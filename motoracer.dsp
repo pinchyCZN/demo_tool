@@ -25,7 +25,7 @@ CFG=motoracer - Win32 Debug
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=Cl.exe
+CPP=cl.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "motoracer - Win32 Release"
@@ -48,7 +48,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=Link.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 SDL.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opengl32.lib glut32.lib /nologo /subsystem:console /machine:I386 /nodefaultlib:"msvcrt.lib" /libpath:"..\SDL\lib\\"
 
@@ -73,7 +73,7 @@ LINK32=Link.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=Link.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 GLU32.LIB kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib opengl32.lib glut32.lib /nologo /subsystem:console /debug /machine:I386 /nodefaultlib:"msvcrt.lib" /pdbtype:sept
 
@@ -89,6 +89,19 @@ LINK32=Link.exe
 # Begin Source File
 
 SOURCE=.\gltest.c
+
+!IF  "$(CFG)" == "motoracer - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "motoracer - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\main.cpp
 # End Source File
 # Begin Source File
 
@@ -106,6 +119,10 @@ SOURCE=.\motoracer.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\player.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\terrain.h
 # End Source File
 # End Group
@@ -115,6 +132,10 @@ SOURCE=.\terrain.h
 # Begin Source File
 
 SOURCE=.\physics.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\player.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
