@@ -19,6 +19,17 @@ int player::render()
 	glPopMatrix();
 	return 0;
 }
+void player::get_modifiers()
+{
+	int i;
+	int list[3]={VK_CONTROL,VK_MENU,VK_SHIFT};
+	for(i=0;i<3;i++){
+		if(GetKeyState(list[i])&0x8000)
+			keys[list[i]]=1;
+		else
+			keys[list[i]]=0;
+	}
+}
 void player::key_down(int key)
 {
 	keys[key&0xFF]=1;
@@ -45,27 +56,27 @@ int player::move()
 	//GetKeyboardState(keys);
 
 	if(key_pressed(GLUT_KEY_LEFT)){
-		rotx=-1;
-		speedx+=delta/30;
-		posx+=speedx;
-	}
-	else if(key_pressed(GLUT_KEY_RIGHT)){
 		rotx=1;
 		speedx+=delta/30;
 		posx-=speedx;
+	}
+	else if(key_pressed(GLUT_KEY_RIGHT)){
+		rotx=-1;
+		speedx+=delta/30;
+		posx+=speedx;
 	}
 	else{
 		speedx-=delta/30;
 	}
 	if(key_pressed(VK_CONTROL)){
-		posz+=delta/30;		
+		posy+=delta;		
 	}
 	else{
-		posz-=delta/30;		
+		posy-=delta*1.2;
 	}
 
-	if(speedx>3)
-		speedx=3;
+	if(speedx>30)
+		speedx=30;
 	else if(speedx<0)
 		speedx=0;
 
@@ -74,10 +85,15 @@ int player::move()
 	else if(posz<0)
 		posz=0;
 
-	if(posx>100)
-		posx=0;
-	else if(posx<0)
-		posx=0;
+	if(posx>500)
+		posx=500;
+	else if(posx<-500)
+		posx=-500;
+
+	if(posy>500)
+		posy=500;
+	else if(posy<0)
+		posy=0;
 
 	tick=current_tick;
 	return 0;

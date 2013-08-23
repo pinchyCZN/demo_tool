@@ -270,6 +270,7 @@ void animation(void)
 	if(bike.v[0]!=0 || bike.v[2]!=0){
 		physics(&terrain,&bike);
 		display();
+		Sleep(10);
 	}
 	else
 		Sleep(10);

@@ -24,6 +24,7 @@ public:
 
 	int render();
 	int key_pressed(int key);
-	void player::key_down(int key);
-	void player::key_up(int key);
+	void key_down(int key);
+	void key_up(int key);
+	void get_modifiers();
 };

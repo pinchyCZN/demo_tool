@@ -7,8 +7,8 @@
 #include "glut.h"
 #include "player.h"
 
-float gx=73,gy=-6,gz=-553;
-float grx=-247,gry=-181,grz=-97;
+float gx=0,gy=0,gz=-500;
+float grx=0,gry=0,grz=0;
 
 GLfloat ambient[]={1.0,1.0,1.0,0.0};
 GLfloat light_position[]={5.0,10.0,10.0,0.0};
@@ -50,11 +50,13 @@ void display(void)
 
 	players[0]->move();
 	players[0]->render();
+	players[0]->get_modifiers();
 
 
 	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
 
+	glutSwapBuffers();
 	glFlush();
 //	bezier();
 	/*
@@ -126,7 +128,7 @@ int main(int argc,char **argv)
 {
 	players[0]=new player();
 	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_SINGLE|GLUT_RGB);
+	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
 	glutInitWindowSize(800,500);
 	glutInitWindowPosition(100,100);
 	glutCreateWindow(argv[0]);
