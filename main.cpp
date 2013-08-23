@@ -101,16 +101,16 @@ void key_down(unsigned char key,int x,int y)
 void special_down(int key,int x,int y)
 {
 	players[0]->key_down(key);
-	printf("specdown=%02X\n",key);
+//	printf("specdown=%02X\n",key);
 }
 void key_up(unsigned char key,int x,int y)
 {
-	printf("keyup=%02X\n",key);
+//	printf("keyup=%02X\n",key);
 	players[0]->key_up(key);
 }
 void special_up(int key,int x,int y)
 {
-	printf("specialup=%02X\n",key);
+//	printf("specialup=%02X\n",key);
 	players[0]->key_up(key);
 }
 void idle()
@@ -124,14 +124,25 @@ void idle()
 	}
 
 }
+int move_console()
+{
+	char title[MAX_PATH]={0}; 
+	HWND hcon; 
+	GetConsoleTitle(title,sizeof(title));
+	if(title[0]!=0){
+		hcon=FindWindow(NULL,title);
+		SetWindowPos(hcon,0,820,0,800,600,SWP_NOZORDER);
+	}
+	return 0;
+}
 int main(int argc,char **argv)
 {
 	players[0]=new player();
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
 	glutInitWindowSize(800,500);
-	glutInitWindowPosition(100,100);
-	glutCreateWindow(argv[0]);
+	glutInitWindowPosition(0,0);
+	glutCreateWindow("test");
 	gl_init();
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
@@ -140,6 +151,7 @@ int main(int argc,char **argv)
 	glutKeyboardUpFunc(key_up);
 	glutSpecialUpFunc(special_up);
 	glutIdleFunc(idle);
+	move_console();
 	glutMainLoop();
 	return 0;
 }

@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdio.h>
 #include "glut.h"
 #include "player.h"
 
@@ -56,29 +57,44 @@ int player::move()
 	//GetKeyboardState(keys);
 
 	if(key_pressed(GLUT_KEY_LEFT)){
-		rotx=1;
-		speedx+=delta/30;
-		posx-=speedx;
+		rotx=-1;
+		speedx=20;
 	}
 	else if(key_pressed(GLUT_KEY_RIGHT)){
-		rotx=-1;
-		speedx+=delta/30;
-		posx+=speedx;
+		rotx=1;
+		speedx=20;
 	}
 	else{
-		speedx-=delta/30;
+		speedx-=delta/5;
 	}
-	if(key_pressed(VK_CONTROL)){
-		posy+=delta;		
-	}
-	else{
-		posy-=delta*1.2;
+	if(key_pressed(GLUT_KEY_DOWN)){
+		rotx=1;
+		speedx=20;
 	}
 
-	if(speedx>30)
-		speedx=30;
+	if(key_pressed(VK_CONTROL)){
+		speedy=40;
+	}
+	else{
+		speedy-=delta/2;
+	}
+
+	if(speedx>100)
+		speedx=100;
 	else if(speedx<0)
 		speedx=0;
+
+	if(speedy>100)
+		speedy=100;
+	else if(speedy<-100)
+		speedy=-100;
+	
+	posx+=speedx*rotx;
+
+	posy+=speedy;
+
+	if(speedx>0)
+		printf("sx=%f\n",speedx);
 
 	if(posz>100)
 		posz=0;
