@@ -11,12 +11,33 @@ player::player(){
 	mode=0;
 	frame=0;
 	memset(keys,0,sizeof(keys));
+	texture=(BYTE*)malloc(256*256*4);
+	int i;
+	for(i=0;i<256*256*4;i++)
+		texture[i]=i*2;
 };
 int player::render()
 {
 	glPushMatrix();
 	glTranslatef(posx,posy,posz);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+	glEnable(GL_TEXTURE_2D);
+
+    glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
+    glEnable(GL_TEXTURE_GEN_T);
+    //glBindTexture(GL_TEXTURE_2D, texture);
+
 	glutSolidCube(100);
+	glDisable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
+    glDisable(GL_TEXTURE_GEN_T);
+
 	glPopMatrix();
 	return 0;
 }

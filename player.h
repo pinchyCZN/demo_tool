@@ -13,6 +13,7 @@ public:
 	double speedz;
 
 	BYTE keys[256];
+	BYTE *texture;
 
 	int mode;
 	int frame;
