@@ -137,7 +137,6 @@ int move_console()
 }
 int main(int argc,char **argv)
 {
-	players[0]=new player();
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
 	glutInitWindowSize(800,500);
@@ -152,6 +151,7 @@ int main(int argc,char **argv)
 	glutSpecialUpFunc(special_up);
 	glutIdleFunc(idle);
 	move_console();
+	players[0]=new player();
 	glutMainLoop();
 	return 0;
 }

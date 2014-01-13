@@ -14,6 +14,7 @@ public:
 
 	BYTE keys[256];
 	BYTE *texture;
+	unsigned int tex_name;
 
 	int mode;
 	int frame;

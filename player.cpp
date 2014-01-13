@@ -13,8 +13,15 @@ player::player(){
 	memset(keys,0,sizeof(keys));
 	texture=(BYTE*)malloc(256*256*4);
 	int i;
-	for(i=0;i<256*256*4;i++)
-		texture[i]=i*2;
+//	for(i=0;i<256*256*4;i++)
+//		texture[i]=i*2;
+	FILE *f=fopen("b1.bmp","rb");
+	if(f!=0){
+		fseek(f,0x120,SEEK_SET);
+		fread(texture,256*256*4,1,f);
+		fclose(f);
+	}
+	glGenTextures(1,&tex_name);
 };
 int player::render()
 {
@@ -27,14 +34,29 @@ int player::render()
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, 80, 100, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
 	glEnable(GL_TEXTURE_2D);
+	
+	glBindTexture(GL_TEXTURE_2D,tex_name);
 
     glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
     glEnable(GL_TEXTURE_GEN_T);
-    //glBindTexture(GL_TEXTURE_2D, texture);
 
 	glutSolidCube(100);
+	/*
+	glBegin(GL_QUADS);
+	glNormal3d(0, 0, 1);
+	glTexCoord2f(0, 0);
+	glVertex2d(0,0);
+	glTexCoord2f(1, 0);
+	glVertex2d(0,10);
+	glTexCoord2f(1, 1);
+	glVertex2d(10,10);
+	glTexCoord2f(0, 1);
+	glVertex2d(0,40);
+	glEnd();
+	*/
+
 	glDisable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
     glDisable(GL_TEXTURE_GEN_T);
 
@@ -89,8 +111,10 @@ int player::move()
 		speedx-=delta/5;
 	}
 	if(key_pressed(GLUT_KEY_DOWN)){
-		rotx=1;
-		speedx=20;
+		posz+=10;
+	}
+	if(key_pressed(GLUT_KEY_UP)){
+		posz-=10;
 	}
 
 	if(key_pressed(VK_CONTROL)){
@@ -117,10 +141,10 @@ int player::move()
 	if(speedx>0)
 		printf("sx=%f\n",speedx);
 
-	if(posz>100)
-		posz=0;
-	else if(posz<0)
-		posz=0;
+	//if(posz>100)
+	//	posz=0;
+	//else if(posz<0)
+	//	posz=0;
 
 	if(posx>500)
 		posx=500;
