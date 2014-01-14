@@ -21,17 +21,54 @@ player::player(){
 		fread(texture,256*256*4,1,f);
 		fclose(f);
 	}
+	for(i=0;i<256*256*4-3;i+=3){
+		char r,g,b;
+		r=texture[i];
+		g=texture[i+1];
+		b=texture[i+2];
+		texture[i]=b;
+		texture[i+1]=g;
+		texture[i+2]=r;
+	}
 	glGenTextures(1,&tex_name);
+	tw=80;
+	th=100;
 };
 int player::render()
 {
 	glPushMatrix();
 	glTranslatef(posx,posy,posz);
 
+
+	// draw quad with approritate texcoords
+	float vertices[] = { 
+		0, 0, 0,
+		1, 0, 0,
+		1, 1, 0,
+		0, 1, 0
+	};
+	unsigned short indices[] = { 0, 1, 2, 0, 2, 3 };
+	float uv[] = { 
+		0, 0,
+		1, 0,
+		1, 1,
+		0, 1
+	};
+	int i;
+	int w,h;
+	w=100;
+	h=100;
+	for(i = 0; i < 4; i++) {
+		vertices[ 3 * i + 0 ] *= w;
+		vertices[ 3 * i + 1 ] *= h;
+		uv[ 2 * i + 0 ] *= (float) w / (float) tw;
+		uv[ 2 * i + 1 ] *= (float) h / (float) th;
+	}
+
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, 80, 100, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
@@ -39,26 +76,42 @@ int player::render()
 	
 	glBindTexture(GL_TEXTURE_2D,tex_name);
 
-    glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
-    glEnable(GL_TEXTURE_GEN_T);
 
-	glutSolidCube(100);
+	glVertexPointer(3, GL_FLOAT, 0, vertices);
+	glTexCoordPointer(2, GL_FLOAT, 0, uv);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glBindTexture(GL_TEXTURE_2D, tex_name);
+	glEnable(GL_TEXTURE_2D);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	glColor4f(1,1,1,1);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+
+    //glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
+    //glEnable(GL_TEXTURE_GEN_T);
+
+	//glutSolidCube(100);
 	/*
-	glBegin(GL_QUADS);
-	glNormal3d(0, 0, 1);
-	glTexCoord2f(0, 0);
-	glVertex2d(0,0);
-	glTexCoord2f(1, 0);
-	glVertex2d(0,10);
-	glTexCoord2f(1, 1);
-	glVertex2d(10,10);
-	glTexCoord2f(0, 1);
-	glVertex2d(0,40);
+	int g_iTextureHeight,g_iTextureWidth;
+	g_iTextureWidth=80;
+	g_iTextureHeight=100;
+
+	glBegin( GL_QUADS );
+	glTexCoord2i( 0, g_iTextureHeight );                           
+	glVertex2i( 0, 0 );
+	glTexCoord2i( g_iTextureWidth, g_iTextureHeight );     
+	glVertex2i( g_iTextureWidth, 0 );
+	glTexCoord2i( g_iTextureWidth, 0 );    
+	glVertex2i( g_iTextureWidth, g_iTextureHeight );
+	glTexCoord2i( 0, 0 );          
+	glVertex2i( 0, g_iTextureHeight );
 	glEnd();
 	*/
-
-	glDisable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
-    glDisable(GL_TEXTURE_GEN_T);
+	//glDisable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
+    //glDisable(GL_TEXTURE_GEN_T);
 
 	glPopMatrix();
 	return 0;
