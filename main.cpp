@@ -58,6 +58,7 @@ void display(void)
 
 	glutSwapBuffers();
 	glFlush();
+	glFinish();
 //	bezier();
 	/*
 	glBindTexture(GL_TEXTURE_2D, 13);
@@ -118,9 +119,14 @@ void idle()
 	static DWORD tick=0;
 	DWORD delta,current=GetTickCount();
 	delta=current-tick;
-	if(delta>30){
+	if(delta>=17){
 		tick=current;
 		glutPostRedisplay();
+		//printf(" delta=%i\n",delta);
+	}
+	else{
+		Sleep(1);
+		//printf("delta=%i\n",delta);
 	}
 
 }
@@ -151,7 +157,7 @@ int main(int argc,char **argv)
 	glutSpecialUpFunc(special_up);
 	glutIdleFunc(idle);
 	move_console();
-	players[0]=new player();
+	players[0]=new player("DUDE");
 	glutMainLoop();
 	return 0;
 }

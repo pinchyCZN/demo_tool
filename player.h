@@ -1,5 +1,6 @@
 class player{
 public:
+	char *name;
 	double posx;
 	double posy;
 	double posz;
@@ -20,9 +21,8 @@ public:
 	int mode;
 	int frame;
 	DWORD tick;
-	DWORD delta;
 
-	player();
+	player(char *);
 	int move();
 
 	int render();
