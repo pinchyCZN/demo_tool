@@ -1,41 +1,50 @@
 #include <windows.h>
 #include <stdio.h>
 #include "glut.h"
-#include "player.h"
+#include "entity.h"
 
-player::player(char *_name){
-	name=_name;
-	tick=0;
-	posx=posy=posz=0;
-	rotx=roty=rotz=0;
-	speedz=speedy=speedz=0;
-	mode=0;
-	frame=0;
-	memset(keys,0,sizeof(keys));
-	texture=(BYTE*)malloc(256*256*4);
-	int i;
-//	for(i=0;i<256*256*4;i++)
-//		texture[i]=i*2;
-	FILE *f=fopen("b1.bmp","rb");
-	if(f!=0){
-		fseek(f,0x120,SEEK_SET);
-		fread(texture,256*256*4,1,f);
-		fclose(f);
+int init_entity(ENTITY *e,int type){
+	if(e==0)
+		return FALSE;
+	memset(e,0,sizeof(ENTITY));
+	e->type=type;
+	if(type==PLAYER1){
+		int i;
+		e->texture=(BYTE*)malloc(256*256*4);
+	//	for(i=0;i<256*256*4;i++)
+	//		texture[i]=i*2;
+		FILE *f=fopen("b1.bmp","rb");
+		if(f!=0){
+			fseek(f,0x120,SEEK_SET);
+			fread(e->texture,256*256*4,1,f);
+			fclose(f);
+		}
+		for(i=0;i<256*256*4-3;i+=3){
+			char r,g,b;
+			r=e->texture[i];
+			g=e->texture[i+1];
+			b=e->texture[i+2];
+			e->texture[i]=b;
+			e->texture[i+1]=g;
+			e->texture[i+2]=r;
+		}
+		glGenTextures(1,&tex_name);
+		tw=80;
+		th=100;
 	}
-	for(i=0;i<256*256*4-3;i+=3){
-		char r,g,b;
-		r=texture[i];
-		g=texture[i+1];
-		b=texture[i+2];
-		texture[i]=b;
-		texture[i+1]=g;
-		texture[i+2]=r;
-	}
-	glGenTextures(1,&tex_name);
-	tw=80;
-	th=100;
 };
-int player::render()
+int free_entity(ENTITY *e)
+{
+	int result=FALSE;
+	if(e==0)
+		return result;
+	if(e->texture!=0)
+		free(e->texture);
+	memset(e,0,sizeof(ENTITY));
+	result=TRUE;
+	return result;
+}
+int render(ENTITY *e)
 {
 	glPushMatrix();
 	glTranslatef(posx,posy,posz);

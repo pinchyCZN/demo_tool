@@ -1,6 +1,7 @@
-class player{
-public:
-	char *name;
+#define PLAYER1 1
+
+typedef struct{
+	int		type;
 	double posx;
 	double posy;
 	double posz;
@@ -13,21 +14,13 @@ public:
 	double speedy;
 	double speedz;
 
-	BYTE keys[256];
 	BYTE *texture;
 	unsigned int tex_name;
 	int tw,th;
 
 	int mode;
-	int frame;
 	DWORD tick;
 
-	player(char *);
-	int move();
+}ENTITY;
 
-	int render();
-	int key_pressed(int key);
-	void key_down(int key);
-	void key_up(int key);
-	void get_modifiers();
-};
+

@@ -88,20 +88,11 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\gltest.c
-
-!IF  "$(CFG)" == "motoracer - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "motoracer - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
+SOURCE=.\entity.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\main.cpp
+SOURCE=.\main.c
 # End Source File
 # Begin Source File
 
@@ -109,21 +100,7 @@ SOURCE=.\misc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\moto_re.c
-# PROP Exclude_From_Build 1
-# End Source File
-# Begin Source File
-
-SOURCE=.\motoracer.c
-# PROP Exclude_From_Build 1
-# End Source File
-# Begin Source File
-
-SOURCE=.\player.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\terrain.h
+SOURCE=.\world_state.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -131,11 +108,7 @@ SOURCE=.\terrain.h
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\physics.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\player.h
+SOURCE=.\entity.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
