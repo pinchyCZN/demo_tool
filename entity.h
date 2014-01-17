@@ -14,12 +14,12 @@ typedef struct{
 	double speedy;
 	double speedz;
 
-	BYTE *texture;
+	unsigned char *texture;
 	unsigned int tex_name;
 	int tw,th;
 
 	int mode;
-	DWORD tick;
+	unsigned int tick;
 
 }ENTITY;
 

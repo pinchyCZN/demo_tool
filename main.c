@@ -5,7 +5,7 @@
 //#include <GL/gl.h>
 //#include <GL/glu.h>
 #include "glut.h"
-#include "player.h"
+#include "entity.h"
 
 float gx=0,gy=0,gz=-500;
 float grx=0,gry=0,grz=0;
@@ -14,7 +14,7 @@ GLfloat ambient[]={1.0,1.0,1.0,0.0};
 GLfloat light_position[]={5.0,10.0,10.0,0.0};
 GLfloat white_light[]={1.0,1.0,1.0,1.0};
 
-player *players[1]={0};
+ENTITY *players[1]={0};
 
 void gl_init(void)
 {
@@ -48,9 +48,9 @@ void display(void)
 	glRotatef(gry,0,1,0);
 	glRotatef(grz,0,0,1);
 
-	players[0]->move();
-	players[0]->render();
-	players[0]->get_modifiers();
+	entity_move(players[0]);
+	render(players[0]);
+	get_modifiers();
 
 
 	t1=GetTickCount();
@@ -89,9 +89,9 @@ void reshape(int w, int h)
 //	glTranslatef(0.0,0.0,-5.0);
 	glutPostRedisplay();
 }
-void key_down(unsigned char key,int x,int y)
+void glkey_down(unsigned char key,int x,int y)
 {
-	players[0]->key_down(key);
+	key_down(key);
 	printf("keydown=%02X\n",key);
 	switch(key){
 	case 0x1B:
@@ -99,20 +99,20 @@ void key_down(unsigned char key,int x,int y)
 		break;
 	}
 }
-void special_down(int key,int x,int y)
+void glspecial_down(int key,int x,int y)
 {
-	players[0]->key_down(key);
+	key_down(key);
 //	printf("specdown=%02X\n",key);
 }
-void key_up(unsigned char key,int x,int y)
+void glkey_up(unsigned char key,int x,int y)
 {
 //	printf("keyup=%02X\n",key);
-	players[0]->key_up(key);
+	key_up(key);
 }
-void special_up(int key,int x,int y)
+void glspecial_up(int key,int x,int y)
 {
 //	printf("specialup=%02X\n",key);
-	players[0]->key_up(key);
+	key_up(key);
 }
 void idle()
 {
@@ -141,8 +141,19 @@ int move_console()
 	}
 	return 0;
 }
+int add_player()
+{
+	ENTITY *e;
+	e=malloc(sizeof(ENTITY));
+	if(e){
+		init_entity(e,PLAYER1);
+		players[0]=e;
+	}
+
+}
 int main(int argc,char **argv)
 {
+	init_keys();
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
 	glutInitWindowSize(800,500);
@@ -151,13 +162,13 @@ int main(int argc,char **argv)
 	gl_init();
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
-	glutKeyboardFunc(key_down);
-	glutSpecialFunc(special_down);
-	glutKeyboardUpFunc(key_up);
-	glutSpecialUpFunc(special_up);
+	glutKeyboardFunc(glkey_down);
+	glutSpecialFunc(glspecial_down);
+	glutKeyboardUpFunc(glkey_up);
+	glutSpecialUpFunc(glspecial_up);
 	glutIdleFunc(idle);
 	move_console();
-	players[0]=new player("DUDE");
+	add_player();
 	glutMainLoop();
 	return 0;
 }

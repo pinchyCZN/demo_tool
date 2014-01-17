@@ -10,27 +10,29 @@ int init_entity(ENTITY *e,int type){
 	e->type=type;
 	if(type==PLAYER1){
 		int i;
-		e->texture=(BYTE*)malloc(256*256*4);
 	//	for(i=0;i<256*256*4;i++)
 	//		texture[i]=i*2;
-		FILE *f=fopen("b1.bmp","rb");
-		if(f!=0){
-			fseek(f,0x120,SEEK_SET);
-			fread(e->texture,256*256*4,1,f);
-			fclose(f);
+		e->texture=(BYTE*)malloc(256*256*4);
+		if(e->texture){
+			FILE *f=fopen("b1.bmp","rb");
+			if(f!=0){
+				fseek(f,0x120,SEEK_SET);
+				fread(e->texture,256*256*4,1,f);
+				fclose(f);
+			}
+			for(i=0;i<256*256*4-3;i+=3){
+				char r,g,b;
+				r=e->texture[i];
+				g=e->texture[i+1];
+				b=e->texture[i+2];
+				e->texture[i]=b;
+				e->texture[i+1]=g;
+				e->texture[i+2]=r;
+			}
 		}
-		for(i=0;i<256*256*4-3;i+=3){
-			char r,g,b;
-			r=e->texture[i];
-			g=e->texture[i+1];
-			b=e->texture[i+2];
-			e->texture[i]=b;
-			e->texture[i+1]=g;
-			e->texture[i+2]=r;
-		}
-		glGenTextures(1,&tex_name);
-		tw=80;
-		th=100;
+		glGenTextures(1,&e->tex_name);
+		e->tw=80;
+		e->th=100;
 	}
 };
 int free_entity(ENTITY *e)
@@ -46,11 +48,7 @@ int free_entity(ENTITY *e)
 }
 int render(ENTITY *e)
 {
-	glPushMatrix();
-	glTranslatef(posx,posy,posz);
 
-
-	// draw quad with approritate texcoords
 	float vertices[] = { 
 		0, 0, 0,
 		1, 0, 0,
@@ -64,27 +62,33 @@ int render(ENTITY *e)
 		1, 1,
 		0, 1
 	};
-	int i;
-	int w,h;
-	w=100;
-	h=100;
-	for(i = 0; i < 4; i++) {
-		vertices[ 3 * i + 0 ] *= w;
-		vertices[ 3 * i + 1 ] *= h;
-		uv[ 2 * i + 0 ] *= (float) w / (float) tw;
-		uv[ 2 * i + 1 ] *= (float) h / (float) th;
+	{
+		int i;
+		int w,h;
+		w=100;
+		h=100;
+		for(i = 0; i < 4; i++) {
+			vertices[ 3 * i + 0 ] *= w;
+			vertices[ 3 * i + 1 ] *= h;
+			uv[ 2 * i + 0 ] *= (float) w / (float) e->tw;
+			uv[ 2 * i + 1 ] *= (float) h / (float) e->th;
+		}
 	}
 
+	if(e==0)
+		return 0;
+	glPushMatrix();
+	glTranslatef(e->posx,e->posy,e->posz);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 //	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 //	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 //	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, 80, 100, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, 80, 100, 0, GL_RGB, GL_UNSIGNED_BYTE, e->texture);
 	glEnable(GL_TEXTURE_2D);
 	
-	glBindTexture(GL_TEXTURE_2D,tex_name);
+	glBindTexture(GL_TEXTURE_2D,e->tex_name);
 
 
 	glVertexPointer(3, GL_FLOAT, 0, vertices);
@@ -92,7 +96,7 @@ int render(ENTITY *e)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glBindTexture(GL_TEXTURE_2D, tex_name);
+	glBindTexture(GL_TEXTURE_2D, e->tex_name);
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
@@ -126,101 +130,76 @@ int render(ENTITY *e)
 	glPopMatrix();
 	return 0;
 }
-void player::get_modifiers()
-{
-	int i;
-	int list[3]={VK_CONTROL,VK_MENU,VK_SHIFT};
-	for(i=0;i<3;i++){
-		if(GetKeyState(list[i])&0x8000)
-			keys[list[i]]=1;
-		else
-			keys[list[i]]=0;
-	}
-}
-void player::key_down(int key)
-{
-	keys[key&0xFF]=1;
-}
-void player::key_up(int key)
-{
-	keys[key&0xFF]=0;
-}
-int player::key_pressed(int key)
-{
-	int result=keys[key&0xFF];
-	if(result)
-		result=result;
-	return result;
-}
-int player::move()
+
+int entity_move(ENTITY *e)
 {
 	DWORD current_tick=GetTickCount();
 	int limit=0;
 	int frame_time=16;
 	//GetKeyboardState(keys);
-	while(tick<current_tick){
+	while(e->tick<current_tick){
 		if(key_pressed(GLUT_KEY_LEFT)){
 			//printf("delta=%i\n",delta);
-			rotx=-1;
-			speedx=12;
+			e->rotx=-1;
+			e->speedx=12;
 		}
 		else if(key_pressed(GLUT_KEY_RIGHT)){
-			rotx=1;
-			speedx=12;
+			e->rotx=1;
+			e->speedx=12;
 		}
 		else{
-			speedx-=frame_time;
+			e->speedx-=frame_time;
 		}
 		if(key_pressed(GLUT_KEY_DOWN)){
-			posz+=10;
+			e->posz+=10;
 		}
 		if(key_pressed(GLUT_KEY_UP)){
-			posz-=10;
+			e->posz-=10;
 		}
 
 		if(key_pressed(VK_CONTROL)){
-			speedy=25;
+			e->speedy=25;
 		}
 		else{
-			speedy-=frame_time*2;
+			e->speedy-=frame_time*2;
 		}
 
-		if(speedx>100)
-			speedx=100;
-		else if(speedx<0)
-			speedx=0;
+		if(e->speedx>100)
+			e->speedx=100;
+		else if(e->speedx<0)
+			e->speedx=0;
 
-		if(speedy>100)
-			speedy=100;
-		else if(speedy<-100)
-			speedy=-100;
+		if(e->speedy>100)
+			e->speedy=100;
+		else if(e->speedy<-100)
+			e->speedy=-100;
 		
-		posx+=speedx*rotx;
+		e->posx+=e->speedx*e->rotx;
 
-		posy+=speedy;
+		e->posy+=e->speedy;
 
-		if(speedx>0)
-			printf("sx=%f posx=%f posy=%f posz=%f\n",speedx,posx,posy,posz);
+		if(e->speedx>0)
+			printf("sx=%f posx=%f posy=%f posz=%f\n",e->speedx,e->posx,e->posy,e->posz);
 
 		//if(posz>100)
 		//	posz=0;
 		//else if(posz<0)
 		//	posz=0;
 
-		if(posx>500)
-			posx=500;
-		else if(posx<-500)
-			posx=-500;
+		if(e->posx>500)
+			e->posx=500;
+		else if(e->posx<-500)
+			e->posx=-500;
 
-		if(posy>500)
-			posy=500;
-		else if(posy<0)
-			posy=0;
+		if(e->posy>500)
+			e->posy=500;
+		else if(e->posy<-100)
+			e->posy=-100;
 		
-		tick+=16;
+		e->tick+=16;
 		limit++;
 		if(limit>4){
-			tick=current_tick;
+			e->tick=current_tick;
 			break;
 		}
 	}
