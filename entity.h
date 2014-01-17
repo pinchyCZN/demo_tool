@@ -1,7 +1,7 @@
 #define PLAYER1 1
 
 typedef struct{
-	int		type;
+	int type;
 	double posx;
 	double posy;
 	double posz;
@@ -19,8 +19,6 @@ typedef struct{
 	int tw,th;
 
 	int mode;
-	unsigned int tick;
-
 }ENTITY;
 
 

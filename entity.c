@@ -131,78 +131,65 @@ int render(ENTITY *e)
 	return 0;
 }
 
-int entity_move(ENTITY *e)
+int entity_move(ENTITY *e,int frame_time)
 {
-	DWORD current_tick=GetTickCount();
-	int limit=0;
-	int frame_time=16;
-	//GetKeyboardState(keys);
-	while(e->tick<current_tick){
-		if(key_pressed(GLUT_KEY_LEFT)){
-			//printf("delta=%i\n",delta);
-			e->rotx=-1;
-			e->speedx=12;
-		}
-		else if(key_pressed(GLUT_KEY_RIGHT)){
-			e->rotx=1;
-			e->speedx=12;
-		}
-		else{
-			e->speedx-=frame_time;
-		}
-		if(key_pressed(GLUT_KEY_DOWN)){
-			e->posz+=10;
-		}
-		if(key_pressed(GLUT_KEY_UP)){
-			e->posz-=10;
-		}
-
-		if(key_pressed(VK_CONTROL)){
-			e->speedy=25;
-		}
-		else{
-			e->speedy-=frame_time*2;
-		}
-
-		if(e->speedx>100)
-			e->speedx=100;
-		else if(e->speedx<0)
-			e->speedx=0;
-
-		if(e->speedy>100)
-			e->speedy=100;
-		else if(e->speedy<-100)
-			e->speedy=-100;
-		
-		e->posx+=e->speedx*e->rotx;
-
-		e->posy+=e->speedy;
-
-		if(e->speedx>0)
-			printf("sx=%f posx=%f posy=%f posz=%f\n",e->speedx,e->posx,e->posy,e->posz);
-
-		//if(posz>100)
-		//	posz=0;
-		//else if(posz<0)
-		//	posz=0;
-
-		if(e->posx>500)
-			e->posx=500;
-		else if(e->posx<-500)
-			e->posx=-500;
-
-		if(e->posy>500)
-			e->posy=500;
-		else if(e->posy<-100)
-			e->posy=-100;
-		
-		e->tick+=16;
-		limit++;
-		if(limit>4){
-			e->tick=current_tick;
-			break;
-		}
+	if(key_pressed(GLUT_KEY_LEFT)){
+		//printf("delta=%i\n",delta);
+		e->rotx=-1;
+		e->speedx=12;
 	}
-	return 0;
+	else if(key_pressed(GLUT_KEY_RIGHT)){
+		e->rotx=1;
+		e->speedx=12;
+	}
+	else{
+		e->speedx-=frame_time;
+	}
+	if(key_pressed(GLUT_KEY_DOWN)){
+		e->posz+=10;
+	}
+	if(key_pressed(GLUT_KEY_UP)){
+		e->posz-=10;
+	}
 
+	if(key_pressed(VK_CONTROL)){
+		e->speedy=25;
+	}
+	else{
+		e->speedy-=frame_time*2;
+	}
+
+	if(e->speedx>100)
+		e->speedx=100;
+	else if(e->speedx<0)
+		e->speedx=0;
+
+	if(e->speedy>100)
+		e->speedy=100;
+	else if(e->speedy<-100)
+		e->speedy=-100;
+	
+	e->posx+=e->speedx*e->rotx;
+
+	e->posy+=e->speedy;
+
+	if(e->speedx>0)
+		printf("sx=%f posx=%f posy=%f posz=%f\n",e->speedx,e->posx,e->posy,e->posz);
+
+	//if(posz>100)
+	//	posz=0;
+	//else if(posz<0)
+	//	posz=0;
+
+	if(e->posx>500)
+		e->posx=500;
+	else if(e->posx<-500)
+		e->posx=-500;
+
+	if(e->posy>500)
+		e->posy=500;
+	else if(e->posy<-100)
+		e->posy=-100;
+		
+	return 0;
 }

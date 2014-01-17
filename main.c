@@ -48,7 +48,7 @@ void display(void)
 	glRotatef(gry,0,1,0);
 	glRotatef(grz,0,0,1);
 
-	entity_move(players[0]);
+	update_world(players,1);
 	render(players[0]);
 	get_modifiers();
 
@@ -154,6 +154,7 @@ int add_player()
 int main(int argc,char **argv)
 {
 	init_keys();
+	init_world();
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
 	glutInitWindowSize(800,500);
