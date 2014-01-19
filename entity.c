@@ -9,18 +9,14 @@ int init_entity(ENTITY *e,int type){
 	memset(e,0,sizeof(ENTITY));
 	e->type=type;
 	if(type==PLAYER1){
-		int i;
-	//	for(i=0;i<256*256*4;i++)
-	//		texture[i]=i*2;
-		e->texture=(BYTE*)malloc(256*256*4);
-		if(e->texture){
-			FILE *f=fopen("b1.bmp","rb");
-			if(f!=0){
-				fseek(f,0x120,SEEK_SET);
-				fread(e->texture,256*256*4,1,f);
-				fclose(f);
-			}
-			for(i=0;i<256*256*4-3;i+=3){
+		int error;
+		error=lodepng_decode24_file(&e->texture,&e->tw,&e->th,"p1.png");
+		if(error)
+			printf("error %u: %s\n", error, lodepng_error_text(error));
+		else{
+			/*
+			int i;
+			for(i=0;i<e->tw*e->th;i+=3){
 				char r,g,b;
 				r=e->texture[i];
 				g=e->texture[i+1];
@@ -29,10 +25,9 @@ int init_entity(ENTITY *e,int type){
 				e->texture[i+1]=g;
 				e->texture[i+2]=r;
 			}
+			*/
+			glGenTextures(1,&e->tex_name);
 		}
-		glGenTextures(1,&e->tex_name);
-		e->tw=80;
-		e->th=100;
 	}
 };
 int free_entity(ENTITY *e)
@@ -65,8 +60,8 @@ int render(ENTITY *e)
 	{
 		int i;
 		int w,h;
-		w=100;
-		h=100;
+		w=e->tw;
+		h=e->th;
 		for(i = 0; i < 4; i++) {
 			vertices[ 3 * i + 0 ] *= w;
 			vertices[ 3 * i + 1 ] *= h;
@@ -85,7 +80,7 @@ int render(ENTITY *e)
 //	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, 80, 100, 0, GL_RGB, GL_UNSIGNED_BYTE, e->texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, e->tw, e->th, 0, GL_RGB, GL_UNSIGNED_BYTE, e->texture);
 	glEnable(GL_TEXTURE_2D);
 	
 	glBindTexture(GL_TEXTURE_2D,e->tex_name);
