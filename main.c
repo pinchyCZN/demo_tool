@@ -14,7 +14,8 @@ GLfloat ambient[]={1.0,1.0,1.0,0.0};
 GLfloat light_position[]={5.0,10.0,10.0,0.0};
 GLfloat white_light[]={1.0,1.0,1.0,1.0};
 
-ENTITY *players[1]={0};
+ENTITY *players[2];
+ENTITY *non_players[100];
 
 void gl_init(void)
 {
@@ -48,8 +49,10 @@ void display(void)
 	glRotatef(gry,0,1,0);
 	glRotatef(grz,0,0,1);
 
-	update_world(players,1);
-	render(players[0]);
+	update_world(players,sizeof(players)/sizeof(ENTITY*));
+	update_world(non_players,sizeof(non_players)/sizeof(ENTITY*));
+	render_entitys(players,sizeof(players)/sizeof(ENTITY*));
+	render_entitys(non_players,sizeof(non_players)/sizeof(ENTITY*));
 	get_modifiers();
 
 
@@ -141,20 +144,69 @@ int move_console()
 	}
 	return 0;
 }
+int find_empty_slot(void **array,int count)
+{
+	int i,index=-1;
+	for(i=0;i<count;i++){
+		if(array[i]==0){
+			index=i;
+			break;
+		}
+	}
+	return index;
+}
 int add_player()
 {
 	ENTITY *e;
-	e=malloc(sizeof(ENTITY));
-	if(e){
-		init_entity(e,PLAYER1);
-		players[0]=e;
+	int i,index;
+	index=find_empty_slot(players,sizeof(players)/sizeof(ENTITY*));
+	if(index>=0){
+		e=malloc(sizeof(ENTITY));
+		if(e){
+			init_entity(e,PLAYER1);
+			players[index]=e;
+		}
 	}
-
+	return index;
+}
+int add_bullet(int *speed,int *pos)
+{
+	ENTITY *e;
+	int i,index=-1;
+	index=find_empty_slot(non_players,sizeof(non_players)/sizeof(ENTITY*));
+	if(index>=0){
+		e=malloc(sizeof(ENTITY));
+		if(e){
+			init_entity(e,BULLET1);
+			non_players[index]=e;
+			if(speed!=0){
+				e->speedx=speed[0];
+				e->speedy=speed[1];
+				e->speedz=speed[2];
+			}
+			if(pos!=0){
+				e->speedx=pos[0];
+				e->speedy=pos[1];
+				e->speedz=pos[2];
+			}
+		}
+	}
+	return index;
+}
+int init_entity_array(ENTITY **e,int count)
+{
+	int i;
+	for(i=0;i<count;i++){
+		e[i]=0;
+	}
+	return 0;
 }
 int main(int argc,char **argv)
 {
 	init_keys();
 	init_world();
+	init_entity_array(players,sizeof(players)/sizeof(ENTITY*));
+	init_entity_array(non_players,sizeof(non_players)/sizeof(ENTITY*));
 	glutInit(&argc,argv);
 	glutInitDisplayMode(GLUT_DOUBLE|GLUT_RGB);
 	glutInitWindowSize(800,500);

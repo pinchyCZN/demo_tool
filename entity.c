@@ -8,16 +8,51 @@ int init_entity(ENTITY *e,int type){
 		return FALSE;
 	memset(e,0,sizeof(ENTITY));
 	e->type=type;
-	if(type==PLAYER1){
-		int error;
-		char *data=0;
-		error=lodepng_decode24_file(&data,&e->tw,&e->th,"p2.png");
-		if(error)
-			printf("error %u: %s\n", error, lodepng_error_text(error));
-		else{
-			e->texture=data;
-			glGenTextures(1,&e->tex_name);
+	switch(type){
+	case PLAYER1:
+		{
+			int error;
+			static char *data=0;
+			static int w=0,h=0;
+			error=lodepng_decode24_file(&data,&w,&h,"p2.png");
+			if(error)
+				printf("error %u: %s\n", error, lodepng_error_text(error));
+			if(data!=0){
+				static int texname=-1;
+				if(texname==-1)
+					glGenTextures(1,&texname);
+				e->texture=data;
+				e->tex_name=texname;
+				e->tw=w;
+				e->th=h;
+			}
 		}
+		break;
+	case BULLET1:
+		{
+			static char *data=0;
+			static int w=0,h=0;
+			if(data==0){
+				w=8;h=8;
+				data=malloc(8*8*3);
+				if(data){
+					int i;
+					for(i=0;i<8*8*3;i++){
+						data[i]=0x7f;
+					}
+				}
+			}
+			if(data!=0){
+				static int texname=-1;
+				if(texname==-1)
+					glGenTextures(1,&texname);
+				e->texture=data;
+				e->tex_name=texname;
+				e->tw=w;
+				e->th=h;
+			}
+		}
+		break;
 	}
 };
 
@@ -26,9 +61,7 @@ int free_entity(ENTITY *e)
 	int result=FALSE;
 	if(e==0)
 		return result;
-	if(e->texture!=0)
-		free(e->texture);
-	memset(e,0,sizeof(ENTITY));
+	free(e);
 	result=TRUE;
 	return result;
 }
@@ -49,18 +82,14 @@ int render(ENTITY *e)
 		1, 1,
 		0, 1
 		*/
-		0, 1,
-		1, 1,
-		1, 0,
-		0, 0,
 
 		0, 1,
 		1, 1,
 		1, 0,
 		0, 0,
 	};
-	if(e->rotx<0){
-	}
+	if(e==0)
+		return 0;
 	{
 		int i;
 		static float w=256.0/6.0,h=256.0/5.0;
@@ -75,10 +104,13 @@ int render(ENTITY *e)
 		}
 	}
 
-	if(e==0)
-		return 0;
 	glPushMatrix();
 	glTranslatef(e->posx,e->posy,e->posz);
+	if(e->rotx<0){
+		glTranslatef(256.0/6.0,0,0);
+		glRotatef(180,0,1,0);
+	}
+
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 //	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 //	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -98,7 +130,7 @@ int render(ENTITY *e)
 
 	glBindTexture(GL_TEXTURE_2D, e->tex_name);
 	glEnable(GL_TEXTURE_2D);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
 
 //	glColor4f(1,1,1,1);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
@@ -131,16 +163,16 @@ int render(ENTITY *e)
 	return 0;
 }
 
-int entity_move(ENTITY *e,int frame_time)
+int move_player1(ENTITY *e,int frame_time)
 {
 	if(key_pressed(GLUT_KEY_LEFT)){
 		//printf("delta=%i\n",delta);
 		e->rotx=-1;
-		e->speedx=6;
+		e->speedx=frame_time/2;
 	}
 	else if(key_pressed(GLUT_KEY_RIGHT)){
 		e->rotx=1;
-		e->speedx=6;
+		e->speedx=frame_time/2;
 	}
 	else{
 		e->speedx-=frame_time;
@@ -153,11 +185,21 @@ int entity_move(ENTITY *e,int frame_time)
 	}
 
 	if(key_pressed(VK_CONTROL)){
-		e->speedy=25;
+		e->speedy=frame_time;
 	}
 	else{
-		e->speedy-=frame_time*2;
+		e->speedy-=frame_time/6;
 	}
+	if(key_pressed(VK_MENU)){
+		int s[3]={0,0,0},p[3]={0,0,0};
+		s[0]=4;
+		p[0]=e->posx;
+		p[1]=e->posy;
+		p[2]=e->posz;
+		add_bullet(s,p);
+		printf("menu\n");
+	}
+
 
 	if(e->speedx>100)
 		e->speedx=100;
@@ -197,6 +239,35 @@ int entity_move(ENTITY *e,int frame_time)
 		e->frame++;
 		if(e->frame>30)
 			e->frame=0;
+	}
+	return 0;
+}
+
+int move_bullet(ENTITY *e,int frame_time)
+{
+	if(e==0)
+		return 0;
+	e->posx+=e->speedx;
+	e->posy+=e->speedy;
+	e->posz+=e->speedz;
+	e->time+=frame_time;
+	if(e->time > 500){
+		e->state=STATE_DIE;
+	}
+	return 0;
+}
+
+int entity_move(ENTITY *e,int frame_time)
+{
+	if(e==0)
+		return 0;
+	switch(e->type){
+	case PLAYER1:
+		move_player1(e,frame_time);
+		break;
+	case BULLET1:
+		move_bullet(e,frame_time);
+		break;
 	}
 	return 0;
 }
