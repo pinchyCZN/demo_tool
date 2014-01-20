@@ -96,6 +96,10 @@ SOURCE=.\input.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\loadpng.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\main.c
 # End Source File
 # Begin Source File
@@ -113,6 +117,10 @@ SOURCE=.\world_state.c
 # Begin Source File
 
 SOURCE=.\entity.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\lodepng.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

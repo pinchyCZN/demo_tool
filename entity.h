@@ -18,7 +18,9 @@ typedef struct{
 	unsigned int tex_name;
 	int tw,th;
 
-	int mode;
+	int state;
+	int frame;
+	unsigned int time;
 }ENTITY;
 
 

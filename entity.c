@@ -10,26 +10,17 @@ int init_entity(ENTITY *e,int type){
 	e->type=type;
 	if(type==PLAYER1){
 		int error;
-		error=lodepng_decode24_file(&e->texture,&e->tw,&e->th,"p1.png");
+		char *data=0;
+		error=lodepng_decode24_file(&data,&e->tw,&e->th,"p2.png");
 		if(error)
 			printf("error %u: %s\n", error, lodepng_error_text(error));
 		else{
-			/*
-			int i;
-			for(i=0;i<e->tw*e->th;i+=3){
-				char r,g,b;
-				r=e->texture[i];
-				g=e->texture[i+1];
-				b=e->texture[i+2];
-				e->texture[i]=b;
-				e->texture[i+1]=g;
-				e->texture[i+2]=r;
-			}
-			*/
+			e->texture=data;
 			glGenTextures(1,&e->tex_name);
 		}
 	}
 };
+
 int free_entity(ENTITY *e)
 {
 	int result=FALSE;
@@ -52,21 +43,35 @@ int render(ENTITY *e)
 	};
 	unsigned short indices[] = { 0, 1, 2, 0, 2, 3 };
 	float uv[] = { 
+		/*
 		0, 0,
 		1, 0,
 		1, 1,
 		0, 1
+		*/
+		0, 1,
+		1, 1,
+		1, 0,
+		0, 0,
+
+		0, 1,
+		1, 1,
+		1, 0,
+		0, 0,
 	};
+	if(e->rotx<0){
+	}
 	{
 		int i;
-		int w,h;
-		w=e->tw;
-		h=e->th;
+		static float w=256.0/6.0,h=256.0/5.0;
+
 		for(i = 0; i < 4; i++) {
 			vertices[ 3 * i + 0 ] *= w;
 			vertices[ 3 * i + 1 ] *= h;
-			uv[ 2 * i + 0 ] *= (float) w / (float) e->tw;
-			uv[ 2 * i + 1 ] *= (float) h / (float) e->th;
+			uv[ 2 * i + 0 ] *= ((float) w / (float) e->tw);
+			uv[ 2 * i + 1 ] *= ((float) h / (float) e->th);
+			uv[ 2 * i + 0 ] += ((float) (e->frame%6) * w / (float) e->tw);
+			uv[ 2 * i + 1 ] += ((float) ((e->frame/6)*h) / (float) e->th);
 		}
 	}
 
@@ -95,7 +100,7 @@ int render(ENTITY *e)
 	glEnable(GL_TEXTURE_2D);
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-	glColor4f(1,1,1,1);
+//	glColor4f(1,1,1,1);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
 
@@ -131,11 +136,11 @@ int entity_move(ENTITY *e,int frame_time)
 	if(key_pressed(GLUT_KEY_LEFT)){
 		//printf("delta=%i\n",delta);
 		e->rotx=-1;
-		e->speedx=12;
+		e->speedx=6;
 	}
 	else if(key_pressed(GLUT_KEY_RIGHT)){
 		e->rotx=1;
-		e->speedx=12;
+		e->speedx=6;
 	}
 	else{
 		e->speedx-=frame_time;
@@ -185,6 +190,13 @@ int entity_move(ENTITY *e,int frame_time)
 		e->posy=500;
 	else if(e->posy<-100)
 		e->posy=-100;
-		
+
+	e->time+=e->speedx;
+	if(e->time>12){
+		e->time=0;
+		e->frame++;
+		if(e->frame>30)
+			e->frame=0;
+	}
 	return 0;
 }
