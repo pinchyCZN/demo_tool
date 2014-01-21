@@ -20,6 +20,8 @@ typedef struct{
 	unsigned char *texture;
 	unsigned int tex_name;
 	int tw,th;
+	int pw,ph;
+	int rows,cols;
 
 	int state;
 	int frame;

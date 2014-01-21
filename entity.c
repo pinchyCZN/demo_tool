@@ -3,6 +3,25 @@
 #include "glut.h"
 #include "entity.h"
 
+
+int bind_texture(char *data,int w,int h,int *texname)
+{
+	int tn=-1;
+	int result=FALSE;
+	glGenTextures(1,&tn);
+	if(tn!=-1){
+		glBindTexture(GL_TEXTURE_2D,tn);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+		glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_DECAL);
+		glTexImage2D(GL_TEXTURE_2D,0,3,w,h,0,GL_RGB,GL_UNSIGNED_BYTE,data);
+		*texname=tn;
+		result=TRUE;
+	}
+	return result;
+}
 int init_entity(ENTITY *e,int type){
 	if(e==0)
 		return FALSE;
@@ -20,11 +39,12 @@ int init_entity(ENTITY *e,int type){
 			if(data!=0){
 				static int texname=-1;
 				if(texname==-1)
-					glGenTextures(1,&texname);
+					bind_texture(data,w,h,&texname);
 				e->texture=data;
 				e->tex_name=texname;
 				e->tw=w;
 				e->th=h;
+				e->pw=12;
 			}
 		}
 		break;
@@ -32,20 +52,21 @@ int init_entity(ENTITY *e,int type){
 		{
 			static char *data=0;
 			static int w=0,h=0;
+			w=12;h=12;
 			if(data==0){
-				w=8;h=8;
-				data=malloc(8*8*3);
+				data=malloc(w*h*3);
 				if(data){
 					int i;
 					for(i=0;i<8*8*3;i++){
 						data[i]=0x7f;
 					}
+					printchar('0',data,0,0,w,h);
 				}
 			}
 			if(data!=0){
 				static int texname=-1;
 				if(texname==-1)
-					glGenTextures(1,&texname);
+					bind_texture(data,w,h,&texname);
 				e->texture=data;
 				e->tex_name=texname;
 				e->tw=w;
@@ -76,13 +97,6 @@ int render(ENTITY *e)
 	};
 	unsigned short indices[] = { 0, 1, 2, 0, 2, 3 };
 	float uv[] = { 
-		/*
-		0, 0,
-		1, 0,
-		1, 1,
-		0, 1
-		*/
-
 		0, 1,
 		1, 1,
 		1, 0,
@@ -90,6 +104,7 @@ int render(ENTITY *e)
 	};
 	if(e==0)
 		return 0;
+
 	{
 		int i;
 		static float w=256.0/6.0,h=256.0/5.0;
@@ -111,15 +126,7 @@ int render(ENTITY *e)
 		glRotatef(180,0,1,0);
 	}
 
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-//	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-//	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, e->tw, e->th, 0, GL_RGB, GL_UNSIGNED_BYTE, e->texture);
 	glEnable(GL_TEXTURE_2D);
-	
 	glBindTexture(GL_TEXTURE_2D,e->tex_name);
 
 
