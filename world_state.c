@@ -30,7 +30,7 @@ int update_world(ENTITY **e,int count,unsigned int gtick,unsigned int current_ti
 		}
 		for(i=0;i<count;i++){
 			if(e[i]!=0){
-				if(e[i]->state==STATE_DIE){
+				if(e[i]->state_life==S_LIFE_DIE){
 					free_entity(e[i]);
 					e[i]=0;
 				}

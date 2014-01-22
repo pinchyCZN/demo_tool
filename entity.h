@@ -1,7 +1,9 @@
 #define PLAYER1 1
 #define BULLET1 2
 
-#define STATE_DIE 1
+#define S_LIFE_DIE 1
+
+#define S_ACTION_FIRE 1
 
 typedef struct{
 	int type;
@@ -23,7 +25,13 @@ typedef struct{
 	int pw,ph;
 	int rows,cols;
 
-	int state;
+	int state_move;
+	int state_action;
+	int state_life;
+	unsigned int stime_move;
+	unsigned int stime_action;
+	unsigned int stime_life;
+	void *owner;
 	int frame;
 	unsigned int time;
 }ENTITY;

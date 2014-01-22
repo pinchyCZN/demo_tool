@@ -174,7 +174,7 @@ int add_player()
 	}
 	return index;
 }
-int add_bullet(int *speed,int *pos)
+int add_bullet(void *owner,int *speed,int *pos)
 {
 	ENTITY *e;
 	int i,index=-1;
@@ -183,6 +183,7 @@ int add_bullet(int *speed,int *pos)
 		e=malloc(sizeof(ENTITY));
 		if(e){
 			init_entity(e,BULLET1);
+			e->owner=owner;
 			non_players[index]=e;
 			if(speed!=0){
 				e->speedx=speed[0];

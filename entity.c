@@ -174,6 +174,8 @@ int render(ENTITY *e)
 
 int move_player1(ENTITY *e,int frame_time)
 {
+	if(e==0)
+		return 0;
 	if(key_pressed(GLUT_KEY_LEFT)){
 		//printf("delta=%i\n",delta);
 		e->rotx=-1;
@@ -201,14 +203,27 @@ int move_player1(ENTITY *e,int frame_time)
 	}
 	if(key_pressed(VK_MENU)){
 		int s[3]={0,0,0},p[3]={0,0,0};
-		s[0]=4;
+		if(e->rotx<0)
+			s[0]=-14;
+		else
+			s[0]=14;
 		p[0]=e->posx;
 		p[1]=e->posy;
 		p[2]=e->posz;
-		add_bullet(s,p);
+		if(e->state_action==0){
+			e->state_action=S_ACTION_FIRE;
+			e->stime_action=0;
+			add_bullet(e,s,p);
+		}
 		printf("menu\n");
 	}
-
+	switch(e->state_action){
+	case S_ACTION_FIRE:
+		e->stime_action+=frame_time;
+		if(e->stime_action>250)
+			e->state_action=0;
+		break;
+	}
 
 	if(e->speedx>100)
 		e->speedx=100;
@@ -261,8 +276,19 @@ int move_bullet(ENTITY *e,int frame_time)
 	e->posz+=e->speedz;
 	e->time+=frame_time;
 	printf("time %i\n",e->time);
-	if(e->time > 1000){
-		e->state=STATE_DIE;
+	if(e->owner){
+		ENTITY *o=e->owner;
+		if(o->texture){
+			double d=o->posx-e->posx;
+			if(d<-3000 || d>3000){
+				e->state_life=S_LIFE_DIE;
+				e->stime_life=0;
+			}
+		}
+	}
+	else if(e->time > 1000){
+		e->state_life=S_LIFE_DIE;
+		e->stime_life=0;
 	}
 	return 0;
 }
