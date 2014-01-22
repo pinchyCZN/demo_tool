@@ -10,13 +10,20 @@ int init_world()
 	frame_time=16;
 	return 1;
 }
-int update_world(ENTITY **e,int count)
+int get_global_tick()
+{
+	return global_tick;
+}
+int set_global_tick(unsigned int t)
+{
+	return global_tick=t;
+}
+
+int update_world(ENTITY **e,int count,unsigned int gtick,unsigned int current_tick)
 {
 
-	unsigned int current_tick=GetTickCount();
 	int limit=0;
-
-	while(global_tick<current_tick){
+	while(gtick<current_tick){
 		int i;
 		for(i=0;i<count;i++){
 			entity_move(e[i],frame_time);
@@ -29,14 +36,14 @@ int update_world(ENTITY **e,int count)
 				}
 			}
 		}
-		global_tick+=16;
+		gtick+=16;
 		limit++;
 		if(limit>4){
-			global_tick=current_tick;
+			gtick=current_tick;
 			break;
 		}
 	}
-	return 1;
+	return gtick;
 }
 
 int render_entitys(ENTITY **e,int count)

@@ -48,9 +48,14 @@ void display(void)
 	glRotatef(grx,1,0,0);
 	glRotatef(gry,0,1,0);
 	glRotatef(grz,0,0,1);
-
-	update_world(players,sizeof(players)/sizeof(ENTITY*));
-	update_world(non_players,sizeof(non_players)/sizeof(ENTITY*));
+	{
+		unsigned int tick,global_tick;
+		tick=GetTickCount();
+		global_tick=get_global_tick();
+		update_world(players,sizeof(players)/sizeof(ENTITY*),global_tick,tick);
+		global_tick=update_world(non_players,sizeof(non_players)/sizeof(ENTITY*),global_tick,tick);
+		set_global_tick(global_tick);
+	}
 	render_entitys(players,sizeof(players)/sizeof(ENTITY*));
 	render_entitys(non_players,sizeof(non_players)/sizeof(ENTITY*));
 	get_modifiers();
@@ -185,9 +190,9 @@ int add_bullet(int *speed,int *pos)
 				e->speedz=speed[2];
 			}
 			if(pos!=0){
-				e->speedx=pos[0];
-				e->speedy=pos[1];
-				e->speedz=pos[2];
+				e->posx=pos[0];
+				e->posy=pos[1];
+				e->posz=pos[2];
 			}
 		}
 	}

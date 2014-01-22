@@ -6,10 +6,10 @@
 
 int bind_texture(char *data,int w,int h,int *texname)
 {
-	int tn=-1;
+	int tn=0;
 	int result=FALSE;
 	glGenTextures(1,&tn);
-	if(tn!=-1){
+	if(tn!=0){
 		glBindTexture(GL_TEXTURE_2D,tn);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
@@ -33,12 +33,14 @@ int init_entity(ENTITY *e,int type){
 			int error;
 			static char *data=0;
 			static int w=0,h=0;
-			error=lodepng_decode24_file(&data,&w,&h,"p2.png");
-			if(error)
-				printf("error %u: %s\n", error, lodepng_error_text(error));
+			if(data==0){
+				error=lodepng_decode24_file(&data,&w,&h,"p2.png");
+				if(error)
+					printf("error %u: %s\n", error, lodepng_error_text(error));
+			}
 			if(data!=0){
-				static int texname=-1;
-				if(texname==-1)
+				static int texname=0;
+				if(texname==0)
 					bind_texture(data,w,h,&texname);
 				e->texture=data;
 				e->tex_name=texname;
@@ -64,8 +66,8 @@ int init_entity(ENTITY *e,int type){
 				}
 			}
 			if(data!=0){
-				static int texname=-1;
-				if(texname==-1)
+				static int texname=0;
+				if(texname==0)
 					bind_texture(data,w,h,&texname);
 				e->texture=data;
 				e->tex_name=texname;
@@ -258,7 +260,8 @@ int move_bullet(ENTITY *e,int frame_time)
 	e->posy+=e->speedy;
 	e->posz+=e->speedz;
 	e->time+=frame_time;
-	if(e->time > 500){
+	printf("time %i\n",e->time);
+	if(e->time > 1000){
 		e->state=STATE_DIE;
 	}
 	return 0;
