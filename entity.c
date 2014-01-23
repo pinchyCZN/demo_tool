@@ -46,7 +46,8 @@ int init_entity(ENTITY *e,int type){
 				e->tex_name=texname;
 				e->tw=w;
 				e->th=h;
-				e->pw=12;
+				e->trows=5;
+				e->tcols=6;
 			}
 		}
 		break;
@@ -54,15 +55,16 @@ int init_entity(ENTITY *e,int type){
 		{
 			static char *data=0;
 			static int w=0,h=0;
-			w=12;h=12;
+			w=8;h=12*8;
 			if(data==0){
 				data=malloc(w*h*3);
 				if(data){
 					int i;
-					for(i=0;i<8*8*3;i++){
+					for(i=0;i<w*h*3;i++){
 						data[i]=0x7f;
 					}
-					printchar('0',data,0,0,w,h);
+					for(i=0;i<8;i++)
+						printchar('0'+i,data,0,i*12,w,h);
 				}
 			}
 			if(data!=0){
@@ -73,6 +75,10 @@ int init_entity(ENTITY *e,int type){
 				e->tex_name=texname;
 				e->tw=w;
 				e->th=h;
+				e->pw=8;
+				e->ph=12;
+				e->tcols=1;
+				e->trows=8;
 			}
 		}
 		break;
@@ -90,7 +96,8 @@ int free_entity(ENTITY *e)
 }
 int render(ENTITY *e)
 {
-
+	int i;
+	float w,h;
 	float vertices[] = { 
 		0, 0, 0,
 		1, 0, 0,
@@ -108,23 +115,32 @@ int render(ENTITY *e)
 		return 0;
 
 	{
-		int i;
-		static float w=256.0/6.0,h=256.0/5.0;
+		int cols=e->tcols;
+		int rows=e->trows;
+		if(cols<=0)cols=1;
+		if(rows<=0)rows=1;
+		w=e->pw;
+		h=e->ph;
+		if(w==0)w=(float)e->tw/(float)e->tcols;
+		if(h==0)h=(float)e->th/(float)e->trows;
+		if(e->type==BULLET1){
+			printf("frame=%i\n",e->frame);
+		}
 
 		for(i = 0; i < 4; i++) {
 			vertices[ 3 * i + 0 ] *= w;
 			vertices[ 3 * i + 1 ] *= h;
 			uv[ 2 * i + 0 ] *= ((float) w / (float) e->tw);
 			uv[ 2 * i + 1 ] *= ((float) h / (float) e->th);
-			uv[ 2 * i + 0 ] += ((float) (e->frame%6) * w / (float) e->tw);
-			uv[ 2 * i + 1 ] += ((float) ((e->frame/6)*h) / (float) e->th);
+			uv[ 2 * i + 0 ] += ((float) (e->frame%(cols+1))*w / (float) e->tw);
+			uv[ 2 * i + 1 ] += ((float) ((e->frame/(rows))*h) / (float) e->th);
 		}
 	}
 
 	glPushMatrix();
 	glTranslatef(e->posx,e->posy,e->posz);
 	if(e->rotx<0){
-		glTranslatef(256.0/6.0,0,0);
+		glTranslatef(w/2,0,0);
 		glRotatef(180,0,1,0);
 	}
 
@@ -179,11 +195,11 @@ int move_player1(ENTITY *e,int frame_time)
 	if(key_pressed(GLUT_KEY_LEFT)){
 		//printf("delta=%i\n",delta);
 		e->rotx=-1;
-		e->speedx=frame_time/2;
+		e->speedx=frame_time/8;
 	}
 	else if(key_pressed(GLUT_KEY_RIGHT)){
 		e->rotx=1;
-		e->speedx=frame_time/2;
+		e->speedx=frame_time/8;
 	}
 	else{
 		e->speedx-=frame_time;
@@ -204,9 +220,9 @@ int move_player1(ENTITY *e,int frame_time)
 	if(key_pressed(VK_MENU)){
 		int s[3]={0,0,0},p[3]={0,0,0};
 		if(e->rotx<0)
-			s[0]=-14;
+			s[0]=-2;
 		else
-			s[0]=14;
+			s[0]=2;
 		p[0]=e->posx;
 		p[1]=e->posy;
 		p[2]=e->posz;
@@ -261,7 +277,7 @@ int move_player1(ENTITY *e,int frame_time)
 	if(e->time>12){
 		e->time=0;
 		e->frame++;
-		if(e->frame>30)
+		if(e->frame>=(e->tcols*e->trows))
 			e->frame=0;
 	}
 	return 0;
@@ -275,7 +291,7 @@ int move_bullet(ENTITY *e,int frame_time)
 	e->posy+=e->speedy;
 	e->posz+=e->speedz;
 	e->time+=frame_time;
-	printf("time %i\n",e->time);
+//	printf("time %i\n",e->time);
 	if(e->owner){
 		ENTITY *o=e->owner;
 		if(o->texture){
@@ -284,6 +300,12 @@ int move_bullet(ENTITY *e,int frame_time)
 				e->state_life=S_LIFE_DIE;
 				e->stime_life=0;
 			}
+		}
+		if(e->time>200){
+			e->time=0;
+			e->frame++;
+			if(e->frame>=(e->tcols*e->trows))
+				e->frame=0;
 		}
 	}
 	else if(e->time > 1000){

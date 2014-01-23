@@ -92,6 +92,10 @@ SOURCE=.\entity.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\environment.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\input.c
 # End Source File
 # Begin Source File

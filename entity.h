@@ -1,3 +1,6 @@
+#ifndef __ENTITY_H__
+#define __ENTITY_H__
+
 #define PLAYER1 1
 #define BULLET1 2
 
@@ -21,9 +24,9 @@ typedef struct{
 
 	unsigned char *texture;
 	unsigned int tex_name;
-	int tw,th;
-	int pw,ph;
-	int rows,cols;
+	int trows,tcols; //texture rows,cols
+	int tw,th; //texture width,height
+	int pw,ph; //player width,height
 
 	int state_move;
 	int state_action;
@@ -36,4 +39,5 @@ typedef struct{
 	unsigned int time;
 }ENTITY;
 
+#endif //__ENTITY_H__
 

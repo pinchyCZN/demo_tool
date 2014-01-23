@@ -266,7 +266,11 @@ int printchar(unsigned char a,char *buffer,int x,int y,int bufw,int bufh)
 	for(i=0;i<12;i++){
 		for(j=0;j<8;j++){
 			int offset;
-			offset=(x+j+(i*bufw))*3;
+			offset=(x+j+((i+y)*bufw))*3;
+			if((x+j)>=bufw)
+				break;
+			if((i+y)>=bufh)
+				break;
 			if(offset>=(bufw*bufh*3))
 				break;
 			if(p[i]&(1<<(7-j))){
