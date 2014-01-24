@@ -34,9 +34,32 @@ int init_entity(ENTITY *e,int type){
 			static char *data=0;
 			static int w=0,h=0;
 			if(data==0){
+				/*
 				error=lodepng_decode24_file(&data,&w,&h,"p2.png");
 				if(error)
 					printf("error %u: %s\n", error, lodepng_error_text(error));
+				*/
+				w=1024;
+				h=32;
+				data=malloc(3*w*h);
+				if(data){
+					int i,j;
+					memset(data,0,3*w*h);
+					for(i=0;i<w/h;i++){
+						char str[10];
+						sprintf(str,"%i",i);
+						printstr(str,data,i*32+10,10,w,h);
+					}
+					for(i=0;i<w;i++){
+						data[i*3+1]=0x7F;
+						data[i*3+1+((h-1)*w*3)]=0x7F;
+					}
+					for(i=0;i<w;i+=32){
+						for(j=0;j<h;j++){
+							data[i*3+1+((j)*w*3)]=0x7F;
+						}
+					}
+				}
 			}
 			if(data!=0){
 				static int texname=0;
@@ -46,8 +69,8 @@ int init_entity(ENTITY *e,int type){
 				e->tex_name=texname;
 				e->tw=w;
 				e->th=h;
-				e->trows=5;
-				e->tcols=6;
+				e->trows=1;
+				e->tcols=w/h;
 			}
 		}
 		break;
@@ -125,6 +148,7 @@ int render(ENTITY *e)
 		if(h==0)h=(float)e->th/(float)e->trows;
 		if(e->type==BULLET1){
 			printf("frame=%i\n",e->frame);
+			printf("%i\n",(e->frame/(rows))*h);
 		}
 
 		for(i = 0; i < 4; i++) {
@@ -132,8 +156,10 @@ int render(ENTITY *e)
 			vertices[ 3 * i + 1 ] *= h;
 			uv[ 2 * i + 0 ] *= ((float) w / (float) e->tw);
 			uv[ 2 * i + 1 ] *= ((float) h / (float) e->th);
-			uv[ 2 * i + 0 ] += ((float) (e->frame%(cols+1))*w / (float) e->tw);
-			uv[ 2 * i + 1 ] += ((float) ((e->frame/(rows))*h) / (float) e->th);
+			//uv[ 2 * i + 0 ] += ((float) (e->frame%(rows))*w / (float) e->tw);
+			//uv[ 2 * i + 1 ] += ((float) ((e->frame/(cols+1))*h) / (float) e->th);
+			uv[ 2 * i + 0 ] += (float) ((e->frame*w) / (float) e->tw);
+			uv[ 2 * i + 1 ] += (float) ((e->frame*h*0) / (float) e->th);
 		}
 	}
 
@@ -195,11 +221,11 @@ int move_player1(ENTITY *e,int frame_time)
 	if(key_pressed(GLUT_KEY_LEFT)){
 		//printf("delta=%i\n",delta);
 		e->rotx=-1;
-		e->speedx=frame_time/8;
+		e->speedx=frame_time/2;
 	}
 	else if(key_pressed(GLUT_KEY_RIGHT)){
 		e->rotx=1;
-		e->speedx=frame_time/8;
+		e->speedx=frame_time/2;
 	}
 	else{
 		e->speedx-=frame_time;
@@ -273,12 +299,16 @@ int move_player1(ENTITY *e,int frame_time)
 	else if(e->posy<-100)
 		e->posy=-100;
 
-	e->time+=e->speedx;
-	if(e->time>12){
-		e->time=0;
-		e->frame++;
-		if(e->frame>=(e->tcols*e->trows))
-			e->frame=0;
+	if(e->speedx==0)
+		e->frame=0;
+	else{
+		e->time+=e->speedx;
+		if(e->time>12){
+			e->time=0;
+			e->frame++;
+			if(e->frame>=(e->tcols*e->trows))
+				e->frame=0;
+		}
 	}
 	return 0;
 }

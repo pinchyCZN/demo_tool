@@ -287,3 +287,12 @@ int printchar(unsigned char a,char *buffer,int x,int y,int bufw,int bufh)
 	}
 	return a;
 }
+int printstr(char *s,char *buffer,int x,int y,int bufw,int bufh)
+{
+	int i,len;
+	len=strlen(s);
+	for(i=0;i<len;i++){
+		printchar(s[i],buffer,x+i*8,y,bufw,bufh);
+	}
+	return 0;
+}
