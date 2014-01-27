@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
-#include "glut.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
+
 #include "entity.h"
 
 
@@ -22,8 +24,10 @@ int display_str(char *str,int x,int y)
 	glRasterPos3f(x,y+15,0);
 	{
 	char *p=str;
-	while(*p)
-		glutBitmapCharacter(GLUT_BITMAP_8_BY_13,*(p++)); 
+	while(*p){
+//		glutBitmapCharacter(); GLUT_BITMAP_8_BY_13,*(p++)); 
+		p++;
+	}
 	}
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);

@@ -4,7 +4,6 @@
 #include <math.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-//#include "glut.h"
 #include "entity.h"
 #include "resource.h"
 
@@ -97,13 +96,23 @@ void display(void)
 	*/
 
 }
-
+void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar )
+{
+	const GLdouble pi = 3.1415926535897932384626433832795;
+	GLdouble fW, fH;
+	fH = tan( (fovY / 2) / 180 * pi ) * zNear;
+	fH = tan( fovY / 360 * pi ) * zNear;
+	fW = fH * aspect;
+	glFrustum( -fW, fW, -fH, fH, zNear, zFar );
+}
 void reshape(int w, int h)
 {
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(65.0,(GLfloat)w/(GLfloat)h,1.0,10000.0);
+
+	perspectiveGL(65.0,(GLfloat)w/(GLfloat)h,1.0,10000.0);
+//	perspectiveGL(65.0,1,1.0,1000.0);
 	//gluPerspective(65.0,1,1.0,1000.0);
 	//glOrtho(-5,5,-5,5,0,1000);
 	glMatrixMode(GL_MODELVIEW);
@@ -111,27 +120,22 @@ void reshape(int w, int h)
 //	glTranslatef(0.0,0.0,-5.0);
 //	glutPostRedisplay();
 }
-void glkey_down(unsigned char key,int x,int y)
+void glkey_down(unsigned char key)
 {
 	key_down(key);
 	printf("keydown=%02X\n",key);
-	switch(key){
-	case 0x1B:
-		exit(0);
-		break;
-	}
 }
-void glspecial_down(int key,int x,int y)
+void glspecial_down(int key)
 {
 	key_down(key);
 //	printf("specdown=%02X\n",key);
 }
-void glkey_up(unsigned char key,int x,int y)
+void glkey_up(unsigned char key)
 {
 //	printf("keyup=%02X\n",key);
 	key_up(key);
 }
-void glspecial_up(int key,int x,int y)
+void glspecial_up(int key)
 {
 //	printf("specialup=%02X\n",key);
 	key_up(key);
@@ -346,6 +350,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static HDC hDC=0;
 	static HGLRC hGLRC=0;
+	print_msg(msg,lparam,wparam,hwnd);
 	switch(msg){
     case WM_CREATE:
 		{
@@ -363,6 +368,18 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			add_player();
 		}
         return 0;
+	case WM_KEYFIRST:
+		glkey_down(wparam);
+		break;
+	case WM_KEYUP:
+		glkey_up(wparam);
+		break;
+	case WM_SYSKEYDOWN:
+		glspecial_down(wparam);
+		break;
+	case WM_SYSKEYUP:
+		glspecial_up(wparam);
+		break;
 	case WM_SIZE:
 		reshape(LOWORD(lparam),HIWORD(lparam));
 		break;
@@ -397,6 +414,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 	ghinstance=hInstance;
 
 	open_console();
+	move_console();
 	memset(&wnd,0,sizeof(wnd));
 	wnd.style=CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
 	wnd.lpfnWndProc=WndProc;
@@ -410,7 +428,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 	wnd.lpszClassName=class_name;
 	RegisterClass(&wnd);
 	ghwindow=CreateWindow(class_name,"gametest",WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS,
-		0,0,800,600,NULL,NULL,ghinstance,NULL);
+		0,0,640,480,NULL,NULL,ghinstance,NULL);
 	if(!ghwindow){
 		
 		MessageBox(NULL,"Could not create main dialog","ERROR",MB_ICONERROR | MB_OK);

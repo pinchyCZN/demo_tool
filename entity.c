@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
-#include "glut.h"
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include "entity.h"
 
 
@@ -148,23 +149,23 @@ int move_player1(ENTITY *e,int frame_time)
 	}
 	if(e->state_action==S_ACTION_PAUSE1 || e->state_action==S_ACTION_PAUSE2)
 		return 0;
-	if(key_pressed(GLUT_KEY_LEFT)){
+	if(key_pressed(VK_LEFT)){
 		//printf("delta=%i\n",delta);
 		e->rotx=-1;
 		e->speedx=frame_time/2;
 	}
-	else if(key_pressed(GLUT_KEY_RIGHT)){
+	else if(key_pressed(VK_RIGHT)){
 		e->rotx=1;
 		e->speedx=frame_time/2;
 	}
 	else{
 		e->speedx-=frame_time;
 	}
-	if(key_pressed(GLUT_KEY_DOWN)){
+	if(key_pressed(VK_DOWN)){
 		e->posz+=10;
 		printinfo=TRUE;
 	}
-	if(key_pressed(GLUT_KEY_UP)){
+	if(key_pressed(VK_UP)){
 		e->posz-=10;
 		printinfo=TRUE;
 	}
