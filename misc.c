@@ -31,3 +31,14 @@ int rotate(float rx,float ry,float rz,float *x,float *y,float *z)
 	x[0]=fx;y[0]=fy;z[0]=fz;
 	return 0;
 }
+
+int snprintf(char *buf,int buf_len,char *fmt,...)
+{
+	int r;
+	va_list va;
+	va_start(va,fmt);
+	r=_vsnprintf(buf,buf_len,fmt,va);
+	if(buf_len>0)
+		buf[buf_len-1]=0;
+	return r;
+}

@@ -7,6 +7,9 @@
 #define S_LIFE_DIE 1
 
 #define S_ACTION_FIRE 1
+#define S_ACTION_PAUSE1 9001
+#define S_ACTION_PAUSE2 9002
+#define S_ACTION_PAUSE3 9003
 
 typedef struct{
 	int type;

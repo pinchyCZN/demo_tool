@@ -69,6 +69,8 @@ int init_entity(ENTITY *e,int type){
 				e->tex_name=texname;
 				e->tw=w;
 				e->th=h;
+				e->pw=32;
+				e->ph=32;
 				e->trows=1;
 				e->tcols=w/h;
 			}
@@ -117,106 +119,34 @@ int free_entity(ENTITY *e)
 	result=TRUE;
 	return result;
 }
-int render(ENTITY *e)
-{
-	int i;
-	float w,h;
-	float vertices[] = { 
-		0, 0, 0,
-		1, 0, 0,
-		1, 1, 0,
-		0, 1, 0
-	};
-	unsigned short indices[] = { 0, 1, 2, 0, 2, 3 };
-	float uv[] = { 
-		0, 1,
-		1, 1,
-		1, 0,
-		0, 0,
-	};
-	if(e==0)
-		return 0;
-
-	{
-		int cols=e->tcols;
-		int rows=e->trows;
-		if(cols<=0)cols=1;
-		if(rows<=0)rows=1;
-		w=e->pw;
-		h=e->ph;
-		if(w==0)w=(float)e->tw/(float)e->tcols;
-		if(h==0)h=(float)e->th/(float)e->trows;
-		if(e->type==BULLET1){
-			printf("frame=%i\n",e->frame);
-			printf("%i\n",(e->frame/(rows))*h);
-		}
-
-		for(i = 0; i < 4; i++) {
-			vertices[ 3 * i + 0 ] *= w;
-			vertices[ 3 * i + 1 ] *= h;
-			uv[ 2 * i + 0 ] *= ((float) w / (float) e->tw);
-			uv[ 2 * i + 1 ] *= ((float) h / (float) e->th);
-			//uv[ 2 * i + 0 ] += ((float) (e->frame%(rows))*w / (float) e->tw);
-			//uv[ 2 * i + 1 ] += ((float) ((e->frame/(cols+1))*h) / (float) e->th);
-			uv[ 2 * i + 0 ] += (float) ((e->frame*w) / (float) e->tw);
-			uv[ 2 * i + 1 ] += (float) ((e->frame*h*0) / (float) e->th);
-		}
-	}
-
-	glPushMatrix();
-	glTranslatef(e->posx,e->posy,e->posz);
-	if(e->rotx<0){
-		glTranslatef(w/2,0,0);
-		glRotatef(180,0,1,0);
-	}
-
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D,e->tex_name);
-
-
-	glVertexPointer(3, GL_FLOAT, 0, vertices);
-	glTexCoordPointer(2, GL_FLOAT, 0, uv);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glBindTexture(GL_TEXTURE_2D, e->tex_name);
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-
-//	glColor4f(1,1,1,1);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-
-
-    //glEnable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
-    //glEnable(GL_TEXTURE_GEN_T);
-
-	//glutSolidCube(100);
-	/*
-	int g_iTextureHeight,g_iTextureWidth;
-	g_iTextureWidth=80;
-	g_iTextureHeight=100;
-
-	glBegin( GL_QUADS );
-	glTexCoord2i( 0, g_iTextureHeight );                           
-	glVertex2i( 0, 0 );
-	glTexCoord2i( g_iTextureWidth, g_iTextureHeight );     
-	glVertex2i( g_iTextureWidth, 0 );
-	glTexCoord2i( g_iTextureWidth, 0 );    
-	glVertex2i( g_iTextureWidth, g_iTextureHeight );
-	glTexCoord2i( 0, 0 );          
-	glVertex2i( 0, g_iTextureHeight );
-	glEnd();
-	*/
-	//glDisable(GL_TEXTURE_GEN_S); //enable texture coordinate generation
-    //glDisable(GL_TEXTURE_GEN_T);
-
-	glPopMatrix();
-	return 0;
-}
 
 int move_player1(ENTITY *e,int frame_time)
 {
+	int printinfo=FALSE;
 	if(e==0)
+		return 0;
+	if(key_pressed('p')){
+		switch(e->state_action){
+		default:
+			e->state_action=S_ACTION_PAUSE1;
+			break;
+		case S_ACTION_PAUSE3:
+		case S_ACTION_PAUSE2:
+			e->state_action=S_ACTION_PAUSE3;
+			break;
+		}
+	}else{
+		switch(e->state_action){
+		default:
+			e->state_action=0;
+			break;
+		case S_ACTION_PAUSE2:
+		case S_ACTION_PAUSE1:
+			e->state_action=S_ACTION_PAUSE2;
+			break;
+		}
+	}
+	if(e->state_action==S_ACTION_PAUSE1 || e->state_action==S_ACTION_PAUSE2)
 		return 0;
 	if(key_pressed(GLUT_KEY_LEFT)){
 		//printf("delta=%i\n",delta);
@@ -232,9 +162,11 @@ int move_player1(ENTITY *e,int frame_time)
 	}
 	if(key_pressed(GLUT_KEY_DOWN)){
 		e->posz+=10;
+		printinfo=TRUE;
 	}
 	if(key_pressed(GLUT_KEY_UP)){
 		e->posz-=10;
+		printinfo=TRUE;
 	}
 
 	if(key_pressed(VK_CONTROL)){
@@ -281,9 +213,6 @@ int move_player1(ENTITY *e,int frame_time)
 
 	e->posy+=e->speedy;
 
-	if(e->speedx>0)
-		printf("sx=%f posx=%f posy=%f posz=%f\n",e->speedx,e->posx,e->posy,e->posz);
-
 	//if(posz>100)
 	//	posz=0;
 	//else if(posz<0)
@@ -296,8 +225,10 @@ int move_player1(ENTITY *e,int frame_time)
 
 	if(e->posy>500)
 		e->posy=500;
-	else if(e->posy<-100)
+	else if(e->posy<-100){
 		e->posy=-100;
+		e->speedy=0;
+	}
 
 	if(e->speedx==0)
 		e->frame=0;
@@ -310,6 +241,8 @@ int move_player1(ENTITY *e,int frame_time)
 				e->frame=0;
 		}
 	}
+	//if(e->speedx!=0 || e->speedy!=0 || e->speedz!=0 || printinfo)
+	//	printf("sx=% 5.1f sy=% 5.1f sz=% 5.1f px=% 5.1f py=% 5.1f pz=% 5.1f\n",e->speedx,e->speedy,e->speedz,e->posx,e->posy,e->posz);
 	return 0;
 }
 
