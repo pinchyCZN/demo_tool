@@ -5,7 +5,37 @@
 
 #include "entity.h"
 
+int test()
+{
+//	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    /* draw six faces of a cube */
+    glBegin(GL_QUADS);
+    glNormal3f( 0.0F, 0.0F, 1.0F);
+    glVertex3f( 0.5F, 0.5F, 0.5F); glVertex3f(-0.5F, 0.5F, 0.5F);
+    glVertex3f(-0.5F,-0.5F, 0.5F); glVertex3f( 0.5F,-0.5F, 0.5F);
+
+    glNormal3f( 0.0F, 0.0F,-1.0F);
+    glVertex3f(-0.5F,-0.5F,-0.5F); glVertex3f(-0.5F, 0.5F,-0.5F);
+    glVertex3f( 0.5F, 0.5F,-0.5F); glVertex3f( 0.5F,-0.5F,-0.5F);
+
+    glNormal3f( 0.0F, 1.0F, 0.0F);
+    glVertex3f( 0.5F, 0.5F, 0.5F); glVertex3f( 0.5F, 0.5F,-0.5F);
+    glVertex3f(-0.5F, 0.5F,-0.5F); glVertex3f(-0.5F, 0.5F, 0.5F);
+
+    glNormal3f( 0.0F,-1.0F, 0.0F);
+    glVertex3f(-0.5F,-0.5F,-0.5F); glVertex3f( 0.5F,-0.5F,-0.5F);
+    glVertex3f( 0.5F,-0.5F, 0.5F); glVertex3f(-0.5F,-0.5F, 0.5F);
+
+    glNormal3f( 1.0F, 0.0F, 0.0F);
+    glVertex3f( 0.5F, 0.5F, 0.5F); glVertex3f( 0.5F,-0.5F, 0.5F);
+    glVertex3f( 0.5F,-0.5F,-0.5F); glVertex3f( 0.5F, 0.5F,-0.5F);
+
+    glNormal3f(-1.0F, 0.0F, 0.0F);
+    glVertex3f(-0.5F,-0.5F,-0.5F); glVertex3f(-0.5F,-0.5F, 0.5F);
+    glVertex3f(-0.5F, 0.5F, 0.5F); glVertex3f(-0.5F, 0.5F,-0.5F);
+    glEnd();
+}
 int display_str(char *str,int x,int y)
 {
 	glMatrixMode(GL_PROJECTION);
@@ -19,23 +49,31 @@ int display_str(char *str,int x,int y)
 
 	glColor3f(0,1.0,0);
 	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_LIGHTING);
+	//glDisable(GL_LIGHTING);
 	glDisable(GL_TEXTURE_2D);
 	glRasterPos3f(x,y+15,0);
 	{
 	char *p=str;
+	char data[100]={0};
+	int i;
+	glRasterPos2i(100,100);
+	for(i=0;i<100;i++){
+		data[i]=0xFF;
+	}
+	glDrawPixels(5,5,GL_RGBA,GL_UNSIGNED_INT,data);
 	while(*p){
 //		glutBitmapCharacter(); GLUT_BITMAP_8_BY_13,*(p++)); 
 		p++;
 	}
 	}
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHTING);
 	glEnable(GL_TEXTURE_2D);
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
+	test();
 	return 0;
 }
 int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int toffy)
@@ -135,8 +173,8 @@ int render(ENTITY *e)
 		char str[12];
 		t=GetTickCount();
 		snprintf(str,sizeof(str),"FPS=%3u",t-tick);
-		if(last!=(t-tick))
-			printf("%s\n",str);
+//		if(last!=(t-tick))
+//			printf("%s\n",str);
 		last=t-tick;
 		display_str(str,0,0);
 		tick=t;

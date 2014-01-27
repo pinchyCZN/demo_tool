@@ -10,8 +10,9 @@
 HWND		ghwindow=0;
 HINSTANCE	ghinstance=0;
 HACCEL		ghaccel=0;
+int g_draw=0;
 
-float gx=0,gy=0,gz=-500;
+float gx=0,gy=0,gz=0;
 float grx=0,gry=0,grz=0;
 
 GLfloat ambient[]={1.0,1.0,1.0,0.0};
@@ -23,6 +24,7 @@ ENTITY *non_players[100];
 
 void gl_init(void)
 {
+	
 	glClearColor(0.0,0.0,0.0,0.0);
 //	glShadeModel(GL_FLAT);
 	glShadeModel(GL_SMOOTH);
@@ -30,10 +32,25 @@ void gl_init(void)
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,white_light);
 	glLightfv(GL_LIGHT0,GL_SPECULAR,white_light);
 	glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+//	glEnable(GL_LIGHTING);
+//	glEnable(GL_LIGHT0);
 	glEnable(GL_DEPTH_TEST);
 //		glLightfv(GL_LIGHT0,GL_POSITION,light_position);
+
+/*
+    glMatrixMode(GL_PROJECTION);
+    glFrustum(-0.5F, 0.5F, -0.5F, 0.5F, 1.0F, 3.0F);
+
+    glMatrixMode(GL_MODELVIEW);
+    glTranslatef(0.0F, 0.0F, -2.0F);
+
+    glRotatef(30.0F, 1.0F, 0.0F, 0.0F);
+    glRotatef(30.0F, 0.0F, 1.0F, 0.0F);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+*/
 }
 
 void display(void)
@@ -66,12 +83,12 @@ void display(void)
 
 
 
+
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
 
-//	glutSwapBuffers();
-	glFinish();
-//	glFlush();
+//	glFinish();
+	glFlush();
 
 	{
 		static DWORD tick=0,delta;
@@ -100,7 +117,6 @@ void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFa
 {
 	const GLdouble pi = 3.1415926535897932384626433832795;
 	GLdouble fW, fH;
-	fH = tan( (fovY / 2) / 180 * pi ) * zNear;
 	fH = tan( fovY / 360 * pi ) * zNear;
 	fW = fH * aspect;
 	glFrustum( -fW, fW, -fH, fH, zNear, zFar );
@@ -108,17 +124,12 @@ void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFa
 void reshape(int w, int h)
 {
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
+	perspectiveGL(65.0,(GLfloat)w/(GLfloat)h,-1000.0,10000.0);
+//	glMatrixMode(GL_PROJECTION);
+//	glLoadIdentity();
+//	glMatrixMode(GL_MODELVIEW);
+//	glLoadIdentity();
 
-	perspectiveGL(65.0,(GLfloat)w/(GLfloat)h,1.0,10000.0);
-//	perspectiveGL(65.0,1,1.0,1000.0);
-	//gluPerspective(65.0,1,1.0,1000.0);
-	//glOrtho(-5,5,-5,5,0,1000);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-//	glTranslatef(0.0,0.0,-5.0);
-//	glutPostRedisplay();
 }
 void glkey_down(unsigned char key)
 {
@@ -261,9 +272,11 @@ void idle()
 	static DWORD tick=0;
 	DWORD delta,current=GetTickCount();
 	delta=current-tick;
-	if(delta>=12){
+	if(delta>=12 && g_draw){
 		tick=current;
-		display();
+		InvalidateRect(ghwindow,0,TRUE);
+//		display();
+//		test();
 //		glutPostRedisplay();
 		//printf(" delta=%i\n",delta);
 	}
@@ -369,6 +382,8 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		}
         return 0;
 	case WM_KEYFIRST:
+		if(wparam==0x1b)
+			exit(0);
 		glkey_down(wparam);
 		break;
 	case WM_KEYUP:
@@ -383,12 +398,19 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	case WM_SIZE:
 		reshape(LOWORD(lparam),HIWORD(lparam));
 		break;
+	case WM_APP:
 	case WM_PAINT:
         {
             PAINTSTRUCT ps;
             BeginPaint(hwnd,&ps);
-            if(hGLRC)
+            if(hGLRC){
+				static DWORD tick=0;
+				printf("%i\n",GetTickCount()-tick);
+				tick=GetTickCount();
+				display();
 			    SwapBuffers(hDC);
+				g_draw=1;
+			}
             EndPaint(hwnd,&ps);
             return 0;
         }
@@ -460,10 +482,10 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 		}
 		if(ghaccel!=0)
 			TranslateAccelerator(ghwindow,ghaccel,&msg);
-		if(!IsDialogMessage(ghwindow,&msg)){
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		DispatchMessage(&msg);
+//		if(!IsDialogMessage(ghwindow,&msg)){
+//			TranslateMessage(&msg);
+//		}
 	}
 	return msg.wParam;
 }
