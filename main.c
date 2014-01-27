@@ -7,6 +7,7 @@
 #include "entity.h"
 #include "resource.h"
 
+HDC			ghDC=0;
 HWND		ghwindow=0;
 HINSTANCE	ghinstance=0;
 HACCEL		ghaccel=0;
@@ -27,14 +28,14 @@ void gl_init(void)
 	
 	glClearColor(0.0,0.0,0.0,0.0);
 //	glShadeModel(GL_FLAT);
-	glShadeModel(GL_SMOOTH);
+//	glShadeModel(GL_SMOOTH);
 	glLightfv(GL_LIGHT0,GL_POSITION,light_position);
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,white_light);
 	glLightfv(GL_LIGHT0,GL_SPECULAR,white_light);
 	glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
 //	glEnable(GL_LIGHTING);
 //	glEnable(GL_LIGHT0);
-	glEnable(GL_DEPTH_TEST);
+//	glEnable(GL_DEPTH_TEST);
 //		glLightfv(GL_LIGHT0,GL_POSITION,light_position);
 
 /*
@@ -82,13 +83,13 @@ void display(void)
 	get_modifiers();
 
 
-
+	test();
 
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
 
-//	glFinish();
 	glFlush();
+	glFinish();
 
 	{
 		static DWORD tick=0,delta;
@@ -272,10 +273,10 @@ void idle()
 	static DWORD tick=0;
 	DWORD delta,current=GetTickCount();
 	delta=current-tick;
-	if(delta>=12 && g_draw){
+	if(delta>=12){// && g_draw){
 		tick=current;
-		InvalidateRect(ghwindow,0,TRUE);
 //		display();
+		InvalidateRect(ghwindow,0,FALSE);
 //		test();
 //		glutPostRedisplay();
 		//printf(" delta=%i\n",delta);
@@ -368,6 +369,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
     case WM_CREATE:
 		{
 			hDC=GetDC(hwnd);
+			ghDC=hDC;
 			if(hDC)
 				setupPixelFormat(hDC);
 			hGLRC=wglCreateContext(hDC);
@@ -400,16 +402,21 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_APP:
 	case WM_PAINT:
+		{
+			int i;
+			i=i+1;
+		}
         {
             PAINTSTRUCT ps;
             BeginPaint(hwnd,&ps);
             if(hGLRC){
 				static DWORD tick=0;
-				printf("%i\n",GetTickCount()-tick);
+				//printf("%i\n",GetTickCount()-tick);
 				tick=GetTickCount();
-				display();
-			    SwapBuffers(hDC);
 				g_draw=1;
+				display();
+			    SwapBuffers(ghDC);
+
 			}
             EndPaint(hwnd,&ps);
             return 0;

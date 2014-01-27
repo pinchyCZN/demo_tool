@@ -7,34 +7,26 @@
 
 int test()
 {
-//	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	static float theta=0;
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_TEXTURE_2D);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 
-    /* draw six faces of a cube */
-    glBegin(GL_QUADS);
-    glNormal3f( 0.0F, 0.0F, 1.0F);
-    glVertex3f( 0.5F, 0.5F, 0.5F); glVertex3f(-0.5F, 0.5F, 0.5F);
-    glVertex3f(-0.5F,-0.5F, 0.5F); glVertex3f( 0.5F,-0.5F, 0.5F);
+	glPushMatrix();
+	glRotatef(theta, 0.0f, 0.0f, 1.0f);
 
-    glNormal3f( 0.0F, 0.0F,-1.0F);
-    glVertex3f(-0.5F,-0.5F,-0.5F); glVertex3f(-0.5F, 0.5F,-0.5F);
-    glVertex3f( 0.5F, 0.5F,-0.5F); glVertex3f( 0.5F,-0.5F,-0.5F);
+//	glBegin(GL_TRIANGLES);
+//	glColor3f(1.0f, 0.0f, 0.0f);   glVertex2f(0.0f,   1.0f);
+//	glColor3f(0.0f, 1.0f, 0.0f);   glVertex2f(0.87f,  -0.5f);
+//	glColor3f(0.0f, 0.0f, 1.0f);   glVertex2f(-0.87f, -0.5f);
+//	glEnd();
 
-    glNormal3f( 0.0F, 1.0F, 0.0F);
-    glVertex3f( 0.5F, 0.5F, 0.5F); glVertex3f( 0.5F, 0.5F,-0.5F);
-    glVertex3f(-0.5F, 0.5F,-0.5F); glVertex3f(-0.5F, 0.5F, 0.5F);
 
-    glNormal3f( 0.0F,-1.0F, 0.0F);
-    glVertex3f(-0.5F,-0.5F,-0.5F); glVertex3f( 0.5F,-0.5F,-0.5F);
-    glVertex3f( 0.5F,-0.5F, 0.5F); glVertex3f(-0.5F,-0.5F, 0.5F);
-
-    glNormal3f( 1.0F, 0.0F, 0.0F);
-    glVertex3f( 0.5F, 0.5F, 0.5F); glVertex3f( 0.5F,-0.5F, 0.5F);
-    glVertex3f( 0.5F,-0.5F,-0.5F); glVertex3f( 0.5F, 0.5F,-0.5F);
-
-    glNormal3f(-1.0F, 0.0F, 0.0F);
-    glVertex3f(-0.5F,-0.5F,-0.5F); glVertex3f(-0.5F,-0.5F, 0.5F);
-    glVertex3f(-0.5F, 0.5F, 0.5F); glVertex3f(-0.5F, 0.5F,-0.5F);
-    glEnd();
+	glPopMatrix();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	theta+=1.0;
 }
 int display_str(char *str,int x,int y)
 {
@@ -47,24 +39,25 @@ int display_str(char *str,int x,int y)
 	glPushMatrix();
 	glLoadIdentity();
 
-	glColor3f(0,1.0,0);
+	glColor3f(1.0,1.0,1.0);
 	glDisable(GL_DEPTH_TEST);
 	//glDisable(GL_LIGHTING);
 	glDisable(GL_TEXTURE_2D);
 	glRasterPos3f(x,y+15,0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	{
-	char *p=str;
-	char data[100]={0};
-	int i;
-	glRasterPos2i(100,100);
-	for(i=0;i<100;i++){
-		data[i]=0xFF;
-	}
-	glDrawPixels(5,5,GL_RGBA,GL_UNSIGNED_INT,data);
-	while(*p){
-//		glutBitmapCharacter(); GLUT_BITMAP_8_BY_13,*(p++)); 
-		p++;
-	}
+		char *data=malloc(640*480*3);
+		int i;
+		//glPixelTransferi(
+		glPixelZoom(10.0,10.0);
+		glRasterPos2i(100,100);
+		if(data){
+			for(i=0;i<640*480*3;i++){
+				data[i]=0xFF;
+			}
+			glDrawPixels(640,480,GL_RGB,GL_BYTE,data);
+			free(data);
+		}
 	}
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_LIGHTING);
