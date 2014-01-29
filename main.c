@@ -124,12 +124,13 @@ void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFa
 }
 void reshape(int w, int h)
 {
+//    glFrustum(-0.5F, 0.5F, -0.5F, 0.5F, -1.0F, 300.0F);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	perspectiveGL(65.0,(GLfloat)w/(GLfloat)h,.1,1000.0);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
-	perspectiveGL(65.0,(GLfloat)w/(GLfloat)h,-1000.0,10000.0);
-//	glMatrixMode(GL_PROJECTION);
-//	glLoadIdentity();
-//	glMatrixMode(GL_MODELVIEW);
-//	glLoadIdentity();
 
 }
 void glkey_down(unsigned char key)
@@ -375,6 +376,12 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			hGLRC=wglCreateContext(hDC);
 			if(hGLRC)
 				wglMakeCurrent(hDC,hGLRC);
+			if(hDC){
+				SelectObject(hDC,GetStockObject(SYSTEM_FONT));
+				wglUseFontBitmaps(hDC,0,255,1000);
+				glListBase (1000); 
+				glCallLists (24, GL_UNSIGNED_BYTE, "Hello Windows OpenGL World");
+			}
 			gl_init();
 			init_keys();
 			init_world();

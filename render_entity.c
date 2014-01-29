@@ -10,11 +10,14 @@ int test()
 	static float theta=0;
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//glClear(GL_COLOR_BUFFER_BIT);
+	//glClear(GL_ALL_ATTRIB_BITS);
 
 	glPushMatrix();
-	glRotatef(theta, 0.0f, 0.0f, 1.0f);
+    glTranslatef(0.0F, 0.0F, -10.4F);
+	glRotatef(theta, 0.0f, 1.0f, 1.0f);
+
 
 	glBegin(GL_TRIANGLES);
 	glColor3f(1.0f, 0.0f, 0.0f);   glVertex2f(0.0f,   1.0f);
@@ -35,36 +38,53 @@ int display_str(char *str,int x,int y)
 	glLoadIdentity();
 	glOrtho(0,1024,768,0,-1000,1000);
 
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
+	{
+		int i,len;
+	glDisable(GL_DEPTH_TEST);
+	//glDisable(GL_LIGHTING);
+	//glEnable(GL_TEXTURE_2D);
+	glRasterPos3f(x,y+20,0);
+	//glClear(GL_COLOR_BUFFER_BIT); 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glListBase(1000); 
+		len=strlen(str);
+		glCallLists(len,GL_UNSIGNED_BYTE,str);
+	}
+	/*
+//	glMatrixMode(GL_MODELVIEW);
+//	glPushMatrix();
+//	glLoadIdentity();
 
 	glColor3f(1.0,1.0,1.0);
 	glDisable(GL_DEPTH_TEST);
 	//glDisable(GL_LIGHTING);
-	glDisable(GL_TEXTURE_2D);
-	glRasterPos3f(x,y+15,0);
+	//glEnable(GL_TEXTURE_2D);
+	//glRasterPos3f(x,y+15,0);
+	//glClear(GL_COLOR_BUFFER_BIT); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	{
-		char *data=malloc(640*480*3);
+		float *data=malloc(640*480*4*2);
 		int i;
 		//glPixelTransferi(
-		glPixelZoom(10.0,10.0);
-		glRasterPos2i(100,100);
+		glPixelZoom(1.0,1.0);
 		if(data){
-			for(i=0;i<640*480*3;i++){
-				data[i]=0xFF;
+			for(i=0;i<640*480;i++){
+				data[i]=1.0; //0xFF; //rand()%256;
 			}
-			glDrawPixels(640,480,GL_RGB,GL_BYTE,data);
+			for(i=0;i<10;i++){
+			glRasterPos3i((rand()%100),(rand()%100),(rand()%100));
+			glDrawPixels(640,480,GL_RGBA,GL_FLOAT,data);
+			}
 			free(data);
 		}
 	}
+	*/
 	glEnable(GL_DEPTH_TEST);
+	//glDisable(GL_TEXTURE_2D);
 	//glEnable(GL_LIGHTING);
-	glEnable(GL_TEXTURE_2D);
+//	glMatrixMode(GL_MODELVIEW);
+//	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	test();
 	return 0;
