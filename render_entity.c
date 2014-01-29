@@ -10,10 +10,8 @@ int test()
 	static float theta=0;
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
-	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	//glClear(GL_COLOR_BUFFER_BIT);
-	//glClear(GL_ALL_ATTRIB_BITS);
 
+	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
     glTranslatef(0.0F, 0.0F, -10.4F);
 	glRotatef(theta, 0.0f, 1.0f, 1.0f);
@@ -26,6 +24,7 @@ int test()
 	glEnd();
 
 
+	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
@@ -33,60 +32,40 @@ int test()
 }
 int display_str(char *str,int x,int y)
 {
+extern int g_screenw,g_screenh;
+	int i,len;
+	int list[3]={GL_TEXTURE_2D,GL_DEPTH_TEST,GL_LIGHTING};
+	int setting[3];
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0,1024,768,0,-1000,1000);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0,g_screenw,g_screenh,0,-1000,1000);
 
-	{
-		int i,len;
-	glDisable(GL_DEPTH_TEST);
-	//glDisable(GL_LIGHTING);
-	//glEnable(GL_TEXTURE_2D);
-	glRasterPos3f(x,y+20,0);
-	//glClear(GL_COLOR_BUFFER_BIT); 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glListBase(1000); 
-		len=strlen(str);
-		glCallLists(len,GL_UNSIGNED_BYTE,str);
-	}
-	/*
-//	glMatrixMode(GL_MODELVIEW);
-//	glPushMatrix();
-//	glLoadIdentity();
-
-	glColor3f(1.0,1.0,1.0);
-	glDisable(GL_DEPTH_TEST);
-	//glDisable(GL_LIGHTING);
-	//glEnable(GL_TEXTURE_2D);
-	//glRasterPos3f(x,y+15,0);
-	//glClear(GL_COLOR_BUFFER_BIT); 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	{
-		float *data=malloc(640*480*4*2);
-		int i;
-		//glPixelTransferi(
-		glPixelZoom(1.0,1.0);
-		if(data){
-			for(i=0;i<640*480;i++){
-				data[i]=1.0; //0xFF; //rand()%256;
-			}
-			for(i=0;i<10;i++){
-			glRasterPos3i((rand()%100),(rand()%100),(rand()%100));
-			glDrawPixels(640,480,GL_RGBA,GL_FLOAT,data);
-			}
-			free(data);
+	for(i=0;i<sizeof(list)/sizeof(int);i++){
+		setting[i]=0;
+		if(glIsEnabled(list[i])){
+			glDisable(list[i]);
+			setting[i]=1;
 		}
 	}
-	*/
-	glEnable(GL_DEPTH_TEST);
-	//glDisable(GL_TEXTURE_2D);
-	//glEnable(GL_LIGHTING);
-//	glMatrixMode(GL_MODELVIEW);
-//	glPopMatrix();
+	glColor3f(1.0,1.0,1.0);
+	glRasterPos3f(x,y+15,0);
+
+	glListBase(1000); 
+	len=strlen(str);
+	glCallLists(len,GL_UNSIGNED_BYTE,str);
+
+	for(i=0;i<sizeof(list)/sizeof(int);i++){
+		if(setting[i])
+			glEnable(list[i]);
+	}
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
-	test();
 	return 0;
 }
 int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int toffy)
@@ -113,6 +92,8 @@ int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int tof
 		uv[ 2 * i + 0 ] += (float) toffx / (float) tw;
 		uv[ 2 * i + 1 ] += (float) toffy / (float) th;
 	}
+	glDisable(GL_DEPTH_TEST);
+
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D,tex_name);
 	glVertexPointer(3, GL_FLOAT, 0, vertices);
@@ -165,8 +146,15 @@ int render(ENTITY *e)
 		}
 	}
 */
+	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glTranslatef(e->posx,e->posy,e->posz);
+	glLoadIdentity();
+	
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	//glTranslatef(e->posx,e->posy,e->posz);
+	glTranslatef(50-rand()%10,50-rand()%100,50-rand()%100);
 	{
 		int w,h;
 		w=e->pw;
@@ -177,6 +165,9 @@ int render(ENTITY *e)
 		}
 		render_texture_rect(e->tex_name,w,h,e->tw,e->th,e->frame*w,0);
 	}
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 
 	if(e->type==PLAYER1){

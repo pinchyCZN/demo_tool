@@ -12,6 +12,8 @@ HWND		ghwindow=0;
 HINSTANCE	ghinstance=0;
 HACCEL		ghaccel=0;
 int g_draw=0;
+int g_screenw=1024;
+int g_screenh=758;
 
 float gx=0,gy=0,gz=0;
 float grx=0,gry=0,grz=0;
@@ -33,6 +35,9 @@ void gl_init(void)
 	glLightfv(GL_LIGHT0,GL_DIFFUSE,white_light);
 	glLightfv(GL_LIGHT0,GL_SPECULAR,white_light);
 	glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
+    glMatrixMode(GL_PROJECTION);
+    glFrustum(-0.08, 0.08F, -0.06F, 0.06F, 0.1F, 1000.0F);
+
 //	glEnable(GL_LIGHTING);
 //	glEnable(GL_LIGHT0);
 //	glEnable(GL_DEPTH_TEST);
@@ -365,7 +370,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static HDC hDC=0;
 	static HGLRC hGLRC=0;
-	print_msg(msg,lparam,wparam,hwnd);
+//	print_msg(msg,lparam,wparam,hwnd);
 	switch(msg){
     case WM_CREATE:
 		{
@@ -379,8 +384,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			if(hDC){
 				SelectObject(hDC,GetStockObject(SYSTEM_FONT));
 				wglUseFontBitmaps(hDC,0,255,1000);
-				glListBase (1000); 
-				glCallLists (24, GL_UNSIGNED_BYTE, "Hello Windows OpenGL World");
 			}
 			gl_init();
 			init_keys();
@@ -405,7 +408,14 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		glspecial_up(wparam);
 		break;
 	case WM_SIZE:
-		reshape(LOWORD(lparam),HIWORD(lparam));
+		{
+			int w,h;
+			w=LOWORD(lparam);
+			h=HIWORD(lparam);
+			g_screenw=w;
+			g_screenh=h;
+			reshape(w,h);
+		}
 		break;
 	case WM_APP:
 	case WM_PAINT:
