@@ -74,6 +74,7 @@ int init_entity(ENTITY *e,int type){
 				e->ph=32;
 				e->trows=1;
 				e->tcols=w/h;
+				e->posz=-2000;
 			}
 		}
 		break;
@@ -162,11 +163,11 @@ int move_player1(ENTITY *e,int frame_time)
 		e->speedx-=frame_time;
 	}
 	if(key_pressed(VK_DOWN)){
-		e->posz+=10;
+		e->posz+=100;
 		printinfo=TRUE;
 	}
 	if(key_pressed(VK_UP)){
-		e->posz-=10;
+		e->posz-=100;
 		printinfo=TRUE;
 	}
 
@@ -226,8 +227,8 @@ int move_player1(ENTITY *e,int frame_time)
 
 	if(e->posy>500)
 		e->posy=500;
-	else if(e->posy<0){
-		e->posy=0;
+	else if(e->posy<-100){
+		e->posy=-100;
 		e->speedy=0;
 	}
 

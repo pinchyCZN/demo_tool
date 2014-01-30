@@ -1,3 +1,4 @@
+#define _WIN32_WINNT 0x400
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,6 +18,8 @@ int g_screenh=758;
 
 float gx=0,gy=0,gz=0;
 float grx=0,gry=0,grz=0;
+
+int g_ztri=-100;
 
 GLfloat ambient[]={1.0,1.0,1.0,0.0};
 GLfloat light_position[]={5.0,10.0,10.0,0.0};
@@ -58,6 +61,31 @@ void gl_init(void)
     glEnable(GL_LIGHT0);
 */
 }
+int test_triangle()
+{
+	static float theta=0;
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_TEXTURE_2D);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+    glTranslatef(0.0F, 0.0F, g_ztri);
+	glRotatef(theta, 0.0f, 1.0f, 1.0f);
+
+
+	glBegin(GL_TRIANGLES);
+	glColor3f(1.0f, 0.0f, 0.0f);   glVertex2f(0.0f,   1.0f);
+	glColor3f(0.0f, 1.0f, 0.0f);   glVertex2f(0.87f,  -0.5f);
+	glColor3f(0.0f, 0.0f, 1.0f);   glVertex2f(-0.87f, -0.5f);
+	glEnd();
+
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	theta+=1.0;
+}
 
 void display(void)
 {
@@ -88,7 +116,14 @@ void display(void)
 	get_modifiers();
 
 
-	test();
+	test_triangle();
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+    glTranslatef(rand()%100, 0.0F, g_ztri);
+	render_rect(100,100);
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
 
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
@@ -129,10 +164,9 @@ void perspectiveGL( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFa
 }
 void reshape(int w, int h)
 {
-//    glFrustum(-0.5F, 0.5F, -0.5F, 0.5F, -1.0F, 300.0F);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	perspectiveGL(65.0,(GLfloat)w/(GLfloat)h,.1,1000.0);
+	perspectiveGL(25.0,(GLfloat)w/(GLfloat)h,.1,10000.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
@@ -283,7 +317,6 @@ void idle()
 		tick=current;
 //		display();
 		InvalidateRect(ghwindow,0,FALSE);
-//		test();
 //		glutPostRedisplay();
 		//printf(" delta=%i\n",delta);
 	}
@@ -370,7 +403,14 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static HDC hDC=0;
 	static HGLRC hGLRC=0;
-//	print_msg(msg,lparam,wparam,hwnd);
+	if(msg!=WM_MOUSEFIRST&&msg!=WM_NCHITTEST&&msg!=WM_SETCURSOR&&msg!=WM_ENTERIDLE&&msg!=WM_PAINT)
+	{
+		static DWORD tick;
+		if((GetTickCount()-tick)>500)
+			printf("--\n");
+		print_msg(msg,lparam,wparam,hwnd);
+		tick=GetTickCount();
+	}
 	switch(msg){
     case WM_CREATE:
 		{
@@ -393,6 +433,22 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			add_player();
 		}
         return 0;
+	case WM_MOUSEWHEEL:
+		{
+			short w=HIWORD(wparam);
+			int key=LOWORD(wparam);
+			int amount=10;
+			if(key&MK_RBUTTON)
+				amount=30;
+			if(key&MK_CONTROL)
+				amount=100;
+			if(w<0)
+				g_ztri-=amount;
+			else
+				g_ztri+=amount;
+			printf("z=%i\n",g_ztri);
+		}
+		break;
 	case WM_KEYFIRST:
 		if(wparam==0x1b)
 			exit(0);

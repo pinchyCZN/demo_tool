@@ -5,31 +5,6 @@
 
 #include "entity.h"
 
-int test()
-{
-	static float theta=0;
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_TEXTURE_2D);
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-    glTranslatef(0.0F, 0.0F, -10.4F);
-	glRotatef(theta, 0.0f, 1.0f, 1.0f);
-
-
-	glBegin(GL_TRIANGLES);
-	glColor3f(1.0f, 0.0f, 0.0f);   glVertex2f(0.0f,   1.0f);
-	glColor3f(0.0f, 1.0f, 0.0f);   glVertex2f(0.87f,  -0.5f);
-	glColor3f(0.0f, 0.0f, 1.0f);   glVertex2f(-0.87f, -0.5f);
-	glEnd();
-
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
-	theta+=1.0;
-}
 int display_str(char *str,int x,int y)
 {
 extern int g_screenw,g_screenh;
@@ -92,8 +67,6 @@ int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int tof
 		uv[ 2 * i + 0 ] += (float) toffx / (float) tw;
 		uv[ 2 * i + 1 ] += (float) toffy / (float) th;
 	}
-	glDisable(GL_DEPTH_TEST);
-
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D,tex_name);
 	glVertexPointer(3, GL_FLOAT, 0, vertices);
@@ -146,15 +119,15 @@ int render(ENTITY *e)
 		}
 	}
 */
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
+//	glMatrixMode(GL_PROJECTION);
+//	glPushMatrix();
+//	glLoadIdentity();
 	
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	//glTranslatef(e->posx,e->posy,e->posz);
-	glTranslatef(50-rand()%10,50-rand()%100,50-rand()%100);
+	glTranslatef(e->posx,e->posy,e->posz);
+	//glTranslatef(50-rand()%10,50-rand()%100,50-rand()%100);
 	{
 		int w,h;
 		w=e->pw;
@@ -167,19 +140,23 @@ int render(ENTITY *e)
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
+//	glMatrixMode(GL_PROJECTION);
+//	glPopMatrix();
 
 	if(e->type==PLAYER1){
 		static unsigned int tick=0;
 		static int last;
-		unsigned int t;
+		unsigned int t,delta;
 		char str[12];
+		float fps=0;
 		t=GetTickCount();
-		snprintf(str,sizeof(str),"FPS=%3u",t-tick);
+		delta=t-tick;
+		if(delta!=0)
+			fps=((float)1/(float)delta)*(float)1000;
+		snprintf(str,sizeof(str),"FPS=%02.1f",fps);
 //		if(last!=(t-tick))
 //			printf("%s\n",str);
-		last=t-tick;
+		last=delta;
 		display_str(str,0,0);
 		tick=t;
 	}
