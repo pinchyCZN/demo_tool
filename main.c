@@ -118,12 +118,12 @@ void display(void)
 
 	test_triangle();
 
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
     glTranslatef(rand()%100, 0.0F, g_ztri);
+	glRotatef(grx,1,0,0);
+	glRotatef(gry,0,1,1);
 	render_rect(100,100);
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
 
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
