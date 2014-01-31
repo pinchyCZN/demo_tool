@@ -22,7 +22,7 @@ void key_up(int key)
 {
 	keys[key&0xFF]=0;
 }
-int key_pressed(int key)
+int key_state(int key)
 {
 	int result=keys[key&0xFF];
 	if(result)

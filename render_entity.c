@@ -46,7 +46,7 @@ extern int g_screenw,g_screenh;
 int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int toffy)
 {
 	int i;
-	unsigned short indices[] = { 0, 1, 2, 0, 2, 3 };
+	unsigned char indices[] = { 0, 1, 2, 0, 2, 3 };
 	float vertices[] = { 
 		0, 0, 0,
 		1, 0, 0,
@@ -73,7 +73,7 @@ int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int tof
 	glTexCoordPointer(2, GL_FLOAT, 0, uv);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
 	return 0;
 }
 int render(ENTITY *e)

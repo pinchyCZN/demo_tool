@@ -127,7 +127,7 @@ int move_player1(ENTITY *e,int frame_time)
 	int printinfo=FALSE;
 	if(e==0)
 		return 0;
-	if(key_pressed('p')){
+	if(key_state('p')){
 		switch(e->state_action){
 		default:
 			e->state_action=S_ACTION_PAUSE1;
@@ -150,34 +150,34 @@ int move_player1(ENTITY *e,int frame_time)
 	}
 	if(e->state_action==S_ACTION_PAUSE1 || e->state_action==S_ACTION_PAUSE2)
 		return 0;
-	if(key_pressed(VK_LEFT)){
+	if(key_state(VK_LEFT)){
 		//printf("delta=%i\n",delta);
 		e->rotx=-1;
 		e->speedx=frame_time/2;
 	}
-	else if(key_pressed(VK_RIGHT)){
+	else if(key_state(VK_RIGHT)){
 		e->rotx=1;
 		e->speedx=frame_time/2;
 	}
 	else{
 		e->speedx-=frame_time;
 	}
-	if(key_pressed(VK_DOWN)){
+	if(key_state(VK_DOWN)){
 		e->posz+=100;
 		printinfo=TRUE;
 	}
-	if(key_pressed(VK_UP)){
+	if(key_state(VK_UP)){
 		e->posz-=100;
 		printinfo=TRUE;
 	}
 
-	if(key_pressed(VK_CONTROL)){
+	if(key_state(VK_CONTROL)){
 		e->speedy=frame_time;
 	}
 	else{
 		e->speedy-=frame_time/6;
 	}
-	if(key_pressed(VK_MENU)){
+	if(key_state(VK_MENU)){
 		int s[3]={0,0,0},p[3]={0,0,0};
 		if(e->rotx<0)
 			s[0]=-2;

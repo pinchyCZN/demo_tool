@@ -20,6 +20,7 @@ float gx=0,gy=0,gz=0;
 float grx=0,gry=0,grz=0;
 
 int g_ztri=-100;
+int g_tmp=10;
 
 GLfloat ambient[]={1.0,1.0,1.0,0.0};
 GLfloat light_position[]={5.0,10.0,10.0,0.0};
@@ -118,12 +119,7 @@ void display(void)
 
 	test_triangle();
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-    glTranslatef(rand()%100, 0.0F, g_ztri);
-	glRotatef(grx,1,0,0);
-	glRotatef(gry,0,1,1);
-	render_rect(100,100);
+	render_rect(g_tmp,g_tmp*2);
 
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
@@ -172,26 +168,7 @@ void reshape(int w, int h)
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
 
 }
-void glkey_down(unsigned char key)
-{
-	key_down(key);
-	printf("keydown=%02X\n",key);
-}
-void glspecial_down(int key)
-{
-	key_down(key);
-//	printf("specdown=%02X\n",key);
-}
-void glkey_up(unsigned char key)
-{
-//	printf("keyup=%02X\n",key);
-	key_up(key);
-}
-void glspecial_up(int key)
-{
-//	printf("specialup=%02X\n",key);
-	key_up(key);
-}
+
 void open_console()
 {
 	char title[MAX_PATH]={0}; 
@@ -403,6 +380,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static HDC hDC=0;
 	static HGLRC hGLRC=0;
+	if(FALSE)
 	if(msg!=WM_MOUSEFIRST&&msg!=WM_NCHITTEST&&msg!=WM_SETCURSOR&&msg!=WM_ENTERIDLE&&msg!=WM_PAINT)
 	{
 		static DWORD tick;
@@ -437,31 +415,37 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		{
 			short w=HIWORD(wparam);
 			int key=LOWORD(wparam);
-			int amount=10;
+			int amount=1;
 			if(key&MK_RBUTTON)
-				amount=30;
+				amount=10;
 			if(key&MK_CONTROL)
 				amount=100;
+
 			if(w<0)
-				g_ztri-=amount;
-			else
+				amount=-amount;
+			if(key_state('Z')){
+				g_tmp+=amount;
+				printf("tmp=%i\n",g_tmp);
+			}
+			else{
 				g_ztri+=amount;
-			printf("z=%i\n",g_ztri);
+				printf("z=%i\n",g_ztri);
+			}
 		}
 		break;
 	case WM_KEYFIRST:
 		if(wparam==0x1b)
 			exit(0);
-		glkey_down(wparam);
+		key_down(wparam);
 		break;
 	case WM_KEYUP:
-		glkey_up(wparam);
+		key_up(wparam);
 		break;
 	case WM_SYSKEYDOWN:
-		glspecial_down(wparam);
+		key_down(wparam);
 		break;
 	case WM_SYSKEYUP:
-		glspecial_up(wparam);
+		key_up(wparam);
 		break;
 	case WM_SIZE:
 		{
