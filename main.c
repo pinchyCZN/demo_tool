@@ -20,7 +20,7 @@ float gx=0,gy=0,gz=0;
 float grx=0,gry=0,grz=0;
 
 int g_ztri=-100;
-int g_tmp=10;
+int g_tmp=700;
 
 GLfloat ambient[]={1.0,1.0,1.0,0.0};
 GLfloat light_position[]={5.0,10.0,10.0,0.0};
@@ -44,7 +44,7 @@ void gl_init(void)
 
 //	glEnable(GL_LIGHTING);
 //	glEnable(GL_LIGHT0);
-//	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 //		glLightfv(GL_LIGHT0,GL_POSITION,light_position);
 
 /*
@@ -65,7 +65,6 @@ void gl_init(void)
 int test_triangle()
 {
 	static float theta=0;
-	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
 
 	glMatrixMode(GL_PROJECTION);
@@ -83,7 +82,6 @@ int test_triangle()
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
-	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 	theta+=1.0;
 }
@@ -119,7 +117,7 @@ void display(void)
 
 	test_triangle();
 
-	render_rect(g_tmp,g_tmp*2);
+	render_rect(g_tmp,g_tmp);
 
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
@@ -411,6 +409,17 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			add_player();
 		}
         return 0;
+	case WM_MBUTTONDOWN:
+		move_rect(0,0,wparam);
+		break;
+	case WM_MOUSEMOVE:
+		{
+			static int x=0,y=0;
+			move_rect(LOWORD(lparam)-x,HIWORD(lparam)-y,wparam);
+			x=LOWORD(lparam);
+			y=HIWORD(lparam);
+		}
+		break;
 	case WM_MOUSEWHEEL:
 		{
 			short w=HIWORD(wparam);
@@ -443,6 +452,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_SYSKEYDOWN:
 		key_down(wparam);
+		return 0;
 		break;
 	case WM_SYSKEYUP:
 		key_up(wparam);
