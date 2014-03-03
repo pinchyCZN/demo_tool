@@ -18,6 +18,11 @@ HWND		ghparams=0;
 
 HINSTANCE	ghinstance=0;
 HACCEL		ghaccel=0;
+int view1_divider=0;
+int params_divider=0;
+int horiz_divider=0;
+int page_divider=0;
+
 int g_draw=0;
 int g_screenw=1024;
 int g_screenh=758;
@@ -400,6 +405,43 @@ LRESULT CALLBACK win_page(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
 
+int resize_main_window(HWND hwnd)
+{
+	RECT rect={0};
+	int x,y,w,h;
+	GetClientRect(hwnd,&rect);
+	if(page_divider<=0)
+		page_divider=rect.right/5;
+	if(horiz_divider<=0)
+		horiz_divider=rect.bottom/2;
+	if(view1_divider<=0)
+		view1_divider=rect.right/2;
+	if(params_divider<=0)
+		params_divider=rect.right/2;
+	x=y=0;
+	w=params_divider-1;
+	h=horiz_divider-1;
+	SetWindowPos(ghview1,NULL,x,y,w,h,SWP_NOZORDER);
+
+	x=params_divider+1;
+	y=0;
+	w=rect.right-x;
+	h=horiz_divider-1;
+	SetWindowPos(ghparams,NULL,x,y,w,h,SWP_NOZORDER);
+
+	x=0;
+	y=horiz_divider+1;
+	w=page_divider-1;
+	h=rect.bottom-y;
+	SetWindowPos(ghpagelist,NULL,x,y,w,h,SWP_NOZORDER);
+
+	x=page_divider+1;
+	y=horiz_divider+1;
+	w=rect.right-x;
+	h=rect.bottom-y;
+	SetWindowPos(ghpage,NULL,x,y,w,h,SWP_NOZORDER);
+	return TRUE;
+}
 int create_tool_windows(HWND hwnd)
 {
     WNDCLASS wnd;
@@ -417,27 +459,29 @@ int create_tool_windows(HWND hwnd)
 	wnd.lpfnWndProc=win_view1;
 	RegisterClass(&wnd);
 	GetClientRect(hwnd,&rect);
-	ghview1=CreateWindow(wnd.lpszClassName,"view1",WS_CHILD,
-		0,0,(rect.right/2)-3,(rect.bottom/2)-3,hwnd,NULL,ghinstance,NULL);
+	ghview1=CreateWindow(wnd.lpszClassName,"view1",WS_CHILD|WS_VISIBLE,
+		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
 
 	wnd.lpszClassName="PARAMS";
 	wnd.lpfnWndProc=win_params;
 	RegisterClass(&wnd);
-	ghparams=CreateWindow(wnd.lpszClassName,"params",WS_CHILD,
-		(rect.right/2)+3,0,(rect.right/2)-3,(rect.bottom/2)-3,hwnd,NULL,ghinstance,NULL);
+	ghparams=CreateWindow(wnd.lpszClassName,"params",WS_CHILD|WS_VISIBLE,
+		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
 	wnd.lpszClassName="PAGELIST";
 	wnd.lpfnWndProc=win_pagelist;
 	RegisterClass(&wnd);
-	ghparams=CreateWindow(wnd.lpszClassName,"pagelist",WS_CHILD,
-		0,(rect.bottom/2)+3,(rect.right/3)-3,(rect.bottom/2)-3,hwnd,NULL,ghinstance,NULL);
+	ghpagelist=CreateWindow(wnd.lpszClassName,"pagelist",WS_CHILD|WS_VISIBLE,
+		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
 	wnd.lpszClassName="PAGE";
 	wnd.lpfnWndProc=win_page;
 	RegisterClass(&wnd);
-	ghparams=CreateWindow(wnd.lpszClassName,"page",WS_CHILD,
-		(rect.right/3)+3,(rect.bottom/2)+3,rect.right/2,rect.bottom/2,hwnd,NULL,ghinstance,NULL);
+	ghpage=CreateWindow(wnd.lpszClassName,"page",WS_CHILD|WS_VISIBLE,
+		0,0,0,0,hwnd,NULL,ghinstance,NULL);
+
+	resize_main_window(hwnd);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
@@ -532,6 +576,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			g_screenw=w;
 			g_screenh=h;
 			reshape(w,h);
+			resize_main_window(hwnd);
 		}
 		break;
 	case WM_APP:
@@ -590,13 +635,12 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 	wnd.lpszMenuName=NULL;
 	wnd.lpszClassName=class_name;
 	RegisterClass(&wnd);
-	ghwindow=CreateWindow(class_name,"main window",WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS,
-		0,0,640,480,NULL,NULL,ghinstance,NULL);
+	ghwindow=CreateWindow(class_name,"main window",WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS|WS_VISIBLE,
+		0,0,800,600,NULL,NULL,ghinstance,NULL);
 	if(!ghwindow){
 		MessageBox(NULL,"Could not create main dialog","ERROR",MB_ICONERROR | MB_OK);
 		return 0;
 	}
-	ShowWindow(ghwindow,iCmdShow);
 	UpdateWindow(ghwindow);
 	//ghaccel=LoadAccelerators(ghinstance,MAKEINTRESOURCE(IDR_ACCELERATOR));
 	_beginthread(worker_thread,0,0);
