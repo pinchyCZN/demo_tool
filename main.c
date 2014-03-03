@@ -10,6 +10,12 @@
 
 HDC			ghDC=0;
 HWND		ghwindow=0;
+
+HWND		ghview1=0;
+HWND		ghpage=0;
+HWND		ghpagelist=0;
+HWND		ghparams=0;
+
 HINSTANCE	ghinstance=0;
 HACCEL		ghaccel=0;
 int g_draw=0;
@@ -373,6 +379,66 @@ int setupPixelFormat(HDC hDC)
         exit(1);
     }
 }
+LRESULT CALLBACK win_view1(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+{
+	switch(msg){
+	case WM_CREATE:
+		return 0;
+	}
+	return DefWindowProc(hwnd,msg,wparam,lparam);
+}
+LRESULT CALLBACK win_params(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+{
+	return DefWindowProc(hwnd,msg,wparam,lparam);
+}
+LRESULT CALLBACK win_pagelist(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+{
+	return DefWindowProc(hwnd,msg,wparam,lparam);
+}
+LRESULT CALLBACK win_page(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+{
+	return DefWindowProc(hwnd,msg,wparam,lparam);
+}
+
+int create_tool_windows(HWND hwnd)
+{
+    WNDCLASS wnd;
+	RECT rect={0};
+	memset(&wnd,0,sizeof(wnd));
+	wnd.style=CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
+	wnd.cbClsExtra=0;
+	wnd.cbWndExtra=0;
+	wnd.hInstance=ghinstance;
+	wnd.hIcon=LoadIcon(NULL,IDI_APPLICATION);
+	wnd.hCursor=LoadCursor(NULL,IDC_ARROW);
+	wnd.hbrBackground=GetStockObject(BLACK_BRUSH);
+	wnd.lpszMenuName=NULL;
+	wnd.lpszClassName="VIEW1";
+	wnd.lpfnWndProc=win_view1;
+	RegisterClass(&wnd);
+	GetClientRect(hwnd,&rect);
+	ghview1=CreateWindow(wnd.lpszClassName,"view1",WS_CHILD,
+		0,0,(rect.right/2)-3,(rect.bottom/2)-3,hwnd,NULL,ghinstance,NULL);
+
+
+	wnd.lpszClassName="PARAMS";
+	wnd.lpfnWndProc=win_params;
+	RegisterClass(&wnd);
+	ghparams=CreateWindow(wnd.lpszClassName,"params",WS_CHILD,
+		(rect.right/2)+3,0,(rect.right/2)-3,(rect.bottom/2)-3,hwnd,NULL,ghinstance,NULL);
+
+	wnd.lpszClassName="PAGELIST";
+	wnd.lpfnWndProc=win_pagelist;
+	RegisterClass(&wnd);
+	ghparams=CreateWindow(wnd.lpszClassName,"pagelist",WS_CHILD,
+		0,(rect.bottom/2)+3,(rect.right/3)-3,(rect.bottom/2)-3,hwnd,NULL,ghinstance,NULL);
+
+	wnd.lpszClassName="PAGE";
+	wnd.lpfnWndProc=win_page;
+	RegisterClass(&wnd);
+	ghparams=CreateWindow(wnd.lpszClassName,"page",WS_CHILD,
+		(rect.right/3)+3,(rect.bottom/2)+3,rect.right/2,rect.bottom/2,hwnd,NULL,ghinstance,NULL);
+}
 
 LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
@@ -390,7 +456,8 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	switch(msg){
     case WM_CREATE:
 		{
-			hDC=GetDC(hwnd);
+			create_tool_windows(hwnd);
+			hDC=GetDC(ghview1);
 			ghDC=hDC;
 			if(hDC)
 				setupPixelFormat(hDC);
@@ -506,7 +573,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 {
     WNDCLASS wnd;
 	MSG msg;
-	const char *class_name="GL_TEST";
+	const char *class_name="DEMOTOOL";
 	ghinstance=hInstance;
 
 	open_console();
@@ -519,14 +586,13 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 	wnd.hInstance=ghinstance;
 	wnd.hIcon=LoadIcon(NULL,IDI_APPLICATION);
 	wnd.hCursor=LoadCursor(NULL,IDC_ARROW);
-	wnd.hbrBackground=GetStockObject(BLACK_BRUSH);
+	wnd.hbrBackground=GetStockObject(GRAY_BRUSH);
 	wnd.lpszMenuName=NULL;
 	wnd.lpszClassName=class_name;
 	RegisterClass(&wnd);
-	ghwindow=CreateWindow(class_name,"gametest",WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS,
+	ghwindow=CreateWindow(class_name,"main window",WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS,
 		0,0,640,480,NULL,NULL,ghinstance,NULL);
 	if(!ghwindow){
-		
 		MessageBox(NULL,"Could not create main dialog","ERROR",MB_ICONERROR | MB_OK);
 		return 0;
 	}
