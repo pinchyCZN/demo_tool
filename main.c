@@ -409,6 +409,7 @@ int resize_main_window(HWND hwnd)
 {
 	RECT rect={0};
 	int x,y,w,h;
+	int line=2;
 	GetClientRect(hwnd,&rect);
 	if(page_divider<=0)
 		page_divider=rect.right/5;
@@ -419,24 +420,24 @@ int resize_main_window(HWND hwnd)
 	if(params_divider<=0)
 		params_divider=rect.right/2;
 	x=y=0;
-	w=params_divider-1;
-	h=horiz_divider-1;
+	w=params_divider-line;
+	h=horiz_divider-line;
 	SetWindowPos(ghview1,NULL,x,y,w,h,SWP_NOZORDER);
 
-	x=params_divider+1;
+	x=params_divider+line;
 	y=0;
 	w=rect.right-x;
-	h=horiz_divider-1;
+	h=horiz_divider-line;
 	SetWindowPos(ghparams,NULL,x,y,w,h,SWP_NOZORDER);
 
 	x=0;
-	y=horiz_divider+1;
-	w=page_divider-1;
+	y=horiz_divider+line;
+	w=page_divider-line;
 	h=rect.bottom-y;
 	SetWindowPos(ghpagelist,NULL,x,y,w,h,SWP_NOZORDER);
 
-	x=page_divider+1;
-	y=horiz_divider+1;
+	x=page_divider+line;
+	y=horiz_divider+line;
 	w=rect.right-x;
 	h=rect.bottom-y;
 	SetWindowPos(ghpage,NULL,x,y,w,h,SWP_NOZORDER);
@@ -488,8 +489,9 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static HDC hDC=0;
 	static HGLRC hGLRC=0;
-	if(FALSE)
-	if(msg!=WM_MOUSEFIRST&&msg!=WM_NCHITTEST&&msg!=WM_SETCURSOR&&msg!=WM_ENTERIDLE&&msg!=WM_PAINT)
+#ifdef _DEBUG
+	//if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;
 		if((GetTickCount()-tick)>500)
@@ -497,6 +499,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		print_msg(msg,lparam,wparam,hwnd);
 		tick=GetTickCount();
 	}
+#endif
 	switch(msg){
     case WM_CREATE:
 		{
@@ -529,6 +532,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			move_rect(LOWORD(lparam)-x,HIWORD(lparam)-y,wparam);
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
+			SetCursor(LoadCursor(NULL,IDC_SIZEALL));
 		}
 		break;
 	case WM_MOUSEWHEEL:
