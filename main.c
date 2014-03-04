@@ -8,6 +8,7 @@
 #include "entity.h"
 #include "resource.h"
 
+HGLRC		hGLRC=0;
 HDC			ghDC=0;
 HWND		ghwindow=0;
 
@@ -16,12 +17,15 @@ HWND		ghpage=0;
 HWND		ghpagelist=0;
 HWND		ghparams=0;
 
+HWND		ghfocus=0;
+
 HINSTANCE	ghinstance=0;
 HACCEL		ghaccel=0;
-int view1_divider=0;
+//int view1_divider=0;
 int params_divider=0;
 int horiz_divider=0;
 int page_divider=0;
+RECT gwinrect={0};
 
 int g_draw=0;
 int g_screenw=1024;
@@ -384,27 +388,117 @@ int setupPixelFormat(HDC hDC)
         exit(1);
     }
 }
+int set_focus(HWND hwnd)
+{
+	if(ghfocus!=hwnd){
+		PostMessage(ghwindow,WM_APP,WM_SETFOCUS,hwnd);
+		InvalidateRect(ghwindow,0,TRUE);
+	}
+	ghfocus=hwnd;
+	return TRUE;
+}
 LRESULT CALLBACK win_view1(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+#ifdef _DEBUG
+	//if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
+	{
+		static DWORD tick;
+		if((GetTickCount()-tick)>500)
+			printf("--\n");
+		printf("v");
+		print_msg(msg,lparam,wparam,hwnd);
+		tick=GetTickCount();
+	}
+#endif
 	switch(msg){
 	case WM_CREATE:
 		return 0;
+	case WM_SIZE:
+		{
+			int w,h;
+			w=LOWORD(lparam);
+			h=HIWORD(lparam);
+			g_screenw=w;
+			g_screenh=h;
+			reshape(w,h);
+		}
+		break;
+	case WM_MOUSEMOVE:
+		set_focus(hwnd);
+		break;
 	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
 LRESULT CALLBACK win_params(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+#ifdef _DEBUG
+	//if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
+	{
+		static DWORD tick;
+		if((GetTickCount()-tick)>500)
+			printf("--\n");
+		printf("p");
+		print_msg(msg,lparam,wparam,hwnd);
+		tick=GetTickCount();
+	}
+#endif
+	switch(msg){
+	case WM_CREATE:
+		return 0;
+	case WM_MOUSEMOVE:
+		set_focus(hwnd);
+		break;
+	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
 LRESULT CALLBACK win_pagelist(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+#ifdef _DEBUG
+	//if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
+	{
+		static DWORD tick;
+		if((GetTickCount()-tick)>500)
+			printf("--\n");
+		printf("l");
+		print_msg(msg,lparam,wparam,hwnd);
+		tick=GetTickCount();
+	}
+#endif
+	switch(msg){
+	case WM_CREATE:
+		return 0;
+	case WM_MOUSEMOVE:
+		set_focus(hwnd);
+		break;
+	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
 LRESULT CALLBACK win_page(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+#ifdef _DEBUG
+	//if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
+	{
+		static DWORD tick;
+		if((GetTickCount()-tick)>500)
+			printf("--\n");
+		printf("g");
+		print_msg(msg,lparam,wparam,hwnd);
+		tick=GetTickCount();
+	}
+#endif
+	switch(msg){
+	case WM_CREATE:
+		return 0;
+	case WM_MOUSEMOVE:
+		set_focus(hwnd);
+		break;
+	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
-
 int resize_main_window(HWND hwnd)
 {
 	RECT rect={0};
@@ -415,10 +509,11 @@ int resize_main_window(HWND hwnd)
 		page_divider=rect.right/5;
 	if(horiz_divider<=0)
 		horiz_divider=rect.bottom/2;
-	if(view1_divider<=0)
-		view1_divider=rect.right/2;
+//	if(view1_divider<=0)
+//		view1_divider=rect.right/2;
 	if(params_divider<=0)
 		params_divider=rect.right/2;
+
 	x=y=0;
 	w=params_divider-line;
 	h=horiz_divider-line;
@@ -484,11 +579,67 @@ int create_tool_windows(HWND hwnd)
 
 	resize_main_window(hwnd);
 }
-
+static int in_range(int x,int min,int max)
+{
+	if(x>=min && x<=max)
+		return TRUE;
+	else
+		return FALSE;
+}
+static int adjust_dividers(HWND hwnd,int x,int y,int grab)
+{
+	int result=FALSE;
+	static int *divider=0;
+	static int xaxis=FALSE;
+	RECT rect={0};
+	GetClientRect(hwnd,&rect);
+	if(grab){
+		divider=0;
+		xaxis=TRUE;
+		if(in_range(x,params_divider-4,params_divider+4)){
+			if(in_range(y,0,horiz_divider-1)){
+				divider=&params_divider;
+				result=TRUE;
+				goto exit;
+			}
+		}
+		if(in_range(x,page_divider-4,page_divider+4)){
+			if(in_range(y,horiz_divider+1,rect.bottom)){
+				divider=&page_divider;
+				result=TRUE;
+				goto exit;
+			}
+		}
+		if(in_range(y,horiz_divider-4,horiz_divider+4)){
+			if(in_range(x,0,rect.right)){
+				divider=&horiz_divider;
+				result=TRUE;
+				xaxis=FALSE;
+				goto exit;
+			}
+		}
+	}
+	if(divider){
+		if(xaxis){
+			if(in_range(x,5,rect.right-5)){
+				*divider=x;
+				result=TRUE;
+			}
+		}
+		else{
+			if(in_range(y,5,rect.bottom-5)){
+				*divider=y;
+				result=TRUE;
+			}
+		}
+	}
+exit:
+	return result;
+}
 LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static HDC hDC=0;
-	static HGLRC hGLRC=0;
+	static lmb_drag=FALSE;
 #ifdef _DEBUG
 	//if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
@@ -515,16 +666,37 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				SelectObject(hDC,GetStockObject(SYSTEM_FONT));
 				wglUseFontBitmaps(hDC,0,255,1000);
 			}
+			hDC=GetDC(ghpage);
+			ghDC=hDC;
+			if(hDC)
+				setupPixelFormat(hDC);
+
 			gl_init();
 			init_keys();
 			init_world();
 			init_entity_array(players,sizeof(players)/sizeof(ENTITY*));
 			init_entity_array(non_players,sizeof(non_players)/sizeof(ENTITY*));
 			add_player();
+			GetClientRect(hwnd,&gwinrect);
 		}
         return 0;
 	case WM_MBUTTONDOWN:
 		move_rect(0,0,wparam);
+		break;
+	case WM_LBUTTONUP:
+		lmb_drag=FALSE;
+		ReleaseCapture();
+		break;
+	case WM_LBUTTONDOWN:
+		SetCursor(LoadCursor(NULL,IDC_SIZEALL));
+		lmb_drag=TRUE;
+		SetCapture(hwnd);
+		{
+			int x,y;
+			x=LOWORD(lparam);
+			y=HIWORD(lparam);
+			adjust_dividers(hwnd,x,y,TRUE);
+		}
 		break;
 	case WM_MOUSEMOVE:
 		{
@@ -533,6 +705,11 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
 			SetCursor(LoadCursor(NULL,IDC_SIZEALL));
+			set_focus(0);
+			if(lmb_drag){
+				if(adjust_dividers(hwnd,x,y,FALSE))
+					resize_main_window(hwnd);
+			}
 		}
 		break;
 	case WM_MOUSEWHEEL:
@@ -574,36 +751,62 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_SIZE:
 		{
-			int w,h;
-			w=LOWORD(lparam);
-			h=HIWORD(lparam);
-			g_screenw=w;
-			g_screenh=h;
-			reshape(w,h);
 			resize_main_window(hwnd);
 		}
 		break;
 	case WM_APP:
+		switch(wparam){
+		case WM_SETFOCUS:
+
+			break;
+		}
+		break;
 	case WM_PAINT:
 		{
-			int i;
-			i=i+1;
-		}
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(hwnd,&ps);
-            if(hGLRC){
-				static DWORD tick=0;
-				//printf("%i\n",GetTickCount()-tick);
-				tick=GetTickCount();
-				g_draw=1;
-				display();
-			    SwapBuffers(ghDC);
-
+			static HBRUSH hbrush=0;
+			if(hbrush==0){
+				LOGBRUSH brush={0};
+				DWORD color=0x00FF00;
+				brush.lbColor=color;
+				brush.lbStyle=BS_SOLID;
+				hbrush=CreateBrushIndirect(&brush);
 			}
-            EndPaint(hwnd,&ps);
-            return 0;
-        }
+			{
+				PAINTSTRUCT ps;
+				HDC hdc;
+				hdc=BeginPaint(hwnd,&ps);
+				if(hGLRC){
+					static DWORD tick=0;
+					//printf("%i\n",GetTickCount()-tick);
+					tick=GetTickCount();
+					g_draw=1;
+					hDC=GetDC(ghview1);
+					wglMakeCurrent(hDC,hGLRC);
+					display();
+					SwapBuffers(hDC);
+					wglMakeCurrent(hDC,hGLRC);
+
+					if(hbrush && ghfocus && hdc){
+						RECT rect={0};
+						GetClientRect(ghfocus,&rect);
+						MapWindowPoints(ghfocus,hwnd,&rect,2);
+						rect.left-=4;
+						if(rect.left<0)
+							rect.left=0;
+						rect.top-=4;
+						if(rect.top<0)
+							rect.top=0;
+						rect.bottom+=4;
+						rect.right+=4;
+						FillRect(hdc,&rect,hbrush);
+					}
+
+				}
+				if(hdc)
+					EndPaint(hwnd,&ps);
+				return 0;
+			}
+		}
 		break;
 	case WM_COMMAND:
 		switch(LOWORD(wparam)){
