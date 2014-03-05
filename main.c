@@ -9,7 +9,6 @@
 #include "resource.h"
 
 HGLRC		hGLRC=0;
-HDC			ghDC=0;
 HWND		ghwindow=0;
 
 HWND		ghview1=0;
@@ -656,7 +655,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		{
 			create_tool_windows(hwnd);
 			hDC=GetDC(ghview1);
-			ghDC=hDC;
 			if(hDC)
 				setupPixelFormat(hDC);
 			hGLRC=wglCreateContext(hDC);
@@ -667,7 +665,12 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				wglUseFontBitmaps(hDC,0,255,1000);
 			}
 			hDC=GetDC(ghpage);
-			ghDC=hDC;
+			if(hDC)
+				setupPixelFormat(hDC);
+			hDC=GetDC(ghpagelist);
+			if(hDC)
+				setupPixelFormat(hDC);
+			hDC=GetDC(ghparams);
 			if(hDC)
 				setupPixelFormat(hDC);
 
@@ -776,15 +779,16 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				HDC hdc;
 				hdc=BeginPaint(hwnd,&ps);
 				if(hGLRC){
-					static DWORD tick=0;
-					//printf("%i\n",GetTickCount()-tick);
-					tick=GetTickCount();
+					if(FALSE){
+						static DWORD tick=0;
+						printf("%i\n",GetTickCount()-tick);
+						tick=GetTickCount();
+					}
 					g_draw=1;
-					hDC=GetDC(ghview1);
-					wglMakeCurrent(hDC,hGLRC);
-					display();
-					SwapBuffers(hDC);
-					wglMakeCurrent(hDC,hGLRC);
+					display_view1(ghview1,hGLRC);
+					display_page(ghpage,hGLRC);
+					display_page_list(ghpagelist,hGLRC);
+					display_params(ghparams,hGLRC);
 
 					if(hbrush && ghfocus && hdc){
 						RECT rect={0};

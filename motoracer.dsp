@@ -75,7 +75,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32  kernel32.lib user32.lib gdi32.lib  comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib  opengl32.lib /nologo /subsystem:windows /debug /machine:I386 /nodefaultlib:"msvcrt.lib" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib opengl32.lib /nologo /subsystem:windows /debug /machine:I386 /nodefaultlib:"msvcrt.lib" /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -94,6 +94,10 @@ SOURCE=.\animate.c
 # Begin Source File
 
 SOURCE=.\debug_print.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\display_ui.c
 # End Source File
 # Begin Source File
 
@@ -126,6 +130,10 @@ SOURCE=.\render_entity.c
 # Begin Source File
 
 SOURCE=.\vga737.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\widgets.c
 # End Source File
 # Begin Source File
 

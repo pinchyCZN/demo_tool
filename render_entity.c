@@ -43,6 +43,7 @@ extern int g_screenw,g_screenh;
 	glPopMatrix();
 	return 0;
 }
+
 int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int toffy)
 {
 	int i;
