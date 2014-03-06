@@ -1,8 +1,34 @@
 #include <windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+/*
+B=COLOR_3DDKSHADOW
+2=COLOR_3DLIGHT
+1=COLOR_BTNHIGHLIGHT
+3=COLOR_BTNSHADOW
+F=COLOR_BTNFACE
+0=COLOR_WINDOWFRAME
+*/
+/* button
+	0000000000000000000000000
+	01111111111111111111111B0
+	01222222222222222222223B0
+	012FFFFFFFFFFFFFFFFFFF3B0
+	012FFFFFFFFFFFFFFFFFFF3B0
+	01333333333333333333333B0
+	0BBBBBBBBBBBBBBBBBBBBBBB0
+	0000000000000000000000000
+  button pressed
+	0000000000000000000000000
+	0333333333333333333333330
+	03FFFFFFFFFFFFFFFFFFFFF30
+	03FFFFFFFFFFFFFFFFFFFFF30
+	03FFFFFFFFFFFFFFFFFFFFF30
+	03FFFFFFFFFFFFFFFFFFFFF30
+	0333333333333333333333330
+	0000000000000000000000000
 
-
+*/
 int draw_button(int x,int y,int w,int h,int color)
 {
 	int i;
@@ -14,6 +40,7 @@ int draw_button(int x,int y,int w,int h,int color)
 		1, 1, 0,
 		0, 1, 0
 	};
+	unsigned char R,G,B;
 	unsigned char colors[] = { 
 		0, 0xFF, 0,
 		0, 0xFF, 0,
@@ -35,14 +62,18 @@ int draw_button(int x,int y,int w,int h,int color)
 	glLoadIdentity();
 	glOrtho(0,1024,1024,0,-1000,1000);
 
-	glColor3f(1.0,1.0,1.0);
 	glTranslatef(x,y,0);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+	//glEnableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, vertices);
-	glColorPointer(3,GL_UNSIGNED_BYTE,0,colors);
-	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
+//	glColorPointer(3,GL_UNSIGNED_BYTE,0,colors);
+	R=color>>16;
+	G=color>>8;
+	B=color;
+	glColor3ub(R,G,B);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
 	glDrawElements(GL_LINES, 6, GL_UNSIGNED_BYTE, indices);
 
 
@@ -53,5 +84,6 @@ int draw_button(int x,int y,int w,int h,int color)
 	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
+	return 0;
 
 }
