@@ -32,8 +32,6 @@ extern int g_screenw,g_screenh;
 	glListBase(1000); 
 	len=strlen(str);
 	glCallLists(len,GL_UNSIGNED_BYTE,str);
-
-	draw_button(20,20,100,100,0xFF);
 	for(i=0;i<sizeof(list)/sizeof(int);i++){
 		if(setting[i])
 			glEnable(list[i]);

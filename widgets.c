@@ -29,7 +29,7 @@ F=COLOR_BTNFACE
 	0000000000000000000000000
 
 */
-int draw_button(int x,int y,int w,int h,int color)
+int draw_button(int x,int y,int w,int h,int color,int pressed)
 {
 	int i;
 	static float theta=0;
@@ -41,18 +41,18 @@ int draw_button(int x,int y,int w,int h,int color)
 		0, 1, 0
 	};
 	unsigned char R,G,B;
-	unsigned char colors[] = { 
-		0, 0xFF, 0,
-		0, 0xFF, 0,
-		0, 0xFF, 0,
-		0, 0xFF, 0
-	};
+	int list[3]={GL_TEXTURE_2D,GL_DEPTH_TEST,GL_LIGHTING};
+	int setting[3];
 	for(i=0;i<4;i++){
 		vertices[ 3 * i + 0 ] *= w;
 		vertices[ 3 * i + 1 ] *= h;
-		colors[i*3]=color>>16;
-		colors[i*3+1]=color>>8;
-		colors[i*3+2]=color;
+	}
+	for(i=0;i<sizeof(list)/sizeof(int);i++){
+		setting[i]=0;
+		if(glIsEnabled(list[i])){
+			glDisable(list[i]);
+			setting[i]=1;
+		}
 	}
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -68,13 +68,17 @@ int draw_button(int x,int y,int w,int h,int color)
 	//glEnableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, vertices);
-//	glColorPointer(3,GL_UNSIGNED_BYTE,0,colors);
 	R=color>>16;
 	G=color>>8;
 	B=color;
 	glColor3ub(R,G,B);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
-	glDrawElements(GL_LINES, 6, GL_UNSIGNED_BYTE, indices);
+	glColor3ub(0x70,0x70,0x70);
+	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices);
+	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices+1);
+	//glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices+2);
+	//glIndexPointer
+	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices+4);
 
 
 
@@ -84,6 +88,10 @@ int draw_button(int x,int y,int w,int h,int color)
 	glPopMatrix();
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
+	for(i=0;i<sizeof(list)/sizeof(int);i++){
+		if(setting[i])
+			glEnable(list[i]);
+	}
 	return 0;
 
 }
