@@ -8,13 +8,16 @@
 #include "entity.h"
 #include "resource.h"
 
-HGLRC		hGLRC=0;
-HWND		ghwindow=0;
+HGLRC	hGLRC=0;
+HWND	ghwindow=0;
 
-HWND		ghview1=0;
-HWND		ghpage=0;
-HWND		ghpagelist=0;
-HWND		ghparams=0;
+HWND	ghview1=0;
+HWND	ghpage=0;
+HWND	ghpagelist=0;
+HWND	ghparams=0;
+int	*gbufpage=0;
+int	*gbufpagelist=0;
+int	*gbufparams=0;
 
 HWND		ghfocus=0;
 
@@ -576,6 +579,12 @@ int create_tool_windows(HWND hwnd)
 	ghpage=CreateWindow(wnd.lpszClassName,"page",WS_CHILD|WS_VISIBLE,
 		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
+	gbufpage=malloc(1024*1024*4);
+	if(gbufpage)
+		memset(gbufpage,0,1024*1024*4);
+	gbufpagelist=malloc(1024*1024*4);
+	gbufparams=malloc(1024*1024*4);
+
 	resize_main_window(hwnd);
 }
 static int in_range(int x,int min,int max)
@@ -664,15 +673,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				SelectObject(hDC,GetStockObject(SYSTEM_FONT));
 				wglUseFontBitmaps(hDC,0,255,1000);
 			}
-			hDC=GetDC(ghpage);
-			if(hDC)
-				setupPixelFormat(hDC);
-			hDC=GetDC(ghpagelist);
-			if(hDC)
-				setupPixelFormat(hDC);
-			hDC=GetDC(ghparams);
-			if(hDC)
-				setupPixelFormat(hDC);
 
 			gl_init();
 			init_keys();
@@ -786,26 +786,25 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					}
 					g_draw=1;
 					display_view1(ghview1,hGLRC);
-					display_page(ghpage,hGLRC);
-					display_page_list(ghpagelist,hGLRC);
-					display_params(ghparams,hGLRC);
-
-					if(hbrush && ghfocus && hdc){
-						RECT rect={0};
-						GetClientRect(ghfocus,&rect);
-						MapWindowPoints(ghfocus,hwnd,&rect,2);
-						rect.left-=4;
-						if(rect.left<0)
-							rect.left=0;
-						rect.top-=4;
-						if(rect.top<0)
-							rect.top=0;
-						rect.bottom+=4;
-						rect.right+=4;
-						FillRect(hdc,&rect,hbrush);
-					}
-
 				}
+				if(hdc){
+					display_page(ghpage,gbufpage,1024,1024);
+				}
+				if(hbrush && ghfocus && hdc){
+					RECT rect={0};
+					GetClientRect(ghfocus,&rect);
+					MapWindowPoints(ghfocus,hwnd,&rect,2);
+					rect.left-=4;
+					if(rect.left<0)
+						rect.left=0;
+					rect.top-=4;
+					if(rect.top<0)
+						rect.top=0;
+					rect.bottom+=4;
+					rect.right+=4;
+					FillRect(hdc,&rect,hbrush);
+				}
+
 				if(hdc)
 					EndPaint(hwnd,&ps);
 				return 0;

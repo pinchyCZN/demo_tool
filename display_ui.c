@@ -1,21 +1,16 @@
 #include <windows.h>
 
-int show_page()
+int build_page(int *buffer,int w,int h)
 {
-	display_str("page",10,10);
-	draw_button(10,10,100,100,0xFF,FALSE);
+	draw_button(buffer,w,h,10,10,50,50,0xFF,FALSE);
 }
 
 int show_page_list()
 {
-	display_str("page list",10,20);
-	draw_button(10,10,100,100,0xFF,FALSE);
 }
 
 int show_params()
 {
-	display_str("params",10,30);
-	draw_button(10,10,100,100,0xFF,FALSE);
 }
 int display_view1(HWND hwnd,HGLRC hglrc)
 {
@@ -29,42 +24,29 @@ int display_view1(HWND hwnd,HGLRC hglrc)
 		SwapBuffers(hdc);
 	}
 }
-int display_page(HWND hwnd,HGLRC hglrc)
+int display_page(HWND hwnd,int *buffer,int w,int h)
 {
 	HDC hdc;
-	if(hwnd==0 || hglrc==0)
-		return FALSE;
+	memset(buffer,0x10,1024*1024*4);
+	build_page(buffer,w,h);
 	hdc=GetDC(hwnd);
 	if(hdc){
-		wglMakeCurrent(hdc,hglrc);
-		show_page();
-		SwapBuffers(hdc);
+		BITMAPINFO bmi;
+		memset(&bmi,0,sizeof(BITMAPINFO));
+		bmi.bmiHeader.biBitCount=32;
+		bmi.bmiHeader.biWidth=w;
+		bmi.bmiHeader.biHeight=h;
+		bmi.bmiHeader.biPlanes=1;
+		bmi.bmiHeader.biSize=40;
+		SetDIBitsToDevice(hdc,0,0,w,h,0,0,0,w,buffer,&bmi,DIB_RGB_COLORS);
 	}
-
+	return 0;
 }
 int display_page_list(HWND hwnd,HGLRC hglrc)
 {
-	HDC hdc;
-	if(hwnd==0 || hglrc==0)
-		return FALSE;
-	hdc=GetDC(hwnd);
-	if(hdc){
-		wglMakeCurrent(hdc,hglrc);
-		show_page_list();
-		SwapBuffers(hdc);
-	}
 
 }
 int display_params(HWND hwnd,HGLRC hglrc)
 {
-	HDC hdc;
-	if(hwnd==0 || hglrc==0)
-		return FALSE;
-	hdc=GetDC(hwnd);
-	if(hdc){
-		wglMakeCurrent(hdc,hglrc);
-		show_params();
-		SwapBuffers(hdc);
-	}
 
 }
