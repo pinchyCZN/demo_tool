@@ -33,7 +33,8 @@ int draw_button(int x,int y,int w,int h,int color,int pressed)
 {
 	int i;
 	static float theta=0;
-	unsigned char indices[] = { 0, 1, 2, 0, 2, 3 };
+	static int other1=1024;
+	unsigned char indices[] = { 0, 1, 2, 0, 2, 3};
 	float vertices[] = { 
 		0, 0, 0,
 		1, 0, 0,
@@ -60,7 +61,9 @@ int draw_button(int x,int y,int w,int h,int color,int pressed)
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0,1024,1024,0,-1000,1000);
+	glOrtho(0,100,100,0,-1000,1000);
+	if(other1>2000)
+		other1=1024;
 
 	glTranslatef(x,y,0);
 
@@ -74,12 +77,22 @@ int draw_button(int x,int y,int w,int h,int color,int pressed)
 	glColor3ub(R,G,B);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
 	glColor3ub(0x70,0x70,0x70);
-	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices);
-	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices+1);
-	//glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices+2);
-	//glIndexPointer
-	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, indices+4);
-
+	indices[0]=0;
+	indices[1]=1;
+	indices[2]=2;
+	indices[3]=3;
+	indices[4]=0;
+	glDrawElements(GL_LINE_LOOP, 5, GL_UNSIGNED_BYTE, indices);
+	vertices[0]+=1;
+	vertices[1]+=1;
+	vertices[3]-=1;
+	vertices[4]+=1;
+	vertices[6]-=2;
+	vertices[7]-=2;
+	vertices[9]+=1;
+	vertices[10]-=2;
+	glColor3ub(0x80,0,0);
+	glDrawElements(GL_LINE_LOOP, 5, GL_UNSIGNED_BYTE, indices);
 
 
 
