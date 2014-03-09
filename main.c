@@ -7,6 +7,7 @@
 #include <GL/glu.h>
 #include "entity.h"
 #include "resource.h"
+#include "widgets.h"
 
 HGLRC	hGLRC=0;
 HWND	ghwindow=0;
@@ -15,9 +16,9 @@ HWND	ghview1=0;
 HWND	ghpage=0;
 HWND	ghpagelist=0;
 HWND	ghparams=0;
-int	*gbufpage=0;
-int	*gbufpagelist=0;
-int	*gbufparams=0;
+SCREEN scpage={0};
+SCREEN scpagelist={0};
+SCREEN scparams={0};
 
 HWND		ghfocus=0;
 
@@ -579,12 +580,17 @@ int create_tool_windows(HWND hwnd)
 	ghpage=CreateWindow(wnd.lpszClassName,"page",WS_CHILD|WS_VISIBLE,
 		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
-	gbufpage=malloc(1024*1024*4);
-	if(gbufpage)
-		memset(gbufpage,0,1024*1024*4);
-	gbufpagelist=malloc(1024*1024*4);
-	gbufparams=malloc(1024*1024*4);
-
+	{
+		SCREEN *s[3]={&scpage,&scpagelist,&scparams};
+		int i;
+		for(i=0;i<3;i++){
+			s[i]->buffer=malloc(1024*1024*4);
+			s[i]->w=1024;
+			s[i]->h=1024;
+			if(s[i]->buffer)
+				memset(s[i]->buffer,0,1024*1024*4);
+		}
+	}
 	resize_main_window(hwnd);
 }
 static int in_range(int x,int min,int max)
@@ -788,7 +794,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					display_view1(ghview1,hGLRC);
 				}
 				if(hdc){
-					display_page(ghpage,gbufpage,1024,1024);
+					display_page(ghpage,&scpage);
 				}
 				if(hbrush && ghfocus && hdc){
 					RECT rect={0};

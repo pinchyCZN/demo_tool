@@ -1,8 +1,28 @@
 #include <windows.h>
+#include "widgets.h"
 
-int build_page(int *buffer,int w,int h)
+int build_page(SCREEN *page,RECT *rect)
 {
-	draw_button(buffer,w,h,10,10,50,50,0xFF,FALSE);
+	BUTTON b={0};
+	SCROLLBAR scroll={0};
+	int i;
+	for(i=0;i<10;i++){
+		char str[80];
+		b.w=40;
+		b.h=20;
+		b.x=10;
+		b.y=i*30;
+		sprintf(str,"cube%i",i);
+		b.text=str;
+		draw_button(page,&b);
+	}
+	scroll.w=20;
+	scroll.h=rect->bottom-rect->top;
+	scroll.pos=0;
+	scroll.range=1000;
+	scroll.x=(rect->right-rect->left)-20;
+	scroll.y=0;
+	draw_vscroll(page,&scroll);
 }
 
 int show_page_list()
@@ -24,11 +44,19 @@ int display_view1(HWND hwnd,HGLRC hglrc)
 		SwapBuffers(hdc);
 	}
 }
-int display_page(HWND hwnd,int *buffer,int w,int h)
+int display_page(HWND hwnd,SCREEN *page)
 {
 	HDC hdc;
+	RECT rect={0};
+	int *buffer,w,h;
+	if(page==0 || page->buffer==0)
+		return 0;
+	buffer=page->buffer;
+	w=page->w;
+	h=page->h;
 	memset(buffer,0x10,1024*1024*4);
-	build_page(buffer,w,h);
+	GetWindowRect(hwnd,&rect);
+	build_page(page,&rect);
 	hdc=GetDC(hwnd);
 	if(hdc){
 		BITMAPINFO bmi;

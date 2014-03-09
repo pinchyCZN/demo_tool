@@ -155,6 +155,14 @@ SOURCE=.\lodepng.h
 
 SOURCE=.\resource.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\types.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\widgets.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
