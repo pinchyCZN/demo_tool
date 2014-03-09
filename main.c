@@ -400,7 +400,7 @@ int set_focus(HWND hwnd)
 	ghfocus=hwnd;
 	return TRUE;
 }
-LRESULT CALLBACK win_view1(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 #ifdef _DEBUG
 	//if(FALSE)
@@ -433,7 +433,7 @@ LRESULT CALLBACK win_view1(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
-LRESULT CALLBACK win_params(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 #ifdef _DEBUG
 	//if(FALSE)
@@ -456,7 +456,7 @@ LRESULT CALLBACK win_params(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
-LRESULT CALLBACK win_pagelist(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+LRESULT CALLBACK win_pagelist_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 #ifdef _DEBUG
 	//if(FALSE)
@@ -479,8 +479,9 @@ LRESULT CALLBACK win_pagelist(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
-LRESULT CALLBACK win_page(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+	static lmb_down=FALSE;
 #ifdef _DEBUG
 	//if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
@@ -493,9 +494,31 @@ LRESULT CALLBACK win_page(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		tick=GetTickCount();
 	}
 #endif
+	page_win_message(&scpage,hwnd,msg,wparam,lparam);
+
 	switch(msg){
 	case WM_CREATE:
 		return 0;
+	case WM_KEYFIRST:
+		if(wparam==0x1b)
+			exit(0);
+		break;
+	case WM_MOUSEWHEEL:
+		{
+			short w=HIWORD(wparam);
+			int key=LOWORD(wparam);
+			int amount=3;
+			int control=0;
+			if(key&MK_RBUTTON)
+				amount=10;
+			if(key&MK_CONTROL)
+				control=1;
+
+			if(w>0)
+				amount=-amount;
+			scroll_page_view(hwnd,&scpage,amount,control);
+		}
+		break;
 	case WM_MOUSEMOVE:
 		set_focus(hwnd);
 		break;
@@ -555,7 +578,7 @@ int create_tool_windows(HWND hwnd)
 	wnd.hbrBackground=GetStockObject(BLACK_BRUSH);
 	wnd.lpszMenuName=NULL;
 	wnd.lpszClassName="VIEW1";
-	wnd.lpfnWndProc=win_view1;
+	wnd.lpfnWndProc=win_view1_proc;
 	RegisterClass(&wnd);
 	GetClientRect(hwnd,&rect);
 	ghview1=CreateWindow(wnd.lpszClassName,"view1",WS_CHILD|WS_VISIBLE,
@@ -563,19 +586,19 @@ int create_tool_windows(HWND hwnd)
 
 
 	wnd.lpszClassName="PARAMS";
-	wnd.lpfnWndProc=win_params;
+	wnd.lpfnWndProc=win_params_proc;
 	RegisterClass(&wnd);
 	ghparams=CreateWindow(wnd.lpszClassName,"params",WS_CHILD|WS_VISIBLE,
 		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
 	wnd.lpszClassName="PAGELIST";
-	wnd.lpfnWndProc=win_pagelist;
+	wnd.lpfnWndProc=win_pagelist_proc;
 	RegisterClass(&wnd);
 	ghpagelist=CreateWindow(wnd.lpszClassName,"pagelist",WS_CHILD|WS_VISIBLE,
 		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
 	wnd.lpszClassName="PAGE";
-	wnd.lpfnWndProc=win_page;
+	wnd.lpfnWndProc=win_page_proc;
 	RegisterClass(&wnd);
 	ghpage=CreateWindow(wnd.lpszClassName,"page",WS_CHILD|WS_VISIBLE,
 		0,0,0,0,hwnd,NULL,ghinstance,NULL);
@@ -686,6 +709,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			init_entity_array(players,sizeof(players)/sizeof(ENTITY*));
 			init_entity_array(non_players,sizeof(non_players)/sizeof(ENTITY*));
 			add_player();
+			init_page_list();
 			GetClientRect(hwnd,&gwinrect);
 		}
         return 0;
@@ -723,24 +747,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_MOUSEWHEEL:
 		{
-			short w=HIWORD(wparam);
-			int key=LOWORD(wparam);
-			int amount=1;
-			if(key&MK_RBUTTON)
-				amount=10;
-			if(key&MK_CONTROL)
-				amount=100;
-
-			if(w<0)
-				amount=-amount;
-			if(key_state('Z')){
-				g_tmp+=amount;
-				printf("tmp=%i\n",g_tmp);
-			}
-			else{
-				g_ztri+=amount;
-				printf("z=%i\n",g_ztri);
-			}
 		}
 		break;
 	case WM_KEYFIRST:
@@ -766,7 +772,8 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	case WM_APP:
 		switch(wparam){
 		case WM_SETFOCUS:
-
+			if(lparam)
+				SetFocus(lparam);
 			break;
 		}
 		break;
@@ -851,7 +858,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 	wnd.lpszMenuName=NULL;
 	wnd.lpszClassName=class_name;
 	RegisterClass(&wnd);
-	ghwindow=CreateWindow(class_name,"main window",WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS|WS_VISIBLE,
+	ghwindow=CreateWindow(class_name,class_name,WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS|WS_VISIBLE,
 		0,0,800,600,NULL,NULL,ghinstance,NULL);
 	if(!ghwindow){
 		MessageBox(NULL,"Could not create main dialog","ERROR",MB_ICONERROR | MB_OK);
@@ -869,7 +876,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 			wparam=msg.wParam;
 			if(FALSE)
 			if(_msg!=WM_MOUSEFIRST&&_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE&&_msg!=WM_DRAWITEM
-				&&_msg!=WM_CTLCOLORBTN&&_msg!=WM_CTLCOLOREDIT)
+				&&_msg!=WM_CTLCOLORBTN&&_msg!=WM_CTLCOLOREDIT&&_msg!=WM_PAINT)
 			//if(_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE)
 			{
 				static DWORD tick=0;

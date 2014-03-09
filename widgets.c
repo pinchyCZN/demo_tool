@@ -84,10 +84,16 @@ int draw_line_h(SCREEN *sc,int x,int y,int len,int color)
 	buffer=sc->buffer;
 	bw=sc->w;
 	bh=sc->h;
+	if(y<0 || y>=bh || x>=bw || (x+len)<0)
+		return 0;
 	offset=x+((bh-y)*bw);
 	for(i=0;i<len;i++){
+		if((x+i)<0)
+			continue;
 		if((x+i)<bw)
 			buffer[offset+i]=color;
+		else
+			break;
 	}
 	return 0;
 }
@@ -98,11 +104,43 @@ int draw_line_v(SCREEN *sc,int x,int y,int len,int color)
 	buffer=sc->buffer;
 	bw=sc->w;
 	bh=sc->h;
+	if(x<0 || x>=bw || y>=bh || (y+len)<0)
+		return 0;
 	offset=x+((bh-y)*bw);
 	for(i=0;i<len;i++){
+		if((y+i)<0)
+			continue;
 		if((y+i)<bh)
 			buffer[offset-(i*bw)]=color;
+		else
+			break;
 	}
+	return 0;
+}
+int draw_diag_line(SCREEN *sc,int x,int y,int len,int dir,int color)
+{
+	int i;
+	int *buffer,bw,bh,offset;
+	buffer=sc->buffer;
+	bw=sc->w;
+	bh=sc->h;
+	offset=x+((bh-y)*bw);
+	for(i=0;i<len;i++){
+		if(offset<0)
+			continue;
+		if((x+i*dir)>=bw || (x+i*dir)<0)
+			continue;
+		if((y+i)>=bh)
+			continue;
+		buffer[offset+(i*dir)-(i*bw)]=color;
+	}
+	return 0;
+}
+int draw_cursor(SCREEN *sc,int x,int y,int color)
+{
+	draw_line_v(sc,x-10,y-10,20,color);
+	draw_diag_line(sc,x-10,y-10,10,1,color);
+	draw_diag_line(sc,x,y,10,-1,color);
 	return 0;
 }
 int draw_button(SCREEN *sc,BUTTON *button)
@@ -151,6 +189,8 @@ int draw_rect(SCREEN *sc,int x,int y,int w,int h,int color)
 	buffer=sc->buffer;
 	bw=sc->w;
 	bh=sc->h;
+	if(x>=bw || y>=bh || (x+w)<0 || (y+h)<0)
+		return 0;
 	for(i=0;i<h;i++){
 		for(j=0;j<w;j++){
 			int offset=(x+j)+((bh-(y+i))*bw);
@@ -181,7 +221,7 @@ int draw_vscroll(SCREEN *sc,SCROLLBAR *scroll)
 	range=scroll->range;
 	draw_rect(sc,x,y,w,h,_BTNHIGHLIGHT);
 	ypos=(float)h*((float)pos/(float)range);
-	bheight=h-(range/2);
+	bheight=h-(range/4);
 	if(bheight<10){
 		bheight=10;
 		if(h<10)
@@ -192,9 +232,8 @@ int draw_vscroll(SCREEN *sc,SCROLLBAR *scroll)
 		button.w=w;
 		button.h=bheight;
 		button.x=x;
-		button.y=(int)ypos;
+		button.y=(int)ypos+y;
 		draw_button(sc,&button);
 	}
 	return 0;
-
 }
