@@ -243,8 +243,8 @@ int move_player1(ENTITY *e,int frame_time)
 				e->frame=0;
 		}
 	}
-	if(e->speedx!=0 || e->speedy!=0 || e->speedz!=0 || printinfo)
-		printf("sx=% 5.1f sy=% 5.1f sz=% 5.1f px=% 5.1f py=% 5.1f pz=% 5.1f\n",e->speedx,e->speedy,e->speedz,e->posx,e->posy,e->posz);
+//	if(e->speedx!=0 || e->speedy!=0 || e->speedz!=0 || printinfo)
+//		printf("sx=% 5.1f sy=% 5.1f sz=% 5.1f px=% 5.1f py=% 5.1f pz=% 5.1f\n",e->speedx,e->speedy,e->speedz,e->posx,e->posy,e->posz);
 	return 0;
 }
 

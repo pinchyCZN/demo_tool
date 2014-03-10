@@ -10,7 +10,7 @@ typedef struct{
 }SCREEN;
 
 #define DEFBUTTONH 25
-#define DEFBUTTONW 80
+#define DEFBUTTONW (DEFBUTTONH*3)
 
 typedef struct{
 	int type;
@@ -43,6 +43,14 @@ typedef struct{
 	int h;
 }STATICTEXT;
 
+typedef struct{
+	int x;
+	int y;
+	int w;
+	int h;
+	int filled;
+	int color;
+}RECTANGLE;
 
 typedef struct{
 	float x,y,z;
@@ -50,11 +58,11 @@ typedef struct{
 }CUBE_DATA;
 
 typedef enum OPTYPES{
-	TCUBE,TRECT
+	TCUBE,TRECT,TRECTDRAG,TRECTSELECT
 };
 
 typedef enum CONTROLTYPES{
-	TBUTTON,TSCROLL,TSTATIC
+	CBUTTON,CSCROLL,CSTATIC,CRECT
 };
 
 typedef struct{

@@ -69,6 +69,17 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 					draw_button(sc,b);
 				}
 				break;
+			case TRECTDRAG:
+				{
+					RECTANGLE *r=list->control.data;
+					if(r){
+						draw_line_h(sc,r->x,       r->y,       r->w,  r->color);
+						draw_line_h(sc,r->x,       r->y+r->h-1,r->w,  r->color);
+						draw_line_v(sc,r->x,       r->y+1,     r->h-2,r->color);
+						draw_line_v(sc,r->x+r->w-1,r->y+1,     r->h-2,r->color);
+					}
+				}
+				break;
 			}
 			list=list->list_next;
 		}

@@ -37,7 +37,7 @@ int move_rect(int _x,int _y,int key)
 		print=TRUE;
 	}
 	if(print){
-		printf("abc=%.0f %.0f %.0f xyz=%.0f %.0f %.0f\n",a,b,c,x,y,z);
+//		printf("abc=%.0f %.0f %.0f xyz=%.0f %.0f %.0f\n",a,b,c,x,y,z);
 	}
 }
 

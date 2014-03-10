@@ -403,7 +403,7 @@ int set_focus(HWND hwnd)
 LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 #ifdef _DEBUG
-	//if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;
@@ -436,7 +436,7 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 #ifdef _DEBUG
-	//if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;
@@ -459,7 +459,7 @@ LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 LRESULT CALLBACK win_pagelist_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 #ifdef _DEBUG
-	//if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;
@@ -483,7 +483,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static lmb_down=FALSE;
 #ifdef _DEBUG
-	//if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;
@@ -678,7 +678,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	static HDC hDC=0;
 	static lmb_drag=FALSE;
 #ifdef _DEBUG
-	//if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;
