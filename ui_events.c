@@ -144,19 +144,132 @@ int get_nearest_grid(SCREEN *sc,int *x,int *y)
 	tx/=DEFBUTTONH;
 	ty/=DEFBUTTONH;
 	tx*=DEFBUTTONH;
-	tx+=DEFBUTTONH/2;
 	ty*=DEFBUTTONH;
-	ty+=DEFBUTTONH/2;
 	*x=tx;
 	*y=ty;
 	return TRUE;
 }
-int find_op(PAGE_DATA *p,int x,int y,OP *op)
+int get_op_pos(OP *op,int *x,int *y,int *w,int *h){
+	int result=FALSE;
+	if(op==0)
+		return result;
+	switch(op->control.type){
+	case TBUTTON:
+		{
+			BUTTON *b;
+			b=op->control.data;
+			*x=b->x;
+			*y=b->y;
+			*w=b->w;
+			*h=b->h;
+			result=TRUE;
+		}
+		break;
+	case TSCROLL:
+		{
+			SCROLLBAR *s;
+			s=op->control.data;
+			*x=s->x;
+			*y=s->y;
+			*w=s->w;
+			*h=s->h;
+			result=TRUE;
+		}
+		break;
+	case TSTATIC:
+		{
+			STATICTEXT *s;
+			s=op->control.data;
+			*x=s->x;
+			*y=s->y;
+			*w=s->w;
+			*h=s->h;
+			result=TRUE;
+		}
+		break;
+	}
+	return result;
+}
+int find_selected_op(PAGE_DATA *p,OP **op)
 {
+	int result=FALSE;
+	OP *oplist;
+	if(p==0)
+		return result;
+	oplist=p->list;
+	while(oplist){
+		if(oplist->selected){
+			if(op){
+				*op=oplist;
+			}
+			result=TRUE;
+			break;
+		}
+		oplist=oplist->list_next;
+	}
+	return result;
+}
+int clear_pressed_all(PAGE_DATA *p)
+{
+	int count=0;
+	OP *oplist;
+	if(p==0)
+		return count;
+	oplist=p->list;
+	while(oplist){
+		if(oplist->control.type==TBUTTON){
+			BUTTON *b=oplist->control.data;
+			if(b){
+				b->pressed=FALSE;
+				count++;
+			}
+		}
+		oplist=oplist->list_next;
+	}
+	return count;
+}
+int hittest_op(PAGE_DATA *p,int x,int y,OP **op)
+{
+	int result=FALSE;
+	OP *oplist;
+	if(p==0)
+		return result;
+	oplist=p->list;
+	while(oplist){
+		int tx,ty,tw,th;
+		if(get_op_pos(oplist,&tx,&ty,&tw,&th)){
+			if(x>=tx && x<=(tx+tw)){
+				if(y>=ty && y<=(ty+th)){
+					*op=oplist;
+					result=TRUE;
+					break;
+				}
 
+			}
+		}
+		oplist=oplist->list_next;
+	}
+	return result;
+}
+int drag_control(SCREEN *sc,CONTROL *c,int x,int y)
+{
+	int result=FALSE;
+	if(c){
+		switch(c->type){
+		case TBUTTON:
+			{
+				int tx=x,ty=y;
+				if(get_nearest_grid(sc,&tx,&ty)){
+				}
+			}
+			break;
+		}
+	}
+	return result;
 }
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+	static CONTROL *drag=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
 	p=page_list.current;
@@ -174,6 +287,20 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		}
 		}
 		break;
+	case WM_MOUSEMOVE:
+		{
+			int x,y;
+			int lmb=wparam&MK_LBUTTON;
+			x=LOWORD(lparam);
+			y=HIWORD(lparam);
+			if(lmb && drag){
+				drag_control(sc,drag,x,y);
+			}
+		}
+		break;
+	case WM_LBUTTONUP:
+		drag=0;
+		break;
 	case WM_LBUTTONDOWN:
 		{
 			int x,y;
@@ -183,9 +310,17 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			p->cursorx=p->hscroll+x;
 			p->cursory=p->vscroll+y;
 			get_nearest_grid(sc,&p->cursorx,&p->cursory);
-			find_op(p,x,y,op);
+			clear_pressed_all(p);
+			hittest_op(p,x,y,&op);
 			if(op){
-
+				drag=&op->control;
+				op->selected=TRUE;
+				if(op->control.type==TBUTTON){
+					BUTTON *b=op->control.data;
+					if(b){
+						b->pressed=TRUE;
+					}
+				}
 			}
 		}
 		break;
@@ -194,6 +329,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			int x,y;
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
+			get_nearest_grid(sc,&x,&y);
 			add_cube_op(p,x,y);
 		}
 		break;

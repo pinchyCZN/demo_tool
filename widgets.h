@@ -39,6 +39,8 @@ typedef struct{
 	char *str;
 	int x;
 	int y;
+	int w;
+	int h;
 }STATICTEXT;
 
 
@@ -68,7 +70,6 @@ typedef struct{
 	void *op_prev,*op_next;
 	void *list_prev,*list_next;
 	int selected;
-	int pressed;
 }OP;
 
 typedef struct{

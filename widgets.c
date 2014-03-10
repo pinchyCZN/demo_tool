@@ -126,11 +126,11 @@ int draw_diag_line(SCREEN *sc,int x,int y,int len,int dir,int color)
 	bh=sc->h;
 	offset=x+((bh-y)*bw);
 	for(i=0;i<len;i++){
-		if(offset<0)
+		if((x+(i*dir))>=bw || (x+(i*dir))<0)
 			continue;
-		if((x+i*dir)>=bw || (x+i*dir)<0)
+		if((y+i)>=bh || (y+i)<0)
 			continue;
-		if((y+i)>=bh)
+		if((offset+(i*dir)-(i*bw))<0)
 			continue;
 		buffer[offset+(i*dir)-(i*bw)]=color;
 	}
@@ -138,9 +138,10 @@ int draw_diag_line(SCREEN *sc,int x,int y,int len,int dir,int color)
 }
 int draw_cursor(SCREEN *sc,int x,int y,int color)
 {
-	draw_line_v(sc,x-10,y-10,20,color);
-	draw_diag_line(sc,x-10,y-10,10,1,color);
-	draw_diag_line(sc,x,y,10,-1,color);
+	int h=DEFBUTTONH-4;
+	draw_line_v(sc,x+2,y+2,h,color);
+	draw_diag_line(sc,x+2,y+2,h/2,1,color);
+	draw_diag_line(sc,x+2+(h/2),y+2+(h/2),h/2,-1,color);
 	return 0;
 }
 int draw_button(SCREEN *sc,BUTTON *button)
@@ -151,26 +152,37 @@ int draw_button(SCREEN *sc,BUTTON *button)
 	y=button->y;
 	w=button->w;
 	h=button->h;
+	pressed=button->pressed;
 	draw_line_h(sc,x,    y,    w,  _WINDOWFRAME);
 	draw_line_h(sc,x,    y+h-1,w,  _WINDOWFRAME);
 	draw_line_v(sc,x,    y+1,  h-1,_WINDOWFRAME);
 	draw_line_v(sc,x+w-1,y+1,  h-1,_WINDOWFRAME);
 
-	draw_line_h(sc,x+1,y+1,w-3,_BTNHIGHLIGHT);
-	draw_line_v(sc,x+1,y+1,h-3,_BTNHIGHLIGHT);
+	if(pressed){
+		draw_line_h(sc,x+1,y+1,  w-2,_BTNSHADOW);
+		draw_line_h(sc,x+1,y+h-2,w-2,_BTNSHADOW);
 
-	draw_line_h(sc,x+2,y+2,w-5,_3DLIGHT);
-	draw_line_v(sc,x+2,y+2,h-5,_3DLIGHT);
+		draw_line_v(sc,x+1,  y+2,h-4,_BTNSHADOW);
+		draw_line_v(sc,x+w-2,y+2,h-4,_BTNSHADOW);
+		for(i=0;i<h-4;i++)
+			draw_line_h(sc,x+2,y+2+i,w-4,_BTNFACE);
+	}
+	else{
+		draw_line_h(sc,x+1,y+1,w-3,_BTNHIGHLIGHT);
+		draw_line_v(sc,x+1,y+1,h-3,_BTNHIGHLIGHT);
 
-	for(i=0;i<h-6;i++)
-		draw_line_h(sc,x+3,y+3+i,w-6,_BTNFACE);
+		draw_line_h(sc,x+2,y+2,w-5,_3DLIGHT);
+		draw_line_v(sc,x+2,y+2,h-5,_3DLIGHT);
 
-	draw_line_h(sc,x+2,  y+h-3,w-4,_BTNSHADOW);
-	draw_line_v(sc,x+w-3,y+2,  h-4,_BTNSHADOW);
+		for(i=0;i<h-6;i++)
+			draw_line_h(sc,x+3,y+3+i,w-6,_BTNFACE);
 
-	draw_line_h(sc,x+1,  y+h-2,w-2,_3DDKSHADOW);
-	draw_line_v(sc,x+w-2,y+1,  h-2,_3DDKSHADOW);
+		draw_line_h(sc,x+2,  y+h-3,w-4,_BTNSHADOW);
+		draw_line_v(sc,x+w-3,y+2,  h-4,_BTNSHADOW);
 
+		draw_line_h(sc,x+1,  y+h-2,w-2,_3DDKSHADOW);
+		draw_line_v(sc,x+w-2,y+1,  h-2,_3DDKSHADOW);
+	}
 	if(button->text && button->text[0]!=0){
 		char *str=button->text;
 		int len;

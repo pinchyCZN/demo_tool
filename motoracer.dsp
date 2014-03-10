@@ -129,6 +129,10 @@ SOURCE=.\render_entity.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\ui_events.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\vga737.c
 # End Source File
 # Begin Source File
