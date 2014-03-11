@@ -69,14 +69,31 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 					draw_button(sc,b);
 				}
 				break;
-			case TRECTDRAG:
+			case TDRAG:
 				{
-					RECTANGLE *r=list->control.data;
-					if(r){
-						draw_line_h(sc,r->x,       r->y,       r->w,  r->color);
-						draw_line_h(sc,r->x,       r->y+r->h-1,r->w,  r->color);
-						draw_line_v(sc,r->x,       r->y+1,     r->h-2,r->color);
-						draw_line_v(sc,r->x+r->w-1,r->y+1,     r->h-2,r->color);
+					CONTROLDRAG *d=list->control.data;
+					if(d){
+						OP *allops=p->list;
+						while(allops){
+							if(allops->type!=TDRAG){
+								switch(allops->type){
+								case TCUBE:
+									{
+										BUTTON *b=allops->control.data;
+										if(b && b->pressed){
+											int xo=d->deltax;
+											int yo=d->deltay;
+											draw_line_h(sc,b->x+xo,       b->y+yo,       b->w,  d->color);
+											draw_line_h(sc,b->x+xo,       b->y+b->h-1+yo,b->w,  d->color);
+											draw_line_v(sc,b->x+xo,       b->y+1+yo,     b->h-2,d->color);
+											draw_line_v(sc,b->x+b->w-1+xo,b->y+1+yo,     b->h-2,d->color);
+										}
+									}
+									break;
+								}
+							}
+							allops=allops->list_next;
+						}
 					}
 				}
 				break;

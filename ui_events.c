@@ -121,16 +121,14 @@ int create_op(int type,OP *op,int x,int y)
 			}
 		}
 		break;
-	case TRECTDRAG:
+	case TDRAG:
 		{
-			RECTANGLE *rect;
-			rect=malloc(sizeof(RECTANGLE));
-			if(rect){
-				memset(rect,0,sizeof(RECTANGLE));
-				rect->x=x;
-				rect->y=y;
-				op->control.type=CRECT;
-				op->control.data=rect;
+			CONTROLDRAG *drag;
+			drag=malloc(sizeof(CONTROLDRAG));
+			if(drag){
+				memset(drag,0,sizeof(CONTROLDRAG));
+				op->control.type=CDRAG;
+				op->control.data=drag;
 				op->type=type;
 				result=TRUE;
 			}
@@ -303,7 +301,7 @@ int find_drag_op(PAGE_DATA *p,OP **op)
 		return result;
 	oplist=p->list;
 	while(oplist){
-		if(oplist->type==TRECTDRAG){
+		if(oplist->type==TDRAG){
 			if(op)
 				*op=oplist;
 			result=TRUE;
@@ -355,41 +353,33 @@ int hittest_op(PAGE_DATA *p,int x,int y,OP **op)
 	}
 	return result;
 }
-int drag_control(SCREEN *sc,PAGE_DATA *p,CONTROL *c,int x,int y)
+int drag_control(SCREEN *sc,PAGE_DATA *p,int x,int y,int startx,int starty)
 {
 	int result=FALSE;
-	if(c){
+	if(p){
 		OP *op=0;
 		if(!find_drag_op(p,&op)){
 			op=malloc(sizeof(OP));
 			if(op){
 				memset(op,0,sizeof(OP));
-				if(create_op(TRECTDRAG,op,x,y))
+				if(create_op(TDRAG,op,x,y))
 					add_op(p,op);
 			}
 		}
 		if(op){
-			switch(c->type){
-			case CBUTTON:
-				{
-					int tx=x,ty=y,w,h;
-					RECTANGLE *r=op->control.data;
-					BUTTON *b=c->data;
-					if(r==0 || b==0)
-						break;
-					if(get_nearest_grid(sc,&tx,&ty)){
-						r->x=tx;
-						r->y=ty;
-						r->w=b->w;
-						r->h=b->h;
-						r->color=0xFF;
-					}
-				}
-				break;
+			CONTROLDRAG *d=op->control.data;
+			if(d){
+				int tx=x-startx,ty=y-starty;
+				d->deltax=(tx/DEFBUTTONH)*DEFBUTTONH;
+				d->deltay=(ty/DEFBUTTONH)*DEFBUTTONH;
+				d->color=0xFF;
 			}
 		}
 	}
 	return result;
+}
+int drag_finish()
+{
 }
 int check_free_pos(PAGE_DATA *p,OP *exclude[],int excount,int x,int y,int w,int h)
 {
@@ -431,7 +421,7 @@ int check_free_pos(PAGE_DATA *p,OP *exclude[],int excount,int x,int y,int w,int 
 }
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
-	static OP *drag=0;
+	static int drag=0,startx=0,starty=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
 	p=page_list.current;
@@ -456,7 +446,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
 			if(lmb && drag){
-				drag_control(sc,p,&drag->control,x,y);
+				drag_control(sc,p,x,y,startx,starty);
 			}
 		}
 		break;
@@ -465,11 +455,9 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			OP *op=0;
 			if(find_drag_op(p,&op)){
 				if(drag){
-					RECTANGLE *r=op->control.data;
-					if(r){
-						OP *list[2]={drag,op};
-						if(check_free_pos(p,list,2,r->x,r->y,r->w,r->h))
-							set_control_pos(&drag->control,&r->x,&r->y,0,0);
+					CONTROLDRAG *d=op->control.data;
+					if(d){
+						drag_finish(p,d);
 					}
 				}
 				del_op(p,op);
@@ -486,10 +474,11 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			p->cursorx=p->hscroll+x;
 			p->cursory=p->vscroll+y;
 			get_nearest_grid(sc,&p->cursorx,&p->cursory);
-			clear_pressed_all(p);
+			if(!(wparam&MK_CONTROL))
+				clear_pressed_all(p);
 			hittest_op(p,x,y,&op);
 			if(op){
-				drag=op;
+				drag=TRUE;
 				op->selected=TRUE;
 				if(op->control.type==CBUTTON){
 					BUTTON *b=op->control.data;
@@ -498,6 +487,8 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					}
 				}
 			}
+			startx=x;
+			starty=y;
 		}
 		break;
 	case WM_RBUTTONDOWN:

@@ -53,16 +53,23 @@ typedef struct{
 }RECTANGLE;
 
 typedef struct{
+	int deltax,deltay;
+	int filled;
+	int color;
+}CONTROLDRAG;
+
+
+typedef struct{
 	float x,y,z;
 	float w,h,l;
 }CUBE_DATA;
 
 typedef enum OPTYPES{
-	TCUBE,TRECT,TRECTDRAG,TRECTSELECT
+	TCUBE,TRECT,TDRAG,TRECTSELECT
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CSTATIC,CRECT
+	CBUTTON,CSCROLL,CSTATIC,CRECT,CDRAG
 };
 
 typedef struct{
