@@ -85,6 +85,7 @@ typedef struct{
 	void *op_prev,*op_next;
 	void *list_prev,*list_next;
 	int selected;
+	int root;
 }OP;
 
 typedef struct{

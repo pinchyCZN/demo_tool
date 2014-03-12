@@ -326,6 +326,7 @@ int clear_pressed_all(PAGE_DATA *p)
 				count++;
 			}
 		}
+		oplist->selected=FALSE;
 		oplist=oplist->list_next;
 	}
 	return count;
@@ -374,51 +375,99 @@ int drag_control(SCREEN *sc,PAGE_DATA *p,int x,int y,int startx,int starty)
 				d->deltay=(ty/DEFBUTTONH)*DEFBUTTONH;
 				d->color=0xFF;
 			}
+			op->selected=TRUE;
 		}
 	}
 	return result;
 }
-int drag_finish()
-{
-}
-int check_free_pos(PAGE_DATA *p,OP *exclude[],int excount,int x,int y,int w,int h)
+int is_location_avail(PAGE_DATA *p,int x,int y,int w,int h)
 {
 	int result=TRUE;
-	OP *oplist;
-	if(p==0)
-		return result;
-	oplist=p->list;
-	while(oplist){
-		int tx,ty,tw,th;
-		int i,skip=FALSE;
-		for(i=0;i<excount;i++){
-			if(exclude[i]==oplist){
-				skip=TRUE;
-				break;
-			}
-		}
-		if(!skip){
-			if(get_op_pos(oplist,&tx,&ty,&tw,&th)){
-				int xr;
-				if(x>=tx && x<=(tx+tw-1)){
-					if(y>=ty && y<=(ty+th-1)){
-						result=FALSE;
-						break;
+	if(p){
+		OP *oplist=p->list;
+		while(oplist){
+			if(oplist->selected==FALSE){
+				int ox,oy,ow,oh;
+				if(get_op_pos(oplist,&ox,&oy,&ow,&oh)){
+					int list[8];
+					int i;
+					list[0]=x;
+					list[1]=y;
+					list[2]=x+w-1;
+					list[3]=y;
+					list[4]=x;
+					list[5]=y+h-1;
+					list[6]=x+w-1;
+					list[7]=y+h-1;
+					for(i=0;i<4;i+=2){
+						int px,py;
+						px=list[i+0];
+						py=list[i+1];
+						if(px>=ox && px<=(ox+ow-1)){
+							if(py>=oy && py<=(oy+oh-1)){
+								result=FALSE;
+								break;
+							}
+						}
+
 					}
 				}
-				xr=x+w-1;
-				if(xr>=tx && xr<=(tx+tw-1)){
-					if(y>=ty && y<=(ty+th-1)){
-						result=FALSE;
-						break;
-					}
-				}
 			}
+			oplist=oplist->list_next;
 		}
-		oplist=oplist->list_next;
 	}
 	return result;
 }
+int drag_finish(PAGE_DATA *p,OP *drag)
+{
+	int result=FALSE;
+	if(p && drag){
+		int dest_ok=TRUE;
+		CONTROLDRAG *d=drag->control.data;
+		OP *olist;
+		int deltax=0,deltay=0;
+		if(d){
+			deltax=d->deltax;
+			deltay=d->deltay;
+		}
+		olist=p->list;
+		while(olist){
+			if(olist->type!=TDRAG && olist->selected==TRUE){
+				int x,y,w,h;
+				get_op_pos(olist,&x,&y,&w,&h);
+				x+=d->deltax;
+				y+=d->deltay;
+				if(!is_location_avail(p,x,y,w,h)){
+					dest_ok=FALSE;
+					break;
+				}
+			}
+			olist=olist->list_next;
+		}
+		if(dest_ok){
+			olist=p->list;
+			while(olist){
+				CONTROL *c=&olist->control;
+				if(c){
+					switch(c->type){
+					case CBUTTON:
+						{
+							BUTTON *b=c->data;
+							if(b && b->pressed){
+								b->x+=deltax;
+								b->y+=deltay;
+							}
+						}
+						break;
+					}
+				}
+				olist=olist->list_next;
+			}
+		}
+	}
+	return result;
+}
+
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static int drag=0,startx=0,starty=0;
@@ -441,11 +490,13 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_MOUSEMOVE:
 		{
-			int x,y;
 			int lmb=wparam&MK_LBUTTON;
-			x=LOWORD(lparam);
-			y=HIWORD(lparam);
 			if(lmb && drag){
+				int x,y;
+				x=LOWORD(lparam);
+				y=HIWORD(lparam);
+				x+=p->hscroll;
+				y+=p->vscroll;
 				drag_control(sc,p,x,y,startx,starty);
 			}
 		}
@@ -453,16 +504,13 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	case WM_LBUTTONUP:
 		{
 			OP *op=0;
-			if(find_drag_op(p,&op)){
-				if(drag){
-					CONTROLDRAG *d=op->control.data;
-					if(d){
-						drag_finish(p,d);
-					}
+			if(drag){
+				if(find_drag_op(p,&op)){
+					drag_finish(p,op);
+					del_op(p,op);
 				}
-				del_op(p,op);
+				drag=0;
 			}
-			drag=0;
 		}
 		break;
 	case WM_LBUTTONDOWN:
@@ -471,8 +519,10 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			OP *op=0;
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
-			p->cursorx=p->hscroll+x;
-			p->cursory=p->vscroll+y;
+			x+=p->hscroll;
+			y+=p->vscroll;
+			p->cursorx=x;
+			p->cursory=y;
 			get_nearest_grid(sc,&p->cursorx,&p->cursory);
 			if(!(wparam&MK_CONTROL))
 				clear_pressed_all(p);

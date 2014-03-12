@@ -76,8 +76,8 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 						OP *allops=p->list;
 						while(allops){
 							if(allops->type!=TDRAG){
-								switch(allops->type){
-								case TCUBE:
+								switch(allops->control.type){
+								case CBUTTON:
 									{
 										BUTTON *b=allops->control.data;
 										if(b && b->pressed){
