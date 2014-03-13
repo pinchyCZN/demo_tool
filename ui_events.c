@@ -480,6 +480,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	static int drag=0,startx=0,starty=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
+	extern OP *selected_op;
 	p=page_list.current;
 	if(p==0)
 		p=page_list.list;
@@ -537,6 +538,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			if(op){
 				drag=TRUE;
 				op->selected=TRUE;
+				selected_op=op;
 				if(op->control.type==CBUTTON){
 					BUTTON *b=op->control.data;
 					if(b){
@@ -544,6 +546,9 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					}
 				}
 			}
+			else
+				selected_op=0;
+
 			startx=p->cursorx+DEFBUTTONH/2;
 			starty=p->cursory+DEFBUTTONH/2;
 		}

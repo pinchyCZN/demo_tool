@@ -4,6 +4,7 @@
 
 
 PAGE_LIST page_list={0};
+OP *selected_op=0;
 
 int init_page_list()
 {
@@ -123,12 +124,16 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 	return TRUE;
 }
 
-int show_page_list()
+int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 {
-}
+	if(selected_op){
+		switch(selected_op->type){
+		case TCUBE:
 
-int show_params()
-{
+			break;
+		}
+	}
+	return 0;
 }
 int display_view1(HWND hwnd,HGLRC hglrc)
 {
@@ -152,7 +157,7 @@ int display_page(HWND hwnd,SCREEN *sc)
 	buffer=sc->buffer;
 	w=sc->w;
 	h=sc->h;
-	memset(buffer,0x10,1024*1024*4);
+	memset(buffer,0x10,w*h*4);
 	GetWindowRect(hwnd,&rect);
 	build_page(sc,&rect,&xscroll,&yscroll);
 	hdc=GetDC(hwnd);
@@ -168,11 +173,35 @@ int display_page(HWND hwnd,SCREEN *sc)
 	}
 	return 0;
 }
-int display_page_list(HWND hwnd,HGLRC hglrc)
+int display_page_list(HWND hwnd,SCREEN *sc)
 {
-
 }
-int display_params(HWND hwnd,HGLRC hglrc)
-{
 
+
+
+int display_params(HWND hwnd,SCREEN *sc)
+{
+	HDC hdc;
+	RECT rect={0};
+	int *buffer,w,h,xscroll=0,yscroll=0;
+	if(sc==0 || sc->buffer==0)
+		return 0;
+	buffer=sc->buffer;
+	w=sc->w;
+	h=sc->h;
+	memset(buffer,0x8,w*h*4);
+	GetWindowRect(hwnd,&rect);
+	build_params(sc,&rect,&xscroll,&yscroll);
+	hdc=GetDC(hwnd);
+	if(hdc){
+		BITMAPINFO bmi;
+		memset(&bmi,0,sizeof(BITMAPINFO));
+		bmi.bmiHeader.biBitCount=32;
+		bmi.bmiHeader.biWidth=w;
+		bmi.bmiHeader.biHeight=h;
+		bmi.bmiHeader.biPlanes=1;
+		bmi.bmiHeader.biSize=40;
+		SetDIBitsToDevice(hdc,-xscroll,-yscroll,w,h,0,0,0,w,buffer,&bmi,DIB_RGB_COLORS);
+	}
+	return 0;
 }

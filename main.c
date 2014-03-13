@@ -802,6 +802,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				}
 				if(hdc){
 					display_page(ghpage,&scpage);
+					display_params(ghparams,&scparams);
 				}
 				if(hbrush && ghfocus && hdc){
 					RECT rect={0};
