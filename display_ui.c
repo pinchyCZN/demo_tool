@@ -67,6 +67,13 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 					else
 						b->text=list->name;
 					draw_button(sc,b);
+
+					if(list->selected)
+						draw_rect(sc,b->x+4,b->y+4,5,5,0xFF0000);
+					if(list->activated)
+						draw_rect(sc,b->x+4,b->y+b->h-10,5,5,0xFF00);
+					if(list->error)
+						draw_line_h(sc,b->x+2,b->y+1,b->w-5,0xFF0000);
 				}
 				break;
 			case TDRAG:

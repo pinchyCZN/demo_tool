@@ -370,9 +370,13 @@ int drag_control(SCREEN *sc,PAGE_DATA *p,int x,int y,int startx,int starty)
 		if(op){
 			CONTROLDRAG *d=op->control.data;
 			if(d){
-				int tx=x-startx,ty=y-starty;
-				d->deltax=(tx/DEFBUTTONH)*DEFBUTTONH;
-				d->deltay=(ty/DEFBUTTONH)*DEFBUTTONH;
+				int x1,y1,x2,y2;
+				x1=startx;y1=starty;
+				x2=x;y2=y;
+				get_nearest_grid(sc,&x1,&y1);
+				get_nearest_grid(sc,&x2,&y2);
+				d->deltax=x2-x1;
+				d->deltay=y2-y1;
 				d->color=0xFF;
 			}
 			op->selected=TRUE;
@@ -409,7 +413,6 @@ int is_location_avail(PAGE_DATA *p,int x,int y,int w,int h)
 								break;
 							}
 						}
-
 					}
 				}
 			}
@@ -418,7 +421,7 @@ int is_location_avail(PAGE_DATA *p,int x,int y,int w,int h)
 	}
 	return result;
 }
-int drag_finish(PAGE_DATA *p,OP *drag)
+int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 {
 	int result=FALSE;
 	if(p && drag){
@@ -437,6 +440,10 @@ int drag_finish(PAGE_DATA *p,OP *drag)
 				get_op_pos(olist,&x,&y,&w,&h);
 				x+=d->deltax;
 				y+=d->deltay;
+				if(x<0 || y<0 || (x+w)>=sc->w || (y+h)>=sc->h){
+					dest_ok=FALSE;
+					break;
+				}
 				if(!is_location_avail(p,x,y,w,h)){
 					dest_ok=FALSE;
 					break;
@@ -506,7 +513,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			OP *op=0;
 			if(drag){
 				if(find_drag_op(p,&op)){
-					drag_finish(p,op);
+					drag_finish(sc,p,op);
 					del_op(p,op);
 				}
 				drag=0;
@@ -537,8 +544,8 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					}
 				}
 			}
-			startx=x;
-			starty=y;
+			startx=p->cursorx+DEFBUTTONH/2;
+			starty=p->cursory+DEFBUTTONH/2;
 		}
 		break;
 	case WM_RBUTTONDOWN:
