@@ -112,11 +112,15 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 	draw_cursor(sc,p->cursorx,p->cursory);
 	if(rect_height<sc->h){
 		SCROLLBAR scroll={0};
+		int x;
 		scroll.w=SCROLL_WIDTH;
 		scroll.h=rect_height;
 		scroll.pos=p->vscroll;
 		scroll.range=sc->h;
-		scroll.x=p->hscroll+rect_width-SCROLL_WIDTH;
+		x=p->hscroll+rect_width;
+		if(x>=sc->w)
+			x=sc->w-1;
+		scroll.x=x-SCROLL_WIDTH;
 		scroll.y=p->vscroll;
 		draw_vscroll(sc,&scroll);
 	}
@@ -129,7 +133,7 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 	if(selected_op){
 		switch(selected_op->type){
 		case TCUBE:
-
+			draw_rect(sc,10,10,100,10,0xFF00);
 			break;
 		}
 	}

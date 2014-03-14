@@ -13,7 +13,7 @@ extern unsigned char vga737_bin[];
 	for(i=0;i<12;i++){
 		for(j=0;j<8;j++){
 			int offset;
-			offset=(x+j+((bufh-(i+y))*bufw));
+			offset=(x+j+((bufh-(i+y)-1)*bufw));
 			if((x+j)>=bufw)
 				break;
 			if((i+y)>=bufh)
@@ -86,7 +86,7 @@ int draw_line_h(SCREEN *sc,int x,int y,int len,int color)
 	bh=sc->h;
 	if(y<0 || y>=bh || x>=bw || (x+len)<0)
 		return 0;
-	offset=x+((bh-y)*bw);
+	offset=x+((bh-y-1)*bw);
 	for(i=0;i<len;i++){
 		if((x+i)<0)
 			continue;
@@ -106,7 +106,7 @@ int draw_line_v(SCREEN *sc,int x,int y,int len,int color)
 	bh=sc->h;
 	if(x<0 || x>=bw || y>=bh || (y+len)<0)
 		return 0;
-	offset=x+((bh-y)*bw);
+	offset=x+((bh-y-1)*bw);
 	for(i=0;i<len;i++){
 		if((y+i)<0)
 			continue;
@@ -124,7 +124,7 @@ int draw_diag_line(SCREEN *sc,int x,int y,int len,int dir,int color)
 	buffer=sc->buffer;
 	bw=sc->w;
 	bh=sc->h;
-	offset=x+((bh-y)*bw);
+	offset=x+((bh-y-1)*bw);
 	for(i=0;i<len;i++){
 		if((x+(i*dir))>=bw || (x+(i*dir))<0)
 			continue;
@@ -205,7 +205,7 @@ int draw_rect(SCREEN *sc,int x,int y,int w,int h,int color)
 		return 0;
 	for(i=0;i<h;i++){
 		for(j=0;j<w;j++){
-			int offset=(x+j)+((bh-(y+i))*bw);
+			int offset=(x+j)+((bh-(y+i)-1)*bw);
 			if((x+j)>=bw)
 				break;
 			if((y+i)>=bh)
