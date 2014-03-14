@@ -539,7 +539,13 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				RECT rect={0};
 				int height;
 				GetWindowRect(hwnd,&rect);
+				//scroll.range=sc->h-rect_height;
+				//bheight=h-(range/3);
+					//if(bheight<10){
+				//ypos=(float)(h-bheight)*((float)pos/(float)(range));
+
 				height=rect.bottom-rect.top;
+				height-=height-((sc->h-height)/3);
 				if(height<=0)
 					height=1;
 				delta*=((float)sc->h/(float)height);
