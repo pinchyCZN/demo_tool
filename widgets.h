@@ -33,6 +33,7 @@ typedef struct{
 	int h;
 	int pos;
 	int range;
+	int pressed;
 }SCROLLBAR;
 
 typedef struct{
@@ -94,6 +95,8 @@ typedef struct{
 	char *name;
 	int hscroll;
 	int vscroll;
+	int vscroll_pressed;
+	int hscroll_pressed;
 	int cursorx,cursory;
 	void *next;
 	void *prev;

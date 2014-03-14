@@ -76,6 +76,7 @@ F=COLOR_BTNFACE
 #define _BTNSHADOW 0x00000048
 #define _BTNFACE 0x00000070
 #define _WINDOWFRAME 0x00000000
+//#define _WINDOWFRAME 0x00FF0000
 
 int draw_line_h(SCREEN *sc,int x,int y,int len,int color)
 {
@@ -232,19 +233,50 @@ int draw_vscroll(SCREEN *sc,SCROLLBAR *scroll)
 	pos=scroll->pos;
 	range=scroll->range;
 	draw_rect(sc,x,y,w,h,_BTNHIGHLIGHT);
-	ypos=(float)h*((float)pos/(float)range);
-	bheight=h-(range/4);
+	bheight=h-(range/3);
 	if(bheight<10){
 		bheight=10;
 		if(h<10)
 			bheight=h;
 	}
+	ypos=(float)(h-bheight)*((float)pos/(float)(range));
 	{
 		BUTTON button={0};
 		button.w=w;
 		button.h=bheight;
 		button.x=x;
 		button.y=(int)ypos+y;
+		button.pressed=scroll->pressed;
+		draw_button(sc,&button);
+	}
+	return 0;
+}
+int draw_hscroll(SCREEN *sc,SCROLLBAR *scroll)
+{
+	float xpos;
+	int bwidth;
+	int x,y,w,h,pos,range;
+	x=scroll->x;
+	y=scroll->y;
+	w=scroll->w;
+	h=scroll->h;
+	pos=scroll->pos;
+	range=scroll->range;
+	draw_rect(sc,x,y,w,h,_BTNHIGHLIGHT);
+	bwidth=w-(range/3);
+	if(bwidth<10){
+		bwidth=10;
+		if(w<10)
+			bwidth=w;
+	}
+	xpos=(float)(w-bwidth)*((float)pos/(float)(range));
+	{
+		BUTTON button={0};
+		button.w=bwidth;
+		button.h=h;
+		button.x=(int)xpos+x;
+		button.y=y;
+		button.pressed=scroll->pressed;
 		draw_button(sc,&button);
 	}
 	return 0;

@@ -116,13 +116,32 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 		scroll.w=SCROLL_WIDTH;
 		scroll.h=rect_height;
 		scroll.pos=p->vscroll;
-		scroll.range=sc->h;
+		scroll.range=sc->h-rect_height;
 		x=p->hscroll+rect_width;
 		if(x>=sc->w)
-			x=sc->w-1;
+			x=sc->w;
 		scroll.x=x-SCROLL_WIDTH;
 		scroll.y=p->vscroll;
+		scroll.pressed=p->vscroll_pressed;
 		draw_vscroll(sc,&scroll);
+	}
+	if(rect_width<sc->w){
+		SCROLLBAR scroll={0};
+		int x,y;
+		scroll.w=rect_width-SCROLL_WIDTH;
+		scroll.h=SCROLL_WIDTH;
+		scroll.pos=p->hscroll;
+		scroll.range=sc->w-rect_width;
+		x=p->hscroll;
+		y=p->vscroll+rect_height;
+		if(x>=sc->w)
+			x=sc->w;
+		if(y>=sc->h)
+			y=sc->h;
+		scroll.x=x;
+		scroll.y=y-SCROLL_WIDTH;
+		scroll.pressed=p->hscroll_pressed;
+		draw_hscroll(sc,&scroll);
 	}
 
 	return TRUE;

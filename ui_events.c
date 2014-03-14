@@ -1,3 +1,4 @@
+#define _WIN32_WINNT 0x400
 #include <windows.h>
 #include "widgets.h"
 
@@ -477,7 +478,7 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
-	static int drag=0,startx=0,starty=0;
+	static int drag=0,clickx=0,clicky=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
 	extern OP *selected_op;
@@ -489,25 +490,78 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	switch(msg){
 	case WM_KEYFIRST:
 		{
-		int key=wparam;
-		switch(key){
-		case 'A':
-			break;
+			int key=wparam;
+			int control;
+			RECT rect={0};
+			GetWindowRect(hwnd,&rect);
+			control=GetKeyState(VK_CONTROL)&0x8000;
+			switch(key){
+			case 'A':
+				break;
+			case VK_PRIOR:
+				scroll_page_view(hwnd,sc,-rect.bottom,control);
+				break;
+			case VK_NEXT:
+				scroll_page_view(hwnd,sc,rect.bottom,control);
+				break;
+			}
 		}
+		break;
+	case WM_MOUSEWHEEL:
+		{
+			short w=HIWORD(wparam);
+			int key=LOWORD(wparam);
+			int amount=DEFBUTTONH/2;
+			int control=0;
+			if(key&MK_SHIFT)
+				amount<<=3;
+			if(key&MK_CONTROL)
+				control=1;
+
+			if(w>0)
+				amount=-amount;
+			scroll_page_view(hwnd,sc,amount,control);
 		}
 		break;
 	case WM_MOUSEMOVE:
 		{
 			int lmb=wparam&MK_LBUTTON;
+			int x,y;
+			x=LOWORD(lparam);
+			y=HIWORD(lparam);
 			if(lmb && drag){
-				int x,y;
-				x=LOWORD(lparam);
-				y=HIWORD(lparam);
 				x+=p->hscroll;
 				y+=p->vscroll;
-				drag_control(sc,p,x,y,startx,starty);
+				drag_control(sc,p,x,y,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
+			}
+			if(p->vscroll_pressed){
+				float delta=y-clicky;
+				RECT rect={0};
+				int height;
+				GetWindowRect(hwnd,&rect);
+				height=rect.bottom-rect.top;
+				if(height<=0)
+					height=1;
+				delta*=((float)sc->h/(float)height);
+				p->vscroll+=(int)delta;
+				clicky=y;
+			}
+			if(p->hscroll_pressed){
+				float delta=x-clickx;
+				RECT rect={0};
+				int width;
+				GetWindowRect(hwnd,&rect);
+				width=rect.right-rect.left;
+				//width+=240;
+				if(width<=0)
+					width=1;
+				delta*=((float)sc->w/(float)width);
+				p->hscroll+=(int)delta;
+				clickx=x;
 			}
 		}
+		break;
+	case WM_KILLFOCUS:
 		break;
 	case WM_LBUTTONUP:
 		{
@@ -519,14 +573,16 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				}
 				drag=0;
 			}
+			p->hscroll_pressed=0;
+			p->vscroll_pressed=0;
 		}
 		break;
 	case WM_LBUTTONDOWN:
 		{
 			int x,y;
 			OP *op=0;
-			x=LOWORD(lparam);
-			y=HIWORD(lparam);
+			clickx=x=LOWORD(lparam);
+			clicky=y=HIWORD(lparam);
 			x+=p->hscroll;
 			y+=p->vscroll;
 			p->cursorx=x;
@@ -548,9 +604,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			}
 			else
 				selected_op=0;
-
-			startx=p->cursorx+DEFBUTTONH/2;
-			starty=p->cursory+DEFBUTTONH/2;
+			check_scroll_hit(sc,p,hwnd,x,y);
 		}
 		break;
 	case WM_RBUTTONDOWN:
@@ -564,6 +618,35 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	}
 	return TRUE;
+}
+int check_scroll_hit(SCREEN *sc,PAGE_DATA *p,HWND hwnd,int x,int y)
+{
+	if(sc==0)
+		return 0;
+	else{
+		RECT rect={0};
+		int rwidth,rheight;
+		GetWindowRect(hwnd,&rect);
+		rwidth=rect.right-rect.left;
+		if(rwidth>sc->w)
+			rwidth=sc->w;
+		rheight=rect.bottom-rect.top;
+		if(rheight>sc->h)
+			rheight=sc->h;
+		if(sc->h > rheight){
+			if(x > (p->hscroll+rwidth-SCROLL_WIDTH))
+				p->vscroll_pressed=TRUE;
+			else
+				p->vscroll_pressed=FALSE;
+		}
+		if(sc->w > rwidth){
+			if(y > (p->vscroll+rheight-SCROLL_WIDTH))
+				p->hscroll_pressed=TRUE;
+			else
+				p->hscroll_pressed=FALSE;
+		}
+	}
+	return 0;
 }
 int scroll_page_view(HWND hwnd,SCREEN *sc,int amount,int control)
 {

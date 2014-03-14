@@ -483,8 +483,8 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static lmb_down=FALSE;
 #ifdef _DEBUG
-	if(FALSE)
-	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
+	//if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&msg!=WM_MOUSEMOVE)
 	{
 		static DWORD tick;
 		if((GetTickCount()-tick)>500)
@@ -503,24 +503,12 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		if(wparam==0x1b)
 			exit(0);
 		break;
-	case WM_MOUSEWHEEL:
-		{
-			short w=HIWORD(wparam);
-			int key=LOWORD(wparam);
-			int amount=3;
-			int control=0;
-			if(key&MK_RBUTTON)
-				amount=10;
-			if(key&MK_CONTROL)
-				control=1;
-
-			if(w>0)
-				amount=-amount;
-			scroll_page_view(hwnd,&scpage,amount,control);
-		}
-		break;
 	case WM_MOUSEMOVE:
 		set_focus(hwnd);
+		break;
+	case WM_LBUTTONDOWN:
+		SetFocus(hwnd);
+		ghfocus=hwnd;
 		break;
 	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
@@ -772,8 +760,10 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	case WM_APP:
 		switch(wparam){
 		case WM_SETFOCUS:
-			if(lparam)
+			if(lparam){
 				SetFocus(lparam);
+				printf("set focus %08X\n",lparam);
+			}
 			break;
 		}
 		break;
@@ -875,7 +865,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 			_msg=msg.message;
 			lparam=msg.lParam;
 			wparam=msg.wParam;
-			if(FALSE)
+			//if(FALSE)
 			if(_msg!=WM_MOUSEFIRST&&_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE&&_msg!=WM_DRAWITEM
 				&&_msg!=WM_CTLCOLORBTN&&_msg!=WM_CTLCOLOREDIT&&_msg!=WM_PAINT)
 			//if(_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE)
