@@ -475,13 +475,161 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 	}
 	return result;
 }
-
+int clear_params()
+{
+	extern PARAM_LIST param_list;
+	PARAM_CONTROL *p=param_list.list;
+	while(p){
+		PARAM_CONTROL *tmp;
+		if(p->control.data)
+			free(p->control.data);
+		tmp=p;
+		p=p->next;
+		free(tmp);
+	}
+	param_list.list=0;
+	return TRUE;
+}
+int add_param_control(PARAM_LIST *pl,PARAM_CONTROL *c)
+{
+	int result=FALSE;
+	if(pl==0 || c==0)
+		return result;
+	if(pl->list==0){
+		pl->list=c;
+		result=TRUE;
+	}else{
+		PARAM_CONTROL *list=pl->list;
+		while(list->next!=0){
+			list=list->next;
+		}
+		list->next=c;
+		c->prev=list;
+		result=TRUE;
+	}
+	return result;
+}
+int create_param_control(int type,PARAM_CONTROL *pc)
+{
+	int result=FALSE;
+	int size=0;
+	if(pc==0)
+		return result;
+	switch(type){
+	case PC_3FLOATA: size=sizeof(C3FLOATA);break;
+	case CSTATIC: size=sizeof(STATICTEXT);break;
+	case CEDIT: size=sizeof(EDITBOX);break;
+	}
+	if(size!=0){
+		void *data=0;
+		data=malloc(size);
+		if(data!=0){
+			memset(data,0,size);
+			pc->control.data=data;
+			pc->control.type=type;
+			result=TRUE;
+		}
+	}
+	return result;
+}
+int create_op_params(OP *o)
+{
+	extern PARAM_LIST param_list;
+	int result=FALSE;
+	clear_params();
+	if(o==0)
+		return result;
+	else{
+		PARAM_LIST *pl=&param_list;
+		switch(o->type){
+		case TCUBE:
+			{
+				struct PCLIST{
+					int type;
+					const char *name;
+					const char *text;
+					int x,y,w,h;
+				};
+				struct PCLIST pclist[]={
+					{CSTATIC,"type","cube",4*12,0,40,20},
+					{CEDIT,"name","",4*12,0,40,20},
+					{PC_3FLOATA,"rotate","",4*12,0,40,20},
+				};
+				int i,xpos=0,ypos=0;
+				for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
+					PARAM_CONTROL *pc=malloc(sizeof(PARAM_CONTROL));
+					if(pc){
+						memset(pc,0,sizeof(PARAM_CONTROL));
+						if(create_param_control(pclist[i].type,pc)){
+							xpos=0;
+							switch(pclist[i].type){
+							case PC_3FLOATA:
+								{
+									C3FLOATA *c=pc->control.data;
+									if(c){
+										c->x=pclist[i].x+xpos;
+										c->y=pclist[i].y+ypos;
+										c->w=pclist[i].w;
+										c->h=pclist[i].h;
+										pc->name=pclist[i].name;
+										pc->x=xpos;
+										pc->y=ypos;
+										result=TRUE;
+									}
+								}
+								break;
+							case CSTATIC:
+								{
+									STATICTEXT *c=pc->control.data;
+									if(c){
+										c->x=pclist[i].x+xpos;
+										c->y=pclist[i].y+ypos;
+										c->w=pclist[i].w;
+										c->h=pclist[i].h;
+										c->str=pclist[i].text;
+										pc->name=pclist[i].name;
+										pc->x=xpos;
+										pc->y=ypos;
+										result=TRUE;
+									}
+								}
+								break;
+							case CEDIT:
+								{
+									EDITBOX *c=pc->control.data;
+									if(c){
+										c->x=pclist[i].x+xpos;
+										c->y=pclist[i].y+ypos;
+										c->w=pclist[i].w;
+										c->h=pclist[i].h;
+										c->str=pclist[i].text;
+										pc->name=pclist[i].name;
+										pc->x=xpos;
+										pc->y=ypos;
+										result=TRUE;
+									}
+								}
+								break;
+							}
+						}
+					}
+					if((!result) && pc)
+						free(pc);
+					if(result){
+						add_param_control(pl,pc);
+						ypos+=30;
+					}
+				}
+			}
+			break;
+		}
+	}
+}
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static int drag=0,clickx=0,clicky=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
-	extern OP *selected_op;
 	p=page_list.current;
 	if(p==0)
 		p=page_list.list;
@@ -511,10 +659,10 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		{
 			short w=HIWORD(wparam);
 			int key=LOWORD(wparam);
-			int amount=DEFBUTTONH/2;
+			int amount=DEFBUTTONH;
 			int control=0;
 			if(key&MK_SHIFT)
-				amount<<=3;
+				amount<<=2;
 			if(key&MK_CONTROL)
 				control=1;
 
@@ -537,31 +685,40 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			if(p->vscroll_pressed){
 				float delta=y-clicky;
 				RECT rect={0};
-				int height;
+				int h,bh,range,d;
 				GetWindowRect(hwnd,&rect);
-				//scroll.range=sc->h-rect_height;
-				//bheight=h-(range/3);
-					//if(bheight<10){
-				//ypos=(float)(h-bheight)*((float)pos/(float)(range));
-
-				height=rect.bottom-rect.top;
-				height-=height-((sc->h-height)/3);
-				if(height<=0)
-					height=1;
-				delta*=((float)sc->h/(float)height);
+				h=rect.bottom-rect.top;
+				range=sc->h-h;
+				bh=h-(range/3);
+				if(bh<10){
+					bh=10;
+					if(h<10)
+						bh=h;
+				}
+				d=h-bh;
+				if(d<=0)
+					d=1;
+				delta=delta*range/d;
 				p->vscroll+=(int)delta;
 				clicky=y;
 			}
 			if(p->hscroll_pressed){
 				float delta=x-clickx;
 				RECT rect={0};
-				int width;
+				int w,bw,range,d;
 				GetWindowRect(hwnd,&rect);
-				width=rect.right-rect.left;
-				//width+=240;
-				if(width<=0)
-					width=1;
-				delta*=((float)sc->w/(float)width);
+				w=rect.right-rect.left;
+				range=sc->w-w;
+				bw=w-(range/3);
+				if(bw<10){
+					bw=10;
+					if(w<10)
+						bw=w;
+				}
+				d=w-bw;
+				if(d<=0)
+					d=1;
+				delta=delta*range/d;
 				p->hscroll+=(int)delta;
 				clickx=x;
 			}
@@ -585,22 +742,22 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_LBUTTONDOWN:
 		{
-			int x,y;
+			int x,y,cx,cy;
 			OP *op=0;
 			clickx=x=LOWORD(lparam);
 			clicky=y=HIWORD(lparam);
 			x+=p->hscroll;
 			y+=p->vscroll;
-			p->cursorx=x;
-			p->cursory=y;
-			get_nearest_grid(sc,&p->cursorx,&p->cursory);
+			cx=x;
+			cy=y;
+			get_nearest_grid(sc,&cx,&cy);
 			if(!(wparam&MK_CONTROL))
 				clear_pressed_all(p);
 			hittest_op(p,x,y,&op);
 			if(op){
 				drag=TRUE;
 				op->selected=TRUE;
-				selected_op=op;
+				create_op_params(op);
 				if(op->control.type==CBUTTON){
 					BUTTON *b=op->control.data;
 					if(b){
@@ -608,9 +765,12 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					}
 				}
 			}
-			else
-				selected_op=0;
-			check_scroll_hit(sc,p,hwnd,x,y);
+			else{
+			}
+			if(!check_scroll_hit(sc,p,hwnd,x,y)){
+				p->cursorx=cx;
+				p->cursory=cy;
+			}
 		}
 		break;
 	case WM_RBUTTONDOWN:
@@ -627,8 +787,9 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 }
 int check_scroll_hit(SCREEN *sc,PAGE_DATA *p,HWND hwnd,int x,int y)
 {
+	int result=FALSE;
 	if(sc==0)
-		return 0;
+		return result;
 	else{
 		RECT rect={0};
 		int rwidth,rheight;
@@ -640,19 +801,23 @@ int check_scroll_hit(SCREEN *sc,PAGE_DATA *p,HWND hwnd,int x,int y)
 		if(rheight>sc->h)
 			rheight=sc->h;
 		if(sc->h > rheight){
-			if(x > (p->hscroll+rwidth-SCROLL_WIDTH))
+			if(x > (p->hscroll+rwidth-SCROLL_WIDTH)){
 				p->vscroll_pressed=TRUE;
+				result=TRUE;
+			}
 			else
 				p->vscroll_pressed=FALSE;
 		}
 		if(sc->w > rwidth){
-			if(y > (p->vscroll+rheight-SCROLL_WIDTH))
+			if(y > (p->vscroll+rheight-SCROLL_WIDTH)){
 				p->hscroll_pressed=TRUE;
+				result=TRUE;
+			}
 			else
 				p->hscroll_pressed=FALSE;
 		}
 	}
-	return 0;
+	return result;
 }
 int scroll_page_view(HWND hwnd,SCREEN *sc,int amount,int control)
 {

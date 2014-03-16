@@ -483,7 +483,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static lmb_down=FALSE;
 #ifdef _DEBUG
-	//if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&msg!=WM_MOUSEMOVE)
 	{
 		static DWORD tick;
@@ -865,7 +865,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 			_msg=msg.message;
 			lparam=msg.lParam;
 			wparam=msg.wParam;
-			//if(FALSE)
+			if(FALSE)
 			if(_msg!=WM_MOUSEFIRST&&_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE&&_msg!=WM_DRAWITEM
 				&&_msg!=WM_CTLCOLORBTN&&_msg!=WM_CTLCOLOREDIT&&_msg!=WM_PAINT)
 			//if(_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE)

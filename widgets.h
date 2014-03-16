@@ -37,12 +37,23 @@ typedef struct{
 }SCROLLBAR;
 
 typedef struct{
-	char *str;
+	const char *str;
 	int x;
 	int y;
 	int w;
 	int h;
 }STATICTEXT;
+
+typedef struct{
+	char *str;
+	int maxlen;
+	int cursor;
+	int multiline;
+	int x;
+	int y;
+	int w;
+	int h;
+}EDITBOX;
 
 typedef struct{
 	int x;
@@ -59,6 +70,14 @@ typedef struct{
 	int color;
 }CONTROLDRAG;
 
+typedef struct{
+	const char *name;
+	int x,y;
+	int w,h;
+	float a,b,c;
+	int animate;
+}C3FLOATA;
+
 
 typedef struct{
 	float x,y,z;
@@ -70,7 +89,8 @@ typedef enum OPTYPES{
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CSTATIC,CRECT,CDRAG
+	CBUTTON,CSCROLL,CSTATIC,CEDIT,CRECT,CDRAG,
+	PC_3FLOATA
 };
 
 typedef struct{
@@ -92,7 +112,7 @@ typedef struct{
 
 typedef struct{
 	OP *list;
-	char *name;
+	const char *name;
 	int hscroll;
 	int vscroll;
 	int vscroll_pressed;
@@ -108,3 +128,23 @@ typedef struct{
 	int hscroll;
 	int vscroll;
 }PAGE_LIST;
+
+
+typedef struct{
+//	int type;
+	CONTROL control;
+	const char *name;
+	int x,y;
+	void *dref;
+	void *next;
+	void *prev;
+}PARAM_CONTROL;
+
+typedef struct{
+	PARAM_CONTROL *list;
+	OP *ref;
+	int hscroll;
+	int vscroll;
+}PARAM_LIST;
+
+

@@ -4,7 +4,7 @@
 
 
 PAGE_LIST page_list={0};
-OP *selected_op=0;
+PARAM_LIST param_list={0};
 
 int init_page_list()
 {
@@ -149,12 +149,20 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 
 int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 {
-	if(selected_op){
-		switch(selected_op->type){
-		case TCUBE:
-			draw_rect(sc,10,10,100,10,0xFF00);
+	PARAM_CONTROL *pc=param_list.list;
+	while(pc){
+		draw_string(sc,pc->x,pc->y,pc->name);
+		switch(pc->control.type){
+		case CSTATIC:
+			{
+				STATICTEXT *c=pc->control.data;
+				if(c){
+					draw_string(sc,c->x,c->y,c->str);
+				}
+			}
 			break;
 		}
+		pc=pc->next;
 	}
 	return 0;
 }
