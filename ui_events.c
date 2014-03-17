@@ -122,6 +122,34 @@ int create_op(int type,OP *op,int x,int y)
 			}
 		}
 		break;
+	case TMULTIPLY:
+		{
+			BUTTON *button;
+			MULTIPLY_DATA *data;
+			button=malloc(sizeof(BUTTON));
+			data=malloc(sizeof(MULTIPLY_DATA));
+			if(button && data){
+				memset(button,0,sizeof(BUTTON));
+				memset(data,0,sizeof(MULTIPLY_DATA));
+				button->w=DEFBUTTONW;
+				button->h=DEFBUTTONH;
+				button->x=x;
+				button->y=y;
+				op->control.type=CBUTTON;
+				op->control.data=button;
+				op->type=type;
+				op->data=data;
+				result=TRUE;
+			}
+			else{
+				if(button)
+					free(button);
+				if(data)
+					free(data);
+			}
+
+		}
+		break;
 	case TDRAG:
 		{
 			CONTROLDRAG *drag;
@@ -138,14 +166,14 @@ int create_op(int type,OP *op,int x,int y)
 	}
 	return result;
 }
-int add_cube_op(PAGE_DATA *p,int x,int y)
+int add_type_op(PAGE_DATA *p,int type,int x,int y)
 {
 	int result=FALSE;
 	OP *op;
 	op=malloc(sizeof(OP));
 	if(op){
 		memset(op,0,sizeof(OP));
-		if(create_op(TCUBE,op,x+p->hscroll,y+p->vscroll)){
+		if(create_op(type,op,x+p->hscroll,y+p->vscroll)){
 			if(add_op(p,op))
 				result=TRUE;
 		}
@@ -344,7 +372,8 @@ int hittest_op(PAGE_DATA *p,int x,int y,OP **op)
 		if(get_op_pos(oplist,&tx,&ty,&tw,&th)){
 			if(x>=tx && x<=(tx+tw)){
 				if(y>=ty && y<=(ty+th)){
-					*op=oplist;
+					if(op)
+						*op=oplist;
 					result=TRUE;
 					break;
 				}
@@ -481,8 +510,18 @@ int clear_params()
 	PARAM_CONTROL *p=param_list.list;
 	while(p){
 		PARAM_CONTROL *tmp;
-		if(p->control.data)
+		if(p->control.data){
+			switch(p->control.type){
+			case CEDIT:
+				{
+					EDITBOX *e=p->control.data;
+					if(e && e->str)
+						free(e->str);
+				}
+				break;
+			}
 			free(p->control.data);
+		}
 		tmp=p;
 		p=p->next;
 		free(tmp);
@@ -551,9 +590,9 @@ int create_op_params(OP *o)
 					int x,y,w,h;
 				};
 				struct PCLIST pclist[]={
-					{CSTATIC,"type","cube",4*12,0,40,20},
-					{CEDIT,"name","",4*12,0,40,20},
-					{PC_3FLOATA,"rotate","",4*12,0,40,20},
+					{CSTATIC,"type","cube",8*8,0,40,20},
+					{CEDIT,"name","",8*8,0,8*40,20},
+					{PC_3FLOATA,"tesselate","",10*8,0,3*12*8,20},
 				};
 				int i,xpos=0,ypos=0;
 				for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
@@ -598,11 +637,18 @@ int create_op_params(OP *o)
 								{
 									EDITBOX *c=pc->control.data;
 									if(c){
+										char *str=0;
+										int maxlen=80;
+										str=malloc(maxlen+1);
+										if(str)
+											memset(str,0,maxlen+1);
 										c->x=pclist[i].x+xpos;
 										c->y=pclist[i].y+ypos;
 										c->w=pclist[i].w;
 										c->h=pclist[i].h;
 										c->str=pclist[i].text;
+										c->str=str;
+										c->maxlen=maxlen;
 										pc->name=pclist[i].name;
 										pc->x=xpos;
 										pc->y=ypos;
@@ -778,8 +824,6 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			int x,y;
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
-			get_nearest_grid(sc,&x,&y);
-			add_cube_op(p,x,y);
 		}
 		break;
 	}

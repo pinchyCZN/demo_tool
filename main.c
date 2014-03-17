@@ -482,6 +482,10 @@ LRESULT CALLBACK win_pagelist_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpara
 LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static lmb_down=FALSE;
+	static HMENU hmenu=0;
+	typedef enum CMDMENU{
+		CMD_DELETE,CMD_CUBE,CMD_MULTIPLY
+	};
 #ifdef _DEBUG
 	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&msg!=WM_MOUSEMOVE)
@@ -498,6 +502,11 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 
 	switch(msg){
 	case WM_CREATE:
+		hmenu=CreatePopupMenu();
+		if(hmenu){
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
+		}
 		return 0;
 	case WM_KEYFIRST:
 		if(wparam==0x1b)
@@ -505,6 +514,31 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	case WM_MOUSEMOVE:
 		set_focus(hwnd);
+		break;
+	case WM_CONTEXTMENU:
+		if(hmenu){
+			int x=LOWORD(lparam),y=HIWORD(lparam);
+			TrackPopupMenu(hmenu,TPM_LEFTALIGN,x,y,0,hwnd,NULL);
+		}
+		break;
+	case WM_COMMAND:
+		{
+			extern PAGE_LIST page_list;
+			PAGE_DATA *p;
+			p=page_list.current;
+			if(p==0)
+				break;
+			if(hittest_op(p,p->cursorx+1,p->cursory+1,NULL))
+				break;
+			switch(LOWORD(wparam)){
+			case CMD_CUBE:
+				add_type_op(p,TCUBE,p->cursorx,p->cursory);
+				break;
+			case CMD_MULTIPLY:
+				add_type_op(p,TMULTIPLY,p->cursorx,p->cursory);
+				break;
+			}
+		}
 		break;
 	case WM_LBUTTONDOWN:
 		SetFocus(hwnd);

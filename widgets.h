@@ -76,16 +76,23 @@ typedef struct{
 	int w,h;
 	float a,b,c;
 	int animate;
+	int selected; //a=1,b,c,animate
 }C3FLOATA;
 
 
 typedef struct{
-	float x,y,z;
-	float w,h,l;
+	float tessx,tessy,tessz;
 }CUBE_DATA;
 
+typedef struct{
+	float	scalex,scaley,scalez;
+	float	rotatex,rotatey,rotatez;
+	float	transx,transy,transz;
+}MULTIPLY_DATA;
+
 typedef enum OPTYPES{
-	TCUBE,TRECT,TDRAG,TRECTSELECT
+	TCUBE,TMULTIPLY,
+	TRECT,TDRAG,TRECTSELECT
 };
 
 typedef enum CONTROLTYPES{

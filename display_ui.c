@@ -59,10 +59,15 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 		OP *list=p->list;
 		while(list){
 			switch(list->type){
+			case TMULTIPLY:
 			case TCUBE:
 				{
 					BUTTON *b=list->control.data;
-					static char *str="CUBE";
+					static char *str="";
+					switch(list->type){
+						case TCUBE:str="CUBE";break;
+						case TMULTIPLY:str="MULTIPLY";break;
+					}
 					if(list->name[0]==0)
 						b->text=str;
 					else
@@ -151,16 +156,56 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 {
 	PARAM_CONTROL *pc=param_list.list;
 	while(pc){
-		draw_string(sc,pc->x,pc->y,pc->name);
+		int height=0;
 		switch(pc->control.type){
 		case CSTATIC:
 			{
 				STATICTEXT *c=pc->control.data;
 				if(c){
-					draw_string(sc,c->x,c->y,c->str);
+					draw_string(sc,c->x,c->y+(c->h/2)-6,c->str);
+					height=c->h;
 				}
 			}
 			break;
+		case CEDIT:
+			{
+				EDITBOX *e=pc->control.data;
+				if(e){
+					draw_rect(sc,e->x,e->y,e->w,e->h,0x202020);
+					draw_line_v(sc,e->x+(e->cursor*8),e->y,e->h,0x7F2020);
+					if(e->str)
+						draw_string(sc,e->x+1,e->y+(e->h/2)-6,e->str);
+					height=e->h;
+				}
+			}
+			break;
+		case PC_3FLOATA:
+			{
+				C3FLOATA *c=pc->control.data;
+				if(c){
+					char str[20];
+					int ypos=c->h/2-6;
+					int fwidth=(c->w-12)/3;
+					int i;
+					float f[3]={c->a,c->b,c->c};
+					for(i=0;i<3;i++){
+						int x=c->x+(i*fwidth);
+						_snprintf(str,sizeof(str),"%.4f",f[i]);
+						draw_rect(sc,x,c->y,fwidth-1,c->h,0x202020);
+						draw_string(sc,x+4,c->y+ypos,str);
+					}
+					draw_rect(sc,c->x+3*fwidth,c->y,16,c->h,0x202020);
+					draw_string(sc,c->x+4+3*fwidth,c->y+ypos,"A");
+					height=c->h;
+				}
+			}
+			break;
+		}
+		if(pc->name){
+			int offset=0;
+			if(height!=0)
+				offset=(height/2)-6;
+			draw_string(sc,pc->x,pc->y+offset,pc->name);
 		}
 		pc=pc->next;
 	}
