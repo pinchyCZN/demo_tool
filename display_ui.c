@@ -172,7 +172,8 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 				EDITBOX *e=pc->control.data;
 				if(e){
 					draw_rect(sc,e->x,e->y,e->w,e->h,0x202020);
-					draw_line_v(sc,e->x+(e->cursor*8),e->y,e->h,0x7F2020);
+					if(pc->has_focus)
+						draw_line_v(sc,e->x+(e->cursor*8),e->y,e->h,0x7F2020);
 					if(e->str)
 						draw_string(sc,e->x+1,e->y+(e->h/2)-6,e->str);
 					height=e->h;
@@ -183,16 +184,15 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			{
 				C3FLOATA *c=pc->control.data;
 				if(c){
-					char str[20];
 					int ypos=c->h/2-6;
 					int fwidth=(c->w-12)/3;
 					int i;
 					float f[3]={c->a,c->b,c->c};
+					char *str[3]={c->numa,c->numb,c->numc};
 					for(i=0;i<3;i++){
 						int x=c->x+(i*fwidth);
-						_snprintf(str,sizeof(str),"%.4f",f[i]);
 						draw_rect(sc,x,c->y,fwidth-1,c->h,0x202020);
-						draw_string(sc,x+4,c->y+ypos,str);
+						draw_string(sc,x+4,c->y+ypos,str[i]);
 					}
 					draw_rect(sc,c->x+3*fwidth,c->y,16,c->h,0x202020);
 					draw_string(sc,c->x+4+3*fwidth,c->y+ypos,"A");

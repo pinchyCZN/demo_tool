@@ -70,13 +70,18 @@ typedef struct{
 	int color;
 }CONTROLDRAG;
 
+
 typedef struct{
 	const char *name;
 	int x,y;
 	int w,h;
 	float a,b,c;
+	char numa[40];
+	char numb[40];
+	char numc[40];
+	int cursor;
 	int animate;
-	int selected; //a=1,b,c,animate
+	int selected; //0=none,1=a,b,c,animate
 }C3FLOATA;
 
 
@@ -142,6 +147,7 @@ typedef struct{
 	CONTROL control;
 	const char *name;
 	int x,y;
+	int has_focus;
 	void *dref;
 	void *next;
 	void *prev;

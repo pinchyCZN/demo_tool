@@ -447,6 +447,8 @@ LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		tick=GetTickCount();
 	}
 #endif
+	param_win_message(&scparams,hwnd,msg,wparam,lparam);
+
 	switch(msg){
 	case WM_CREATE:
 		return 0;
