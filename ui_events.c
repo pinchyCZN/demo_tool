@@ -300,6 +300,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 				result=TRUE;
 			}
 		}
+		break;
 	case CEDIT:
 		{
 			EDITBOX *e;
@@ -313,8 +314,10 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 					*w=e->w;
 				if(h)
 					*h=e->h;
+				result=TRUE;
 			}
 		}
+		break;
 	case PC_3FLOATA:
 		{
 			C3FLOATA *c;
@@ -328,6 +331,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 					*w=c->w;
 				if(h)
 					*h=c->h;
+				result=TRUE;
 			}
 
 		}
@@ -872,6 +876,7 @@ int hittest_param(PARAM_CONTROL *pclist,int x,int y,PARAM_CONTROL **pc)
 	while(pclist){
 		int tx,ty,tw,th;
 		if(get_control_pos(&pclist->control,&tx,&ty,&tw,&th)){
+			printf("x=%i y=%i tx=%i ty=%i twend=%i thend=%i\n",x,y,tx,ty,tx+tw,ty+th);
 			if(x>=tx && x<=(tx+tw)){
 				if(y>=ty && y<=(ty+th)){
 					if(pc)
@@ -883,6 +888,39 @@ int hittest_param(PARAM_CONTROL *pclist,int x,int y,PARAM_CONTROL **pc)
 			}
 		}
 		pclist=pclist->next;
+	}
+	return result;
+}
+int clear_param_selected(PARAM_CONTROL *list)
+{
+	int count=0;
+	while(list!=0){
+		list->has_focus=FALSE;
+		count++;
+		list=list->next;
+	}
+	return count;
+}
+int send_char_control(CONTROL *c,WPARAM wparam,LPARAM lparam)
+{
+	int result=FALSE;
+	if(c){
+		int key=wparam;
+		switch(c->type){
+		case CEDIT:
+			{
+				EDITBOX *e=c->data;
+				if(e && e->str){
+					if(e->cursor < e->maxlen){
+						e->str[e->cursor]=wparam;
+						e->cursor++;
+					}
+				}
+			}
+			break;
+		case PC_3FLOATA:
+			break;
+		}
 	}
 	return result;
 }
@@ -901,8 +939,20 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			PARAM_CONTROL *pc=0;
 			clickx=x=LOWORD(lparam);
 			clicky=y=HIWORD(lparam);
+			clear_param_selected(p);
 			if(hittest_param(p,x,y,&pc)){
-				printf("made it\n");
+				pc->has_focus=TRUE;
+			}
+		}
+		break;
+	case WM_KEYFIRST:
+		{
+			PARAM_CONTROL *list=p;
+			while(list){
+				if(list->has_focus){
+					send_char_control(&list->control,wparam,lparam);
+				}
+				list=list->next;
 			}
 		}
 		break;
