@@ -905,16 +905,30 @@ int send_char_control(CONTROL *c,WPARAM wparam,LPARAM lparam)
 {
 	int result=FALSE;
 	if(c){
-		int key=wparam;
+		unsigned char key=MapVirtualKey(wparam,2);
 		switch(c->type){
 		case CEDIT:
 			{
 				EDITBOX *e=c->data;
 				if(e && e->str){
-					if(e->cursor < e->maxlen){
-						e->str[e->cursor]=wparam;
-						e->cursor++;
+					printf("key=%02X scan=%08X\n",key,lparam);
+					switch(key){
+					case '\b':
+						e->str[e->cursor]=0;
+						e->cursor--;
+						break;
+					
+					default:
+						if(e->cursor < e->maxlen){
+							e->str[e->cursor]=key;
+							e->cursor++;
+						}
+						break;
 					}
+					if(e->cursor < 0)
+						e->cursor=0;
+					else if(e->cursor >= e->maxlen)
+						e->cursor = e->maxlen-1;
 				}
 			}
 			break;
