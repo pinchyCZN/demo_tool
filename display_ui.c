@@ -66,8 +66,21 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 					}
 					if(list->name[0]==0)
 						b->text=str;
-					else
-						b->text=list->name;
+					else{
+						char str[sizeof(list->name)];
+						int len;
+						len=_snprintf(str,sizeof(str),"\"%s\"",list->name);
+						if(len<0)
+							len=sizeof(str);
+						if((len*8)>=b->w){
+							len=(b->w)/8;
+							if(len>sizeof(str))
+								len=sizeof(str);
+							if(len>0)
+								str[len-1]=0;
+						}
+						b->text=str;
+					}
 					draw_button(sc,b);
 
 					if(list->selected)
@@ -167,7 +180,8 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			{
 				EDITBOX *e=pc->control.data;
 				if(e){
-					draw_rect(sc,e->x,e->y,e->w,e->h,0x202020);
+					int width=e->maxlen*8;
+					draw_rect(sc,e->x,e->y,width,e->h,0x202020);
 					if(pc->has_focus){
 						if(e->overwrite)
 							draw_line_h(sc,e->x+(e->cursor*8),e->y+e->h-1,9,0x7F2020);

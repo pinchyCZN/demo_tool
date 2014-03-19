@@ -26,7 +26,7 @@ int del_op(PAGE_DATA *pd,OP *op)
 	int result=FALSE;
 	if(pd==0 || op==0)
 		return result;
-	clear_params();
+	//clear_params();
 	{
 		OP *prev,*next;
 		prev=op->list_prev;
@@ -553,9 +553,6 @@ int clear_params()
 			switch(p->control.type){
 			case CEDIT:
 				{
-					EDITBOX *e=p->control.data;
-					if(e && e->str)
-						free(e->str);
 				}
 				break;
 			}
@@ -679,12 +676,8 @@ int create_op_params(OP *o)
 								{
 									EDITBOX *c=pc->control.data;
 									if(c){
-										char *str=0;
-										int maxlen=40;
-										str=malloc(maxlen+1);
-										if(str){
-											memset(str,0,maxlen+1);
-										}
+										char *str=o->name;
+										int maxlen=sizeof(o->name)-1;
 										c->x=pclist[i].x+xpos;
 										c->y=pclist[i].y+ypos;
 										c->w=pclist[i].w;
@@ -916,7 +909,12 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 					switch(vkey){
 					case VK_BACK:
 						if(e->cursor>0){
-							e->str[e->cursor-1]=0;
+							int i;
+							for(i=e->cursor-1;i<e->maxlen;i++){
+								e->str[i]=e->str[i+1];
+								if(e->str[i+1]==0)
+									break;
+							}
 							e->cursor--;
 						}
 						break;

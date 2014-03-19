@@ -116,7 +116,7 @@ typedef struct{
 	int type;
 	void *data;
 	CONTROL control;
-	char name[80];
+	char name[20];
 	void *op_prev,*op_next;
 	void *list_prev,*list_next;
 	int selected;
