@@ -49,6 +49,7 @@ typedef struct{
 	int maxlen;
 	int cursor;
 	int multiline;
+	int overwrite;
 	int x;
 	int y;
 	int w;
@@ -76,12 +77,13 @@ typedef struct{
 	int x,y;
 	int w,h;
 	float a,b,c;
-	char numa[40];
-	char numb[40];
-	char numc[40];
+	char numa[16];
+	char numb[16];
+	char numc[16];
 	int cursor;
 	int animate;
 	int selected; //0=none,1=a,b,c,animate
+	int changed;
 }C3FLOATA;
 
 
@@ -123,8 +125,26 @@ typedef struct{
 }OP;
 
 typedef struct{
-	OP *list;
+//	int type;
+	CONTROL control;
 	const char *name;
+	int x,y;
+	int has_focus;
+	void *dref;
+	void *next;
+	void *prev;
+}PARAM_CONTROL;
+
+typedef struct{
+	PARAM_CONTROL *list;
+	OP *ref;
+	int hscroll;
+	int vscroll;
+}PARAM_LIST;
+
+typedef struct{
+	OP *list;
+	char name[20];
 	int hscroll;
 	int vscroll;
 	int vscroll_pressed;
@@ -142,22 +162,5 @@ typedef struct{
 }PAGE_LIST;
 
 
-typedef struct{
-//	int type;
-	CONTROL control;
-	const char *name;
-	int x,y;
-	int has_focus;
-	void *dref;
-	void *next;
-	void *prev;
-}PARAM_CONTROL;
-
-typedef struct{
-	PARAM_CONTROL *list;
-	OP *ref;
-	int hscroll;
-	int vscroll;
-}PARAM_LIST;
 
 

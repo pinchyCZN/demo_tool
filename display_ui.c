@@ -14,15 +14,11 @@ int init_page_list()
 	if(p){
 		char *str;
 		memset(p,0,sizeof(PAGE_DATA));
-		str=malloc(sizeof("page1"));
-		if(str){
-			p->name=str;
-			add_page(&page_list,&p);
-			page_list.current=p;
-			result=TRUE;
-		}
-		else
-			free(p);
+		_snprintf(p->name,sizeof(p->name),"default");
+		p->name[sizeof(p->name)-1]=0;
+		add_page(&page_list,&p);
+		page_list.current=p;
+		result=TRUE;
 	}
 	return result;
 }
@@ -172,8 +168,12 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 				EDITBOX *e=pc->control.data;
 				if(e){
 					draw_rect(sc,e->x,e->y,e->w,e->h,0x202020);
-					if(pc->has_focus)
-						draw_line_v(sc,e->x+(e->cursor*8),e->y,e->h,0x7F2020);
+					if(pc->has_focus){
+						if(e->overwrite)
+							draw_line_h(sc,e->x+(e->cursor*8),e->y+e->h-1,9,0x7F2020);
+						else
+							draw_line_v(sc,e->x+(e->cursor*8),e->y,e->h,0x7F2020);
+					}
 					if(e->str)
 						draw_string(sc,e->x+1,e->y+(e->h/2)-6,e->str);
 					height=e->h;

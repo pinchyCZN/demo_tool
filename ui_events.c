@@ -26,6 +26,7 @@ int del_op(PAGE_DATA *pd,OP *op)
 	int result=FALSE;
 	if(pd==0 || op==0)
 		return result;
+	clear_params();
 	{
 		OP *prev,*next;
 		prev=op->list_prev;
@@ -38,6 +39,8 @@ int del_op(PAGE_DATA *pd,OP *op)
 			prev->list_next=next;
 		if(next)
 			next->list_prev=prev;
+		if(prev==0)
+			pd->list=0;
 		free(op);
 		result=TRUE;
 	}
@@ -626,8 +629,8 @@ int create_op_params(OP *o)
 					int x,y,w,h;
 				};
 				struct PCLIST pclist[]={
-					{CSTATIC,"type","cube",8*8,0,40,20},
-					{CEDIT,"name","",8*8,0,8*40,20},
+					{CSTATIC,"type","cube",6*8,0,40,20},
+					{CEDIT,"name","",6*8,0,8*40,20},
 					{PC_3FLOATA,"tesselate","",10*8,0,3*12*8,20},
 				};
 				int i,xpos=0,ypos=0;
@@ -677,10 +680,11 @@ int create_op_params(OP *o)
 									EDITBOX *c=pc->control.data;
 									if(c){
 										char *str=0;
-										int maxlen=80;
+										int maxlen=40;
 										str=malloc(maxlen+1);
-										if(str)
+										if(str){
 											memset(str,0,maxlen+1);
+										}
 										c->x=pclist[i].x+xpos;
 										c->y=pclist[i].y+ypos;
 										c->w=pclist[i].w;
@@ -876,7 +880,6 @@ int hittest_param(PARAM_CONTROL *pclist,int x,int y,PARAM_CONTROL **pc)
 	while(pclist){
 		int tx,ty,tw,th;
 		if(get_control_pos(&pclist->control,&tx,&ty,&tw,&th)){
-			printf("x=%i y=%i tx=%i ty=%i twend=%i thend=%i\n",x,y,tx,ty,tx+tw,ty+th);
 			if(x>=tx && x<=(tx+tw)){
 				if(y>=ty && y<=(ty+th)){
 					if(pc)
@@ -901,38 +904,75 @@ int clear_param_selected(PARAM_CONTROL *list)
 	}
 	return count;
 }
-int send_char_control(CONTROL *c,WPARAM wparam,LPARAM lparam)
+int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 {
 	int result=FALSE;
 	if(c){
-		unsigned char key=MapVirtualKey(wparam,2);
 		switch(c->type){
 		case CEDIT:
 			{
 				EDITBOX *e=c->data;
 				if(e && e->str){
-					printf("key=%02X scan=%08X\n",key,lparam);
-					switch(key){
-					case '\b':
-						e->str[e->cursor]=0;
+					switch(vkey){
+					case VK_BACK:
+						if(e->cursor>0){
+							e->str[e->cursor-1]=0;
+							e->cursor--;
+						}
+						break;
+					case VK_END:
+						e->cursor=strlen(e->str);
+						break;
+					case VK_HOME:
+						e->cursor=0;
+						break;
+					case VK_LEFT:
 						e->cursor--;
 						break;
-					
-					default:
-						if(e->cursor < e->maxlen){
-							e->str[e->cursor]=key;
+					case VK_RIGHT:
+						if(e->str[e->cursor]!=0)
 							e->cursor++;
+						break;
+					case VK_INSERT:
+						e->overwrite=!e->overwrite;
+						break;
+					case VK_DELETE:
+						{
+							int i;
+							for(i=e->cursor;i<e->maxlen;i++){
+								e->str[i]=e->str[i+1];
+							}
 						}
 						break;
 					}
+					if(key < ' ' || key > 0x7E)
+						;
+					else if(e->cursor < e->maxlen){
+						int k=key;
+						if(!shift)
+							k=tolower(key);
+						else
+							k=toupper(key);
+						if(!e->overwrite){
+							int i;
+							for(i=e->maxlen-2;i>=e->cursor;i--){
+								e->str[i+1]=e->str[i];
+							}
+						}
+						e->str[e->cursor]=k;
+						e->cursor++;
+					}
 					if(e->cursor < 0)
 						e->cursor=0;
-					else if(e->cursor >= e->maxlen)
-						e->cursor = e->maxlen-1;
+					else if(e->cursor > e->maxlen)
+						e->cursor = e->maxlen;
 				}
 			}
 			break;
 		case PC_3FLOATA:
+			{
+
+			}
 			break;
 		}
 	}
@@ -964,7 +1004,12 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			PARAM_CONTROL *list=p;
 			while(list){
 				if(list->has_focus){
-					send_char_control(&list->control,wparam,lparam);
+					int key,vkey,ctrl,shift;
+					key=MapVirtualKey(wparam,2)&0xFF;
+					vkey=wparam;
+					ctrl=GetKeyState(VK_CONTROL)&0x8000;
+					shift=GetKeyState(VK_SHIFT)&0x8000;
+					send_char_control(&list->control,key,vkey,ctrl,shift);
 				}
 				list=list->next;
 			}

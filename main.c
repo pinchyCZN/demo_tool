@@ -452,6 +452,11 @@ LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	switch(msg){
 	case WM_CREATE:
 		return 0;
+	case WM_MBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+	case WM_LBUTTONDOWN:
+		SetFocus(hwnd);
+		break;
 	case WM_MOUSEMOVE:
 		set_focus(hwnd);
 		break;
@@ -508,6 +513,8 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		if(hmenu){
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION|MF_SEPARATOR,0,0);
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_DELETE,"delete");
 		}
 		return 0;
 	case WM_KEYFIRST:
@@ -527,24 +534,33 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		{
 			extern PAGE_LIST page_list;
 			PAGE_DATA *p;
+			OP *op=0;
+			int x,y;
 			p=page_list.current;
 			if(p==0)
 				break;
-			if(hittest_op(p,p->cursorx+1,p->cursory+1,NULL))
-				break;
+			x=p->cursorx-p->hscroll;
+			y=p->cursory-p->vscroll;
+			hittest_op(p,x+1,y+1,&op);
 			switch(LOWORD(wparam)){
 			case CMD_CUBE:
-				add_type_op(p,TCUBE,p->cursorx,p->cursory);
+				if(op==0)
+					add_type_op(p,TCUBE,x,y);
 				break;
 			case CMD_MULTIPLY:
-				add_type_op(p,TMULTIPLY,p->cursorx,p->cursory);
+				if(op==0)
+					add_type_op(p,TMULTIPLY,x,y);
+				break;
+			case CMD_DELETE:
+				del_op(p,op);
 				break;
 			}
 		}
 		break;
+	case WM_MBUTTONDOWN:
+	case WM_RBUTTONDOWN:
 	case WM_LBUTTONDOWN:
 		SetFocus(hwnd);
-		ghfocus=hwnd;
 		break;
 	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
