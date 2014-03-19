@@ -171,7 +171,7 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			{
 				STATICTEXT *c=pc->control.data;
 				if(c){
-					draw_string(sc,c->x,c->y+(c->h/2)-6,c->str);
+					draw_string(sc,c->x,c->y+(c->h/2)-6,c->str,WHITE);
 					height=c->h;
 				}
 			}
@@ -189,7 +189,7 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 							draw_line_v(sc,e->x+(e->cursor*8),e->y,e->h,0x7F2020);
 					}
 					if(e->str)
-						draw_string(sc,e->x+1,e->y+(e->h/2)-6,e->str);
+						draw_string(sc,e->x+1,e->y+(e->h/2)-6,e->str,WHITE);
 					height=e->h;
 				}
 			}
@@ -206,10 +206,10 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 					for(i=0;i<3;i++){
 						int x=c->x+(i*fwidth);
 						draw_rect(sc,x,c->y,fwidth-1,c->h,0x202020);
-						draw_string(sc,x+4,c->y+ypos,str[i]);
+						draw_string(sc,x+4,c->y+ypos,str[i],WHITE);
 					}
 					draw_rect(sc,c->x+3*fwidth,c->y,16,c->h,0x202020);
-					draw_string(sc,c->x+4+3*fwidth,c->y+ypos,"A");
+					draw_string(sc,c->x+4+3*fwidth,c->y+ypos,"A",WHITE);
 					height=c->h;
 				}
 			}
@@ -219,7 +219,7 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			int offset=0;
 			if(height!=0)
 				offset=(height/2)-6;
-			draw_string(sc,pc->x,pc->y+offset,pc->name);
+			draw_string(sc,pc->x,pc->y+offset,pc->name,WHITE);
 		}
 		pc=pc->next;
 	}

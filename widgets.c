@@ -1,7 +1,7 @@
 #include "widgets.h"
 #include "types.h"
 
-int draw_char(SCREEN *sc,int x,int y,char a)
+int draw_char(SCREEN *sc,int x,int y,char a,int color)
 {
 extern unsigned char vga737_bin[];
 	int i,j;
@@ -23,21 +23,20 @@ extern unsigned char vga737_bin[];
 			if(offset<0)
 				continue;
 			if(p[i]&(1<<(7-j))){
-				int c=0xFFFFFF;
-				buffer[offset]=c;
+				buffer[offset]=color;
 			}else{
 			}
 		}
 	}
 	return a;
 }
-int draw_string(SCREEN *sc,int x,int y,char *str)
+int draw_string(SCREEN *sc,int x,int y,char *str,int color)
 {
 	int i;
 	int len;
 	len=strlen(str);
 	for(i=0;i<len;i++){
-		draw_char(sc,x+(i*8),y,str[i]);
+		draw_char(sc,x+(i*8),y,str[i],color);
 	}
 	return i;
 }
@@ -191,7 +190,7 @@ int draw_button(SCREEN *sc,BUTTON *button)
 		len=strlen(str);
 		cx=x+(w/2)-((len*8)/2);
 		cy=y+(h/2)-6;
-		draw_string(sc,cx,cy,str);
+		draw_string(sc,cx,cy,str,WHITE);
 	}
 	return 0;
 }
