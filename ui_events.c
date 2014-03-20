@@ -321,19 +321,19 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			}
 		}
 		break;
-	case PC_3FLOATA:
+	case CEDITFLOAT:
 		{
-			C3FLOATA *c;
-			c=control->data;
-			if(c){
+			EDITFLOAT *e;
+			e=control->data;
+			if(e){
 				if(x)
-					*x=c->x;
+					*x=e->x;
 				if(y)
-					*y=c->y;
+					*y=e->y;
 				if(w)
-					*w=c->w;
+					*w=e->w;
 				if(h)
-					*h=c->h;
+					*h=e->h;
 				result=TRUE;
 			}
 
@@ -394,6 +394,18 @@ int clear_pressed_all(PAGE_DATA *p)
 				count++;
 			}
 		}
+		oplist=oplist->list_next;
+	}
+	return count;
+}
+int clear_selected_all(PAGE_DATA *p)
+{
+	int count=0;
+	OP *oplist;
+	if(p==0)
+		return count;
+	oplist=p->list;
+	while(oplist){
 		oplist->selected=FALSE;
 		oplist=oplist->list_next;
 	}
@@ -591,7 +603,7 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	if(pc==0)
 		return result;
 	switch(type){
-	case PC_3FLOATA: size=sizeof(C3FLOATA);break;
+	case CEDITFLOAT: size=sizeof(EDITFLOAT);break;
 	case CSTATIC: size=sizeof(STATICTEXT);break;
 	case CEDIT: size=sizeof(EDITBOX);break;
 	}
@@ -624,13 +636,23 @@ int create_op_params(OP *o)
 					const char *name;
 					const char *text;
 					int x,y,w,h;
+					void *data;
+					int incheight;
 				};
 				struct PCLIST pclist[]={
-					{CSTATIC,"type","cube",6*8,0,40,20},
-					{CEDIT,"name","",6*8,0,8*40,20},
-					{PC_3FLOATA,"tesselate","",10*8,0,3*12*8,20},
+					{CSTATIC,"type","cube",6*8,0,40,20,NULL,TRUE},
+					{CEDIT,"name","",6*8,0,8*40,20,NULL,TRUE},
+					{CEDITFLOAT,"tesselate","",10*8,0,10*8,20,NULL,FALSE},
+					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
+					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
 				};
 				int i,xpos=0,ypos=0;
+				CUBE_DATA *cube=o->data;
+				if(cube){
+					pclist[2].data=&cube->tessx;
+					pclist[3].data=&cube->tessy;
+					pclist[4].data=&cube->tessz;
+				}
 				for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
 					PARAM_CONTROL *pc=malloc(sizeof(PARAM_CONTROL));
 					if(pc){
@@ -638,20 +660,24 @@ int create_op_params(OP *o)
 						if(create_param_control(pclist[i].type,pc)){
 							xpos=0;
 							switch(pclist[i].type){
-							case PC_3FLOATA:
+							case CEDITFLOAT:
 								{
-									C3FLOATA *c=pc->control.data;
+									EDITFLOAT *c=pc->control.data;
 									if(c){
+										float *f=pclist[i].data;
 										c->x=pclist[i].x+xpos;
 										c->y=pclist[i].y+ypos;
 										c->w=pclist[i].w;
 										c->h=pclist[i].h;
-										_snprintf(c->numa,sizeof(c->numa),"%.4f",c->a);
-										_snprintf(c->numb,sizeof(c->numb),"%.4f",c->b);
-										_snprintf(c->numc,sizeof(c->numc),"%.4f",c->c);
+										if(f){
+											_snprintf(c->str,sizeof(c->str),"%.4f",*f);
+											c->fdata=f;
+										}
 										pc->name=pclist[i].name;
 										pc->x=xpos;
 										pc->y=ypos;
+										if(pclist[i].incheight)
+											ypos+=30;
 										result=TRUE;
 									}
 								}
@@ -668,6 +694,8 @@ int create_op_params(OP *o)
 										pc->name=pclist[i].name;
 										pc->x=xpos;
 										pc->y=ypos;
+										if(pclist[i].incheight)
+											ypos+=30;
 										result=TRUE;
 									}
 								}
@@ -688,6 +716,8 @@ int create_op_params(OP *o)
 										pc->name=pclist[i].name;
 										pc->x=xpos;
 										pc->y=ypos;
+										if(pclist[i].incheight)
+											ypos+=30;
 										result=TRUE;
 									}
 								}
@@ -699,7 +729,6 @@ int create_op_params(OP *o)
 						free(pc);
 					if(result){
 						add_param_control(pl,pc);
-						ypos+=30;
 					}
 				}
 			}
@@ -838,6 +867,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			hittest_op(p,x,y,&op);
 			if(op){
 				drag=TRUE;
+				clear_selected_all(p);
 				op->selected=TRUE;
 				create_op_params(op);
 				if(op->control.type==CBUTTON){
@@ -897,14 +927,102 @@ int clear_param_selected(PARAM_CONTROL *list)
 	}
 	return count;
 }
+int handle_edit_keys(int key,int vkey,int shift,int ctrl,char *str,int maxlen,int *cursor,int *overwrite)
+{
+	int result=FALSE;
+	if(str==0)
+		return result;
+	switch(vkey){
+	case VK_BACK:
+		if(*cursor>0){
+			int i;
+			for(i=*cursor-1;i<maxlen;i++){
+				str[i]=str[i+1];
+				if(str[i+1]==0)
+					break;
+			}
+			(*cursor)--;
+			result=TRUE;
+		}
+		break;
+	case VK_END:
+		*cursor=strlen(str);
+		break;
+	case VK_HOME:
+		*cursor=0;
+		break;
+	case VK_LEFT:
+		(*cursor)--;
+		break;
+	case VK_RIGHT:
+		if(str[*cursor]!=0)
+			(*cursor)++;
+		break;
+	case VK_INSERT:
+		*overwrite=!(*overwrite);
+		break;
+	case VK_DELETE:
+		{
+			int i;
+			for(i=*cursor;i<maxlen;i++){
+				if(str[i]!=0)
+					result=TRUE;
+				str[i]=str[i+1];
+			}
+		}
+		break;
+	}
+	if(key < ' ' || key > 0x7E)
+		;
+	else if(*cursor < maxlen){
+		int k=key;
+		if(!shift)
+			k=tolower(key);
+		else
+			k=toupper(key);
+		if(!(*overwrite)){
+			int i;
+			for(i=maxlen-2;i>=*cursor;i--){
+				str[i+1]=str[i];
+			}
+		}
+		str[*cursor]=k;
+		(*cursor)++;
+		result=TRUE;
+	}
+	if(*cursor < 0)
+		*cursor=0;
+	else if(*cursor > maxlen)
+		*cursor = maxlen;
+	return result;
+}
 int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 {
 	int result=FALSE;
 	if(c){
 		switch(c->type){
+		case CEDITFLOAT:
+			{
+				EDITFLOAT *e=c->data;
+				if(e && e->str){
+					if(handle_edit_keys(key,vkey,shift,ctrl,e->str,sizeof(e->str)-1,&e->cursor,&e->overwrite)){
+						e->changed=TRUE;
+					}
+					if(vkey==VK_RETURN){
+						if(e->fdata)
+							*e->fdata=atof(e->str);
+						printf("%f\n",*e->fdata);
+						e->changed=FALSE;
+					}
+				}
+			}
+			break;
 		case CEDIT:
 			{
 				EDITBOX *e=c->data;
+				if(e && e->str)
+					handle_edit_keys(key,vkey,shift,ctrl,e->str,e->maxlen,&e->cursor,&e->overwrite);
+				/*
 				if(e && e->str){
 					switch(vkey){
 					case VK_BACK:
@@ -965,13 +1083,10 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 					else if(e->cursor > e->maxlen)
 						e->cursor = e->maxlen;
 				}
+				*/
 			}
 			break;
-		case PC_3FLOATA:
-			{
 
-			}
-			break;
 		}
 	}
 	return result;

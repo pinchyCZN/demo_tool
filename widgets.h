@@ -81,7 +81,7 @@ typedef struct{
 	int cursor;
 	int changed;
 	int overwrite;
-	float *data;
+	float *fdata;
 	int x,y;
 	int w,h;
 }EDITFLOAT;
@@ -117,8 +117,7 @@ typedef enum OPTYPES{
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CSTATIC,CEDIT,CRECT,CDRAG,
-	PC_3FLOATA
+	CBUTTON,CSCROLL,CSTATIC,CEDIT,CEDITFLOAT,CRECT,CDRAG
 };
 
 typedef struct{
