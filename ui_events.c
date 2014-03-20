@@ -739,7 +739,7 @@ int create_op_params(OP *o)
 }
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
-	static int drag=0,clickx=0,clicky=0;
+	static int drag=0,clickx=0,clicky=0,debounce=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
 	p=page_list.current;
@@ -790,9 +790,34 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
 			if(lmb && drag){
-				x+=p->hscroll;
-				y+=p->vscroll;
-				drag_control(sc,p,x,y,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
+				if(debounce==0){
+					int size=4;
+					int deltax,deltay;
+					deltax=clickx-x;
+					deltay=clicky-y;
+					if((deltax<-size) || (deltax>size))
+						debounce=1;
+					if((deltay<-size) || (deltay>size))
+						debounce=1;
+					if(debounce==0)
+						;
+					else{
+						if(deltax<0)
+							deltax+=size;
+						else
+							deltax-=size;
+						if(deltay<0)
+							deltay+=size;
+						else
+							deltay-=size;
+					}
+
+				}
+				if(debounce!=0){
+					x+=p->hscroll;
+					y+=p->vscroll;
+					drag_control(sc,p,x,y,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
+				}
 			}
 			if(p->vscroll_pressed){
 				float delta=y-clicky;
@@ -858,6 +883,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			OP *op=0;
 			clickx=x=LOWORD(lparam);
 			clicky=y=HIWORD(lparam);
+			debounce=0;
 			x+=p->hscroll;
 			y+=p->vscroll;
 			cx=x;
@@ -1099,6 +1125,27 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	if(p==0)
 		return FALSE;
 	switch(msg){
+	case WM_MOUSEWHEEL:
+		{
+			POINT point;
+			PARAM_CONTROL *pc=0;
+			point.x=LOWORD(lparam);
+			point.y=HIWORD(lparam);
+			MapWindowPoints(NULL,hwnd,&point,1);
+			if(hittest_param(p,point.x,point.y,&pc)){
+				if(pc->has_focus){
+					signed short deltax=(HIWORD(wparam));
+					int lmb,mmb,rmb,ctrl,shift;
+					lmb=wparam&MK_LBUTTON;
+					mmb=wparam&MK_MBUTTON;
+					rmb=wparam&MK_RBUTTON;
+					shift=wparam&MK_SHIFT;
+					ctrl=wparam&MK_CONTROL;
+					send_mouse_move(pc,deltax,0,lmb,mmb,rmb,shift,ctrl);
+				}
+			}
+		}
+		break;
 	case WM_MOUSEMOVE:
 		if(pcdrag){
 			int x,y,deltax,deltay;
@@ -1112,20 +1159,24 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			y=HIWORD(lparam);
 			deltax=clickx-x;
 			deltay=clicky-y;
-			if(debounce<2){
-				debounce++;
-				break;
-			}
-			else if(debounce==2){
-				if(deltax>0)
-					deltax=1;
-				else if(deltax<0)
-					deltax=-1;
-				if(deltay>0)
-					deltay=1;
-				else if(deltay<0)
-					deltay=-1;
-				debounce++;
+			if(debounce==0){
+				int size=4;
+				if((deltax<-size) || (deltax>size))
+					debounce=1;
+				if((deltay<-size) || (deltay>size))
+					debounce=1;
+				if(debounce==0)
+					break;
+				else{
+					if(deltax<0)
+						deltax+=size;
+					else
+						deltax-=size;
+					if(deltay<0)
+						deltay+=size;
+					else
+						deltay-=size;
+				}
 			}
 			send_mouse_move(pcdrag,deltax,deltay,lmb,mmb,rmb,shift,ctrl);
 			clickx=x;
