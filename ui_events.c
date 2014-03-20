@@ -1,5 +1,6 @@
 #define _WIN32_WINNT 0x400
 #include <windows.h>
+#include <math.h>
 #include "widgets.h"
 
 int add_op(PAGE_DATA *pd,OP *op)
@@ -1009,10 +1010,27 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 						e->changed=TRUE;
 					}
 					if(vkey==VK_RETURN){
-						if(e->fdata)
+						if(e->fdata){
 							*e->fdata=atof(e->str);
-						printf("%f\n",*e->fdata);
+							_snprintf(e->str,sizeof(e->str),"%.4f",*e->fdata);
+							e->str[sizeof(e->str)-1]=0;
+						}
 						e->changed=FALSE;
+					}
+					else if(vkey==VK_ESCAPE){
+						if(e->fdata){
+							_snprintf(e->str,sizeof(e->str),"%.4f",*e->fdata);
+						}
+						e->changed=FALSE;
+					}
+					{
+						int len;
+						e->str[sizeof(e->str)-1]=0;
+						len=strlen(e->str);
+						if(e->cursor>len)
+							e->cursor=len;
+						if(e->cursor<0)
+							e->cursor=0;
 					}
 				}
 			}
@@ -1022,68 +1040,6 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 				EDITBOX *e=c->data;
 				if(e && e->str)
 					handle_edit_keys(key,vkey,shift,ctrl,e->str,e->maxlen,&e->cursor,&e->overwrite);
-				/*
-				if(e && e->str){
-					switch(vkey){
-					case VK_BACK:
-						if(e->cursor>0){
-							int i;
-							for(i=e->cursor-1;i<e->maxlen;i++){
-								e->str[i]=e->str[i+1];
-								if(e->str[i+1]==0)
-									break;
-							}
-							e->cursor--;
-						}
-						break;
-					case VK_END:
-						e->cursor=strlen(e->str);
-						break;
-					case VK_HOME:
-						e->cursor=0;
-						break;
-					case VK_LEFT:
-						e->cursor--;
-						break;
-					case VK_RIGHT:
-						if(e->str[e->cursor]!=0)
-							e->cursor++;
-						break;
-					case VK_INSERT:
-						e->overwrite=!e->overwrite;
-						break;
-					case VK_DELETE:
-						{
-							int i;
-							for(i=e->cursor;i<e->maxlen;i++){
-								e->str[i]=e->str[i+1];
-							}
-						}
-						break;
-					}
-					if(key < ' ' || key > 0x7E)
-						;
-					else if(e->cursor < e->maxlen){
-						int k=key;
-						if(!shift)
-							k=tolower(key);
-						else
-							k=toupper(key);
-						if(!e->overwrite){
-							int i;
-							for(i=e->maxlen-2;i>=e->cursor;i--){
-								e->str[i+1]=e->str[i];
-							}
-						}
-						e->str[e->cursor]=k;
-						e->cursor++;
-					}
-					if(e->cursor < 0)
-						e->cursor=0;
-					else if(e->cursor > e->maxlen)
-						e->cursor = e->maxlen;
-				}
-				*/
 			}
 			break;
 
@@ -1091,25 +1047,108 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 	}
 	return result;
 }
+int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int rmb,int shift,int ctrl)
+{
+	int result=FALSE;
+	if(pc==0 || pc->control.data==0)
+		return result;
+	switch(pc->control.type){
+	case CEDITFLOAT:
+		{
+			EDITFLOAT *e=pc->control.data;
+			if(e){
+				float dx=deltax;
+				if(e->fdata){
+					float scale=10;
+					if(shift)
+						scale=100;
+					if(ctrl)
+						scale=1;
+					if(shift && ctrl)
+						scale=.1;
+					if(rmb)
+						*e->fdata=0;
+					else
+						(*e->fdata)+=(((float)dx)*scale);
+					_snprintf(e->str,sizeof(e->str),"%.4f",*e->fdata);
+				}
+				e->changed=FALSE;
+				{
+					int len;
+					e->str[sizeof(e->str)-1]=0;
+					len=strlen(e->str);
+					if(e->cursor>len)
+						e->cursor=len;
+					if(e->cursor<0)
+						e->cursor=0;
+				}
+			}
+
+		}
+		break;
+	}
+	return result;
+}
 int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
-	static int clickx=0,clicky=0;
+	static int clickx=0,clicky=0,debounce=0;
+	static PARAM_CONTROL *pcdrag=0;
 	PARAM_CONTROL *p;
 	extern PARAM_LIST param_list;
 	p=param_list.list;
 	if(p==0)
 		return FALSE;
 	switch(msg){
+	case WM_MOUSEMOVE:
+		if(pcdrag){
+			int x,y,deltax,deltay;
+			int lmb,mmb,rmb,ctrl,shift;
+			lmb=wparam&MK_LBUTTON;
+			mmb=wparam&MK_MBUTTON;
+			rmb=wparam&MK_RBUTTON;
+			shift=wparam&MK_SHIFT;
+			ctrl=wparam&MK_CONTROL;
+			x=LOWORD(lparam);
+			y=HIWORD(lparam);
+			deltax=clickx-x;
+			deltay=clicky-y;
+			if(debounce<2){
+				debounce++;
+				break;
+			}
+			else if(debounce==2){
+				if(deltax>0)
+					deltax=1;
+				else if(deltax<0)
+					deltax=-1;
+				if(deltay>0)
+					deltay=1;
+				else if(deltay<0)
+					deltay=-1;
+				debounce++;
+			}
+			send_mouse_move(pcdrag,deltax,deltay,lmb,mmb,rmb,shift,ctrl);
+			clickx=x;
+			clicky=y;
+		}
+		break;
+	case WM_LBUTTONUP:
+		pcdrag=0;
+		break;
 	case WM_LBUTTONDOWN:
 		{
 			int x,y;
 			PARAM_CONTROL *pc=0;
 			clickx=x=LOWORD(lparam);
 			clicky=y=HIWORD(lparam);
+			debounce=0;
 			clear_param_selected(p);
 			if(hittest_param(p,x,y,&pc)){
 				pc->has_focus=TRUE;
+				pcdrag=pc;
 			}
+			else
+				pcdrag=0;
 		}
 		break;
 	case WM_KEYFIRST:

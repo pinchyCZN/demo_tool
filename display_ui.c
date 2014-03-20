@@ -200,14 +200,14 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 				if(c){
 					int color=WHITE;
 					draw_rect(sc,c->x,c->y,c->w,c->h,0x202020);
-					if(c->changed)
-						color=RED;
 					if(pc->has_focus){
 						if(c->overwrite)
 							draw_line_h(sc,c->x+(c->cursor*8),c->y+c->h-1,9,0x7F2020);
 						else
 							draw_line_v(sc,c->x+(c->cursor*8),c->y,c->h,0x7F2020);
 					}
+					if(c->changed)
+						color=RED;
 					draw_string(sc,c->x,c->y+(c->h/2)-6,c->str,color);
 					height=c->h;
 				}
