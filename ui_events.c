@@ -1023,6 +1023,23 @@ int handle_edit_keys(int key,int vkey,int shift,int ctrl,char *str,int maxlen,in
 		*cursor = maxlen;
 	return result;
 }
+int float_edit_modify(char *fmt,char *str,int size,int *cursor,float f)
+{
+	if(fmt && str && size>0){
+		int len;
+		_snprintf(str,size,fmt,f);
+		str[size-1]=0;
+		len=strlen(str);
+		if(*cursor>len)
+			*cursor=len;
+		if(*cursor<0)
+			*cursor=0;
+	}
+	return 0;
+}
+int inc_digit_str(char *str,int size,int pos,int dir)
+{
+}
 int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 {
 	int result=FALSE;
@@ -1038,25 +1055,40 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 					if(vkey==VK_RETURN){
 						if(e->fdata){
 							*e->fdata=atof(e->str);
-							_snprintf(e->str,sizeof(e->str),"%.4f",*e->fdata);
-							e->str[sizeof(e->str)-1]=0;
+							float_edit_modify("%.4f",e->str,sizeof(e->str),&e->cursor,*e->fdata);
 						}
 						e->changed=FALSE;
 					}
 					else if(vkey==VK_ESCAPE){
 						if(e->fdata){
-							_snprintf(e->str,sizeof(e->str),"%.4f",*e->fdata);
+							float_edit_modify("%.4f",e->str,sizeof(e->str),&e->cursor,*e->fdata);
 						}
 						e->changed=FALSE;
 					}
-					{
-						int len;
-						e->str[sizeof(e->str)-1]=0;
-						len=strlen(e->str);
-						if(e->cursor>len)
-							e->cursor=len;
-						if(e->cursor<0)
-							e->cursor=0;
+					else if(vkey==VK_UP || vkey==VK_DOWN){
+						if(e->fdata){
+							if(e->cursor<0)
+								e->cursor=0;
+							if(e->cursor<sizeof(e->str)){
+								unsigned char c;
+								c=e->str[e->cursor];
+								if(isdigit(c)){
+									if(vkey==VK_UP)
+										c++;
+									else
+										c--;
+									if(c>'9'){
+										c='0';
+									}
+									if(c<'0')
+										c='0';
+									e->str[e->cursor]=c;
+									*e->fdata=atof(e->str);
+									float_edit_modify("%.4f",e->str,sizeof(e->str),&e->cursor,*e->fdata);
+									e->changed=FALSE;
+								}
+							}
+						}
 					}
 				}
 			}
@@ -1212,6 +1244,19 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					vkey=wparam;
 					ctrl=GetKeyState(VK_CONTROL)&0x8000;
 					shift=GetKeyState(VK_SHIFT)&0x8000;
+					if(vkey==VK_TAB){
+						PARAM_CONTROL *tmp=list;
+						if(shift)
+							tmp=list->prev;
+						else
+							tmp=list->next;
+						if(tmp){
+							tmp->has_focus=TRUE;
+							list->has_focus=FALSE;
+							break;
+						}
+
+					}
 					send_char_control(&list->control,key,vkey,ctrl,shift);
 				}
 				list=list->next;
