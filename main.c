@@ -491,7 +491,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	static lmb_down=FALSE;
 	static HMENU hmenu=0;
 	typedef enum CMDMENU{
-		CMD_DELETE,CMD_CUBE,CMD_MULTIPLY
+		CMD_DELETE,CMD_CUBE,CMD_MULTIPLY,CMD_ACTIVATE
 	};
 #ifdef _DEBUG
 	if(FALSE)
@@ -513,6 +513,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		if(hmenu){
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_ACTIVATE,"activate");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION|MF_SEPARATOR,0,0);
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_DELETE,"delete");
 		}
@@ -553,6 +554,8 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				break;
 			case CMD_DELETE:
 				del_op(p,op);
+				break;
+			case CMD_ACTIVATE:
 				break;
 			}
 		}

@@ -27,7 +27,8 @@ int del_op(PAGE_DATA *pd,OP *op)
 	int result=FALSE;
 	if(pd==0 || op==0)
 		return result;
-	//clear_params();
+	if(op->selected && op->type!=TDRAG)
+		clear_params();
 	{
 		OP *prev,*next;
 		prev=op->list_prev;
@@ -41,7 +42,7 @@ int del_op(PAGE_DATA *pd,OP *op)
 		if(next)
 			next->list_prev=prev;
 		if(prev==0)
-			pd->list=0;
+			pd->list=next;
 		free(op);
 		result=TRUE;
 	}
