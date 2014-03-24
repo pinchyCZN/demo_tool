@@ -876,6 +876,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			}
 			p->hscroll_pressed=0;
 			p->vscroll_pressed=0;
+			test_build(p);
 		}
 		break;
 	case WM_LBUTTONDOWN:

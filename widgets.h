@@ -130,7 +130,6 @@ typedef struct{
 	void *data;
 	CONTROL control;
 	char name[20];
-	void *op_prev,*op_next;
 	void *list_prev,*list_next;
 	int selected;
 	int activated;
