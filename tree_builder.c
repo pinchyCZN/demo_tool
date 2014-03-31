@@ -59,21 +59,79 @@ int test_build(PAGE_DATA *p)
 	}
 	return 0;
 }
+int add_tree_node(TREENODE *t,OP *o)
+{
+	int result=FALSE;
+	if(t==0 || o==0)
+		return result;
+	{
+		TREENODE *node=0;
+		node=malloc(sizeof(TREENODE));
+		if(node){
+			TREENODE *tmp=t->links;
+			memset(node,0,sizeof(TREENODE));
+			node->op=o;
+			tmp=realloc(tmp,sizeof(void*)*(t->lcount+1));
+			if(tmp){
+				tmp->links[tmp->lcount]=node;
+				t->lcount++;
+				result=TRUE;
+			}
+			else{
+				free(node);
+				node=0;
+			}
+		}
+	}
+	return result;
+}
+int free_tree(TREENODE *root)
+{
+	int result=FALSE;
+	if(root){
+		int i;
+		for(i=0;i<root->lcount;i++){
+			free_tree(root->links[i]);
+			if(root->links[i]){
+				free(root->links[i]);
+				root->links[i]=0;
+				result=TRUE;
+			}
+		}
+		if(root->links)
+			free(root->links);
+		memset(root,0,sizeof(TREENODE));
+	}
+	return result;
+}
+int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *root)
+{
+	int result=FALSE;
+	if(p==0 || node==0 || root==0)
+		return result;
+	{
+		OP *oplist=p->list;
+		while(oplist){
+			if(root!=oplist){
+				if(is_stacked(&root->control,&oplist->control)){
+					oplist->error=1;
+					add_stackedops(p,node,oplist);
+					result=TRUE;
+				}
+			}
+			oplist=oplist->list_next;
+		}
+	}
+	return result;
+}
 int build_tree(PAGE_DATA *p,OP *root)
 {
 	int result=FALSE;
-	OP *oplist=0;
 	if(p==0 || root==0 || root->selected==0)
 		return result;
 	clear_page_errors(p);
-	oplist=p->list;
-	while(oplist){
-		int x,y,w,h;
-		if(root!=oplist){
-			if(is_stacked(&root->control,&oplist->control)){
-				oplist->error=1;
-			}
-		}
-		oplist=oplist->list_next;
-	}
+	free_tree(&rootnode);
+	memset(rootnode,0,sizeof(TREENODE));
+	rootnode.op=root;
+	add_stackedops(p,&rootnode,root);
 }

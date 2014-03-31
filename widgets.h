@@ -176,7 +176,7 @@ typedef struct{
 
 
 typedef struct{
-	void *links;
+	void **links;
 	void *op;
 	int lcount;
 }TREENODE;
