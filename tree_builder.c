@@ -68,13 +68,16 @@ int add_tree_node(TREENODE *t,OP *o)
 		TREENODE *node=0;
 		node=malloc(sizeof(TREENODE));
 		if(node){
-			TREENODE *tmp=t->links;
+			int newsize;
+			TREENODE **tmp=t->links;
 			memset(node,0,sizeof(TREENODE));
 			node->op=o;
-			tmp=realloc(tmp,sizeof(void*)*(t->lcount+1));
+			newsize=sizeof(void*)*(t->lcount+1);
+			tmp=realloc(tmp,newsize);
 			if(tmp){
-				tmp->links[tmp->lcount]=node;
+				tmp[t->lcount]=node;
 				t->lcount++;
+				t->links=tmp;
 				result=TRUE;
 			}
 			else{
@@ -104,17 +107,18 @@ int free_tree(TREENODE *root)
 	}
 	return result;
 }
-int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *root)
+int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *current_op)
 {
 	int result=FALSE;
-	if(p==0 || node==0 || root==0)
+	if(p==0 || node==0 || current_op==0)
 		return result;
 	{
 		OP *oplist=p->list;
 		while(oplist){
-			if(root!=oplist){
-				if(is_stacked(&root->control,&oplist->control)){
+			if(current_op!=oplist){
+				if(is_stacked(&current_op->control,&oplist->control)){
 					oplist->error=1;
+					add_tree_node(node,oplist);
 					add_stackedops(p,node,oplist);
 					result=TRUE;
 				}
@@ -124,14 +128,29 @@ int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *root)
 	}
 	return result;
 }
-int build_tree(PAGE_DATA *p,OP *root)
+int dump_tree(TREENODE *t)
+{
+	if(t){
+		int i;
+		OP *o=t->op;
+		if(o)
+			printf("opname=%s\n",o->name);
+		else
+			printf("node has no OP!\n");
+		for(i=0;i<t->lcount;i++){
+			dump_tree(t->links[i]);
+		}
+	}
+}
+int build_tree(PAGE_DATA *p,OP *current_op)
 {
 	int result=FALSE;
-	if(p==0 || root==0 || root->selected==0)
+	if(p==0 || current_op==0 || current_op->selected==0)
 		return result;
 	clear_page_errors(p);
 	free_tree(&rootnode);
 	memset(rootnode,0,sizeof(TREENODE));
-	rootnode.op=root;
-	add_stackedops(p,&rootnode,root);
+	rootnode.op=current_op;
+	add_stackedops(p,&rootnode,current_op);
+	dump_tree(&rootnode);
 }
