@@ -43,6 +43,8 @@ extern int g_screenw,g_screenh;
 	return 0;
 }
 
+
+
 int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int toffy)
 {
 	int i;
@@ -75,6 +77,28 @@ int render_texture_rect(int tex_name,int w,int h,int tw,int th,int toffx,int tof
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
 	return 0;
+}
+int render_rect_(float x,float y,float z,float w,float h)
+{
+	int i;
+	unsigned char indices[] = { 0, 1, 2, 0, 2, 3 };
+	float vertices[] = { 
+		0, 0, 0,
+		1, 0, 0,
+		1, 1, 0,
+		0, 1, 0
+	};
+	for(i=0;i<4;i++){
+		vertices[ 3 * i + 0 ] *= w;
+		vertices[ 3 * i + 1 ] *= h;
+	}
+	glVertexPointer(3, GL_FLOAT, 0, vertices);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
+}
+int render_cube(float x,float y,float z,float w,float h,float d)
+{
+
 }
 int render(ENTITY *e)
 {
@@ -136,7 +160,8 @@ int render(ENTITY *e)
 			glTranslatef(w/2,0,0);
 			glRotatef(180,0,1,0);
 		}
-		render_texture_rect(e->tex_name,w,h,e->tw,e->th,e->frame*w,0);
+//		render_rect(100,100);
+		//render_texture_rect(e->tex_name,w,h,e->tw,e->th,e->frame*w,0);
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
