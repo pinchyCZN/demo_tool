@@ -154,3 +154,14 @@ int build_tree(PAGE_DATA *p,OP *current_op)
 	add_stackedops(p,&rootnode,current_op);
 	dump_tree(&rootnode);
 }
+
+int display_tree()
+{
+	OP *op;
+	op=rootnode.op;
+	if(op){
+		if(op->type==TCUBE){
+
+		}
+	}
+}

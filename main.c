@@ -135,7 +135,6 @@ void display(void)
 
 	test_triangle();
 
-	render_rect(g_tmp,g_tmp);
 
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);

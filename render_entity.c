@@ -96,6 +96,46 @@ int render_rect_(float x,float y,float z,float w,float h)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
 }
+
+int render_rect(float w,float h,float *rot,float *trans)
+{
+	static float theta=0;
+	int i;
+	unsigned char indices[] = { 0, 1, 2, 0, 2, 3 };
+	float vertices[] = { 
+		0, 0, 0,
+		1, 0, 0,
+		1, 1, 0,
+		0, 1, 0
+	};
+	float normals[] = { 
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1,
+		0, 0, 1
+	};
+	for(i=0;i<4;i++){
+		vertices[ 3 * i + 0 ] *= w;
+		vertices[ 3 * i + 1 ] *= h;
+		vertices[ 3 * i + 0 ] -= w/2;
+		vertices[ 3 * i + 1 ] -= h/2;
+	}
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glRotatef(rot[0], 1.0f, 0.0f, 0.0f);
+	glRotatef(rot[1], 0.0f, 1.0f, 0.0f);
+	glRotatef(rot[2], 0.0f, 0.0f, 1.0f);
+	glTranslatef(trans[0], trans[1], trans[2]);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glVertexPointer(3,GL_FLOAT,0,vertices);
+	glNormalPointer(GL_FLOAT,0,normals);
+	glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,indices);
+	glPopMatrix();
+
+}
+
+
 int render_cube(float x,float y,float z,float w,float h,float d)
 {
 
@@ -188,3 +228,53 @@ int render(ENTITY *e)
 
 	return 0;
 }
+/*
+int render_rect(int w,int h)
+{
+       static float theta=0;
+       int i;
+       unsigned char indices[] = { 0, 1, 2, 0, 2, 3 };
+       float vertices[] = {
+               0, 0, 0,
+               1, 0, 0,
+               1, 1, 0,
+               0, 1, 0
+       };
+       float normals[] = {
+               0, 0, 1,
+               0, 0, 1,
+               0, 0, 1,
+               0, 0, 1
+       };
+       float colors[] = {
+               0, 0, .5,
+               0, .5, .8,
+               0, 0, .9,
+               0, 0, 1
+       };
+       for(i=0;i<4;i++){
+               vertices[ 3 * i + 0 ] *= w;
+               vertices[ 3 * i + 1 ] *= h;
+               vertices[ 3 * i + 0 ] -= w/2;
+               vertices[ 3 * i + 1 ] -= h/2;
+       }
+       glDisable(GL_TEXTURE_2D);
+       glMatrixMode(GL_PROJECTION);
+       glPushMatrix();
+    glTranslatef(x, y, z);
+       glRotatef(a, 1.0f, 0.0f, 0.0f);
+       glRotatef(b, 0.0f, 1.0f, 0.0f);
+       glRotatef(c, 0.0f, 0.0f, 1.0f);
+
+       glEnableClientState(GL_VERTEX_ARRAY);
+       glEnableClientState(GL_NORMAL_ARRAY);
+       glEnableClientState(GL_COLOR_ARRAY);
+       glVertexPointer(3,GL_FLOAT,0,vertices);
+       glNormalPointer(GL_FLOAT,0,normals);
+       glColorPointer(3,GL_FLOAT,0,colors);
+       glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,indices);
+
+       glMatrixMode(GL_PROJECTION);
+       glPopMatrix();
+       theta-=1.0;
+	   */
