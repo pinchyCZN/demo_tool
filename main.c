@@ -85,7 +85,7 @@ int test_triangle()
 	static float theta=0;
 	glDisable(GL_TEXTURE_2D);
 
-	glMatrixMode(GL_PROJECTION);
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
     glTranslatef(0.0F, 0.0F, g_ztri);
 	glRotatef(theta, 0.0f, 1.0f, 1.0f);
@@ -97,7 +97,7 @@ int test_triangle()
 	glColor3f(0.0f, 0.0f, 1.0f);   glVertex2f(-0.87f, -0.5f);
 	glEnd();
 
-	glMatrixMode(GL_PROJECTION);
+	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	glEnable(GL_TEXTURE_2D);
 	theta+=1.0;
@@ -115,10 +115,10 @@ void display(void)
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+//	glRotatef(grx,1,0,0);
+//	glRotatef(gry,0,1,0);
+//	glRotatef(grz,0,0,1);
 	glTranslatef(gx,gy,gz);
-	glRotatef(grx,1,0,0);
-	glRotatef(gry,0,1,0);
-	glRotatef(grz,0,0,1);
 	{
 		unsigned int tick,global_tick;
 		tick=GetTickCount();
@@ -401,6 +401,7 @@ int set_focus(HWND hwnd)
 }
 LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+	static POINT mpoint;
 #ifdef _DEBUG
 	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
@@ -426,7 +427,44 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			reshape(w,h);
 		}
 		break;
+	case WM_KEYDOWN:
+		switch(wparam){
+		case 'R':
+			grx=gry=grz=0;
+			gx=gy=gz=0;
+			break;
+		case VK_ESCAPE:
+			exit(0);
+			break;
+		}
+		break;
+	case WM_MBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+	case WM_LBUTTONDOWN:
+		mpoint.x=LOWORD(lparam);
+		mpoint.y=HIWORD(lparam);
+		SetFocus(hwnd);
+		break;
+
 	case WM_MOUSEMOVE:
+		{
+			POINT p;
+			int deltax,deltay;
+			p.x=LOWORD(lparam);
+			p.y=HIWORD(lparam);
+			deltax=p.x-mpoint.x;
+			deltay=p.y-mpoint.y;
+
+			if(wparam&MK_LBUTTON){
+				grx+=deltax;
+				gry+=deltay;
+			}
+			if(wparam&MK_RBUTTON){
+				gz+=deltay;
+			//	gx+=deltay;
+			}
+			mpoint=p;
+		}
 		set_focus(hwnd);
 		break;
 	}
