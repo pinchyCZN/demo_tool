@@ -161,7 +161,16 @@ int display_tree()
 	op=rootnode.op;
 	if(op){
 		if(op->type==TCUBE){
-
+			static float theta=0;
+			float rot[3],trans[3],size[2];
+			rot[0]=theta; rot[2]=0;
+			rot[1]=theta;
+			trans[0]=trans[1]=trans[2]=0;
+			size[0]=1000;
+			size[1]=1000;
+			trans[2]=-100;
+			render_rect(&size,&rot,&trans);
+			theta++;
 		}
 	}
 }

@@ -97,7 +97,7 @@ int render_rect_(float x,float y,float z,float w,float h)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
 }
 
-int render_rect(float w,float h,float *rot,float *trans)
+int render_rect(float *size,float *rot,float *trans)
 {
 	static float theta=0;
 	int i;
@@ -115,12 +115,10 @@ int render_rect(float w,float h,float *rot,float *trans)
 		0, 0, 1
 	};
 	for(i=0;i<4;i++){
-		vertices[ 3 * i + 0 ] *= w;
-		vertices[ 3 * i + 1 ] *= h;
-		vertices[ 3 * i + 0 ] -= w/2;
-		vertices[ 3 * i + 1 ] -= h/2;
+		vertices[ 3 * i + 0 ] *= size[0];
+		vertices[ 3 * i + 1 ] *= size[1];
 	}
-	glMatrixMode(GL_PROJECTION);
+	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glRotatef(rot[0], 1.0f, 0.0f, 0.0f);
 	glRotatef(rot[1], 0.0f, 1.0f, 0.0f);
@@ -131,6 +129,7 @@ int render_rect(float w,float h,float *rot,float *trans)
 	glVertexPointer(3,GL_FLOAT,0,vertices);
 	glNormalPointer(GL_FLOAT,0,normals);
 	glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,indices);
+	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 
 }

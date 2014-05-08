@@ -97,7 +97,6 @@ int test_triangle()
 	glColor3f(0.0f, 0.0f, 1.0f);   glVertex2f(-0.87f, -0.5f);
 	glEnd();
 
-
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glEnable(GL_TEXTURE_2D);
@@ -136,6 +135,7 @@ void display(void)
 	test_triangle();
 
 
+	display_tree();
 //	t1=GetTickCount();
 //	printf("time=%u v=%f\n",GetTickCount()-t1,bike.v[0]);
 
