@@ -41,7 +41,7 @@ int g_ztri=-100;
 int g_tmp=700;
 
 GLfloat ambient[]={1.0,1.0,1.0,0.0};
-GLfloat light_position[]={5.0,10.0,10.0,0.0};
+GLfloat light_position[]={-5.0,-10.0,10.0,0.0};
 GLfloat white_light[]={1.0,1.0,1.0,1.0};
 
 ENTITY *players[2];
@@ -60,9 +60,9 @@ void gl_init(void)
     glMatrixMode(GL_PROJECTION);
     glFrustum(-0.08, 0.08F, -0.06F, 0.06F, 0.1F, 1000.0F);
 
-//	glEnable(GL_LIGHTING);
-//	glEnable(GL_LIGHT0);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+//	glEnable(GL_DEPTH_TEST);
 //		glLightfv(GL_LIGHT0,GL_POSITION,light_position);
 
 /*
@@ -87,8 +87,10 @@ int test_triangle()
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-    glTranslatef(0.0F, 0.0F, g_ztri);
-	glRotatef(theta, 0.0f, 1.0f, 1.0f);
+//	glLoadIdentity();
+
+//    glTranslatef(0.0F, 0.0F, g_ztri);
+//	glRotatef(theta, 0.0f, 1.0f, 1.0f);
 
 
 	glBegin(GL_TRIANGLES);
@@ -114,10 +116,12 @@ void display(void)
 //	glColor3f(1.0,0.0,0.0);
 
 	glMatrixMode(GL_MODELVIEW);
+//	glMatrixMode(GL_PROJECTION);
+	
 	glLoadIdentity();
-//	glRotatef(grx,1,0,0);
-//	glRotatef(gry,0,1,0);
-//	glRotatef(grz,0,0,1);
+	glRotatef(grx,1,0,0);
+	glRotatef(gry,0,1,0);
+	glRotatef(grz,0,0,1);
 	glTranslatef(gx,gy,gz);
 	{
 		unsigned int tick,global_tick;
@@ -399,6 +403,10 @@ int set_focus(HWND hwnd)
 	ghfocus=hwnd;
 	return TRUE;
 }
+int print_globs()
+{
+	printf("%3.2f %3.2f %3.2f , %3.2f %3.2f %3.2f\n",grx,gry,grz,gx,gy,gz);
+}
 LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static POINT mpoint;
@@ -432,6 +440,7 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		case 'R':
 			grx=gry=grz=0;
 			gx=gy=gz=0;
+			print_globs();
 			break;
 		case VK_ESCAPE:
 			exit(0);
@@ -444,6 +453,7 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		mpoint.x=LOWORD(lparam);
 		mpoint.y=HIWORD(lparam);
 		SetFocus(hwnd);
+		print_globs();
 		break;
 
 	case WM_MOUSEMOVE:
@@ -458,10 +468,12 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			if(wparam&MK_LBUTTON){
 				grx+=deltax;
 				gry+=deltay;
+				print_globs();
 			}
 			if(wparam&MK_RBUTTON){
 				gz+=deltay;
 			//	gx+=deltay;
+				print_globs();
 			}
 			mpoint=p;
 		}

@@ -166,11 +166,10 @@ int display_tree()
 			rot[0]=theta; rot[2]=0;
 			rot[1]=theta;
 			trans[0]=trans[1]=trans[2]=0;
-			size[0]=1000;
-			size[1]=1000;
+			size[0]=1;
+			size[1]=1;
 			trans[2]=-100;
 			render_rect(&size,&rot,&trans);
-			theta++;
 		}
 	}
 }
