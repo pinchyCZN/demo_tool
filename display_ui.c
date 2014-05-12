@@ -270,6 +270,7 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			int offset=0;
 			if(height!=0)
 				offset=(height/2)-6;
+
 			draw_string(sc,pc->x,pc->y+offset,pc->name,WHITE);
 		}
 		pc=pc->next;

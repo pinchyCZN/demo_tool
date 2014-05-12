@@ -542,7 +542,9 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 int clear_params()
 {
 	extern PARAM_LIST param_list;
+	extern CRITICAL_SECTION mutex;
 	PARAM_CONTROL *p=param_list.list;
+	EnterCriticalSection(&mutex);
 	while(p){
 		PARAM_CONTROL *tmp;
 		if(p->control.data){
@@ -559,6 +561,7 @@ int clear_params()
 		free(tmp);
 	}
 	param_list.list=0;
+	LeaveCriticalSection(&mutex);
 	return TRUE;
 }
 int add_param_control(PARAM_LIST *pl,PARAM_CONTROL *c)
@@ -587,8 +590,8 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	if(pc==0)
 		return result;
 	switch(type){
-	case CEDITBYTE: size=sizeof(EDITBYTE);break;
-	case CEDITINT: size=sizeof(EDITINT);break;
+	//case CEDITBYTE: size=sizeof(EDITBYTE);break;
+	//case CEDITINT: size=sizeof(EDITINT);break;
 	case CEDITFLOAT: size=sizeof(EDITFLOAT);break;
 	case CSTATIC: size=sizeof(STATICTEXT);break;
 	case CEDIT: size=sizeof(EDITBOX);break;

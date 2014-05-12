@@ -47,6 +47,8 @@ GLfloat white_light[]={1.0,1.0,1.0,1.0};
 ENTITY *players[2];
 ENTITY *non_players[100];
 
+CRITICAL_SECTION mutex={0};
+
 void gl_init(void)
 {
 	
@@ -900,8 +902,10 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					display_view1(ghview1,hGLRC);
 				}
 				if(hdc){
+					EnterCriticalSection(&mutex);
 					display_page(ghpage,&scpage);
 					display_params(ghparams,&scparams);
+					LeaveCriticalSection(&mutex);
 				}
 				if(hbrush && ghfocus && hdc){
 					RECT rect={0};
@@ -964,6 +968,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 		MessageBox(NULL,"Could not create main dialog","ERROR",MB_ICONERROR | MB_OK);
 		return 0;
 	}
+	InitializeCriticalSection(&mutex);
 	UpdateWindow(ghwindow);
 	//ghaccel=LoadAccelerators(ghinstance,MAKEINTRESOURCE(IDR_ACCELERATOR));
 	_beginthread(worker_thread,0,0);
