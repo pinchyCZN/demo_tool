@@ -55,12 +55,14 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 		OP *list=p->list;
 		while(list){
 			switch(list->type){
+			case TLIGHT:
 			case TMULTIPLY:
 			case TCUBE:
 				{
 					BUTTON *b=list->control.data;
 					static char *str="";
 					switch(list->type){
+						case TLIGHT:str="LIGHT";break;
 						case TCUBE:str="CUBE";break;
 						case TMULTIPLY:str="MULTIPLY";break;
 					}
@@ -167,6 +169,15 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 	while(pc){
 		int height=0;
 		switch(pc->control.type){
+		case CRECT:
+			{
+				RECTANGLE *c=pc->control.data;
+				if(c){
+					draw_rect(sc,c->x,c->y,c->w,c->h,c->color);
+					height=c->h;
+				}
+			}
+			break;
 		case CSTATIC:
 			{
 				STATICTEXT *c=pc->control.data;
@@ -191,6 +202,25 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 					if(e->str)
 						draw_string(sc,e->x+1,e->y+(e->h/2)-6,e->str,WHITE);
 					height=e->h;
+				}
+			}
+			break;
+		case CEDITBYTE:
+			{
+				EDITBYTE *c=pc->control.data;
+				if(c){
+					int color=WHITE;
+					draw_rect(sc,c->x,c->y,c->w,c->h,0x202020);
+					if(pc->has_focus){
+						if(c->overwrite)
+							draw_line_h(sc,c->x+(c->cursor*8),c->y+c->h-1,9,0x7F2020);
+						else
+							draw_line_v(sc,c->x+(c->cursor*8),c->y,c->h,0x7F2020);
+					}
+					if(c->changed)
+						color=RED;
+					draw_string(sc,c->x,c->y+(c->h/2)-6,c->str,color);
+					height=c->h;
 				}
 			}
 			break;

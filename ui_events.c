@@ -94,66 +94,48 @@ int del_page(PAGE_LIST *pl,PAGE_DATA *pd)
 	}
 	return result;
 }
+int create_op_button(int otype,int osize,OP *op,int x,int y)
+{
+	int result=FALSE;
+	BUTTON *button;
+	void *op_data;
+	button=malloc(sizeof(BUTTON));
+	op_data=malloc(osize);
+	if(button && op_data){
+		memset(button,0,sizeof(BUTTON));
+		memset(op_data,0,osize);
+		button->w=DEFBUTTONW;
+		button->h=DEFBUTTONH;
+		button->x=x;
+		button->y=y;
+		op->control.type=CBUTTON;
+		op->control.data=button;
+		op->type=otype;
+		op->data=op_data;
+		result=TRUE;
+	}
+	else{
+		if(button)
+			free(button);
+		if(op_data)
+			free(op_data);
+	}
+	return result;
+}
 int create_op(int type,OP *op,int x,int y)
 {
 	int result=FALSE;
 	if(op==0)
 		return result;
 	switch(type){
+	case TLIGHT:
+		result=create_op_button(type,sizeof(LIGHT_DATA),op,x,y);
+		break;
 	case TCUBE:
-		{
-			BUTTON *button;
-			CUBE_DATA *cube;
-			button=malloc(sizeof(BUTTON));
-			cube=malloc(sizeof(CUBE_DATA));
-			if(button && cube){
-				memset(button,0,sizeof(BUTTON));
-				memset(cube,0,sizeof(CUBE_DATA));
-				button->w=DEFBUTTONW;
-				button->h=DEFBUTTONH;
-				button->x=x;
-				button->y=y;
-				op->control.type=CBUTTON;
-				op->control.data=button;
-				op->type=type;
-				op->data=cube;
-				result=TRUE;
-			}
-			else{
-				if(button)
-					free(button);
-				if(cube)
-					free(cube);
-			}
-		}
+		result=create_op_button(type,sizeof(CUBE_DATA),op,x,y);
 		break;
 	case TMULTIPLY:
-		{
-			BUTTON *button;
-			MULTIPLY_DATA *data;
-			button=malloc(sizeof(BUTTON));
-			data=malloc(sizeof(MULTIPLY_DATA));
-			if(button && data){
-				memset(button,0,sizeof(BUTTON));
-				memset(data,0,sizeof(MULTIPLY_DATA));
-				button->w=DEFBUTTONW;
-				button->h=DEFBUTTONH;
-				button->x=x;
-				button->y=y;
-				op->control.type=CBUTTON;
-				op->control.data=button;
-				op->type=type;
-				op->data=data;
-				result=TRUE;
-			}
-			else{
-				if(button)
-					free(button);
-				if(data)
-					free(data);
-			}
-
-		}
+		result=create_op_button(type,sizeof(MULTIPLY_DATA),op,x,y);
 		break;
 	case TDRAG:
 		{
@@ -605,9 +587,12 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	if(pc==0)
 		return result;
 	switch(type){
+	case CEDITBYTE: size=sizeof(EDITBYTE);break;
+	case CEDITINT: size=sizeof(EDITINT);break;
 	case CEDITFLOAT: size=sizeof(EDITFLOAT);break;
 	case CSTATIC: size=sizeof(STATICTEXT);break;
 	case CEDIT: size=sizeof(EDITBOX);break;
+	case CRECT: size=sizeof(RECTANGLE);break;
 	}
 	if(size!=0){
 		void *data=0;
@@ -618,6 +603,164 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 			pc->control.type=type;
 			result=TRUE;
 		}
+	}
+	return result;
+}
+struct PCLIST{
+	int type;
+	const char *name;
+	const char *text;
+	int x,y,w,h;
+	void *data;
+	int incheight;
+};
+int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *pl)
+{
+	int result=FALSE;
+	int i,xpos=0,ypos=0;
+	for(i=0;i<list_count;i++){
+		PARAM_CONTROL *pc=malloc(sizeof(PARAM_CONTROL));
+		if(pc){
+			memset(pc,0,sizeof(PARAM_CONTROL));
+			if(create_param_control(pclist[i].type,pc)){
+				xpos=0;
+				switch(pclist[i].type){
+				case CRECT:
+					{
+						RECTANGLE *c=pc->control.data;
+						if(c){
+							unsigned char *b=pclist[i].data;
+							c->x=pclist[i].x+xpos;
+							c->y=pclist[i].y+ypos;
+							c->w=pclist[i].w;
+							c->h=pclist[i].h;
+							if(b){
+								c->color=(b[0]<<16)|(b[1]<<8)|(b[2]);
+								c->filled=TRUE;
+							}
+							pc->name=pclist[i].name;
+							pc->x=xpos;
+							pc->y=ypos;
+							if(pclist[i].incheight)
+								ypos+=30;
+							result=TRUE;
+						}
+					}
+				case CEDITBYTE:
+					{
+						EDITBYTE *c=pc->control.data;
+						if(c){
+							unsigned char *b=pclist[i].data;
+							c->x=pclist[i].x+xpos;
+							c->y=pclist[i].y+ypos;
+							c->w=pclist[i].w;
+							c->h=pclist[i].h;
+							if(b){
+								_snprintf(c->str,sizeof(c->str),"%i",*b);
+								c->byte=b;
+							}
+							pc->name=pclist[i].name;
+							pc->x=xpos;
+							pc->y=ypos;
+							if(pclist[i].incheight)
+								ypos+=30;
+							result=TRUE;
+						}
+					}
+					break;
+				case CEDITINT:
+					{
+						EDITINT *c=pc->control.data;
+						if(c){
+							int *idata=pclist[i].data;
+							c->x=pclist[i].x+xpos;
+							c->y=pclist[i].y+ypos;
+							c->w=pclist[i].w;
+							c->h=pclist[i].h;
+							if(idata){
+								_snprintf(c->str,sizeof(c->str),"%i",*idata);
+								c->integer=idata;
+							}
+							pc->name=pclist[i].name;
+							pc->x=xpos;
+							pc->y=ypos;
+							if(pclist[i].incheight)
+								ypos+=30;
+							result=TRUE;
+						}
+					}
+					break;
+				case CEDITFLOAT:
+					{
+						EDITFLOAT *c=pc->control.data;
+						if(c){
+							float *f=pclist[i].data;
+							c->x=pclist[i].x+xpos;
+							c->y=pclist[i].y+ypos;
+							c->w=pclist[i].w;
+							c->h=pclist[i].h;
+							if(f){
+								_snprintf(c->str,sizeof(c->str),"%.4f",*f);
+								c->fdata=f;
+							}
+							pc->name=pclist[i].name;
+							pc->x=xpos;
+							pc->y=ypos;
+							if(pclist[i].incheight)
+								ypos+=30;
+							result=TRUE;
+						}
+					}
+					break;
+				case CSTATIC:
+					{
+						STATICTEXT *c=pc->control.data;
+						if(c){
+							c->x=pclist[i].x+xpos;
+							c->y=pclist[i].y+ypos;
+							c->w=pclist[i].w;
+							c->h=pclist[i].h;
+							c->str=pclist[i].text;
+							pc->name=pclist[i].name;
+							pc->x=xpos;
+							pc->y=ypos;
+							if(pclist[i].incheight)
+								ypos+=30;
+							result=TRUE;
+						}
+					}
+					break;
+				case CEDIT:
+					{
+						EDITBOX *c=pc->control.data;
+						if(c){
+							char *str=op->name;
+							int maxlen=sizeof(op->name)-1;
+							c->x=pclist[i].x+xpos;
+							c->y=pclist[i].y+ypos;
+							c->w=pclist[i].w;
+							c->h=pclist[i].h;
+							c->str=pclist[i].text;
+							c->str=str;
+							c->maxlen=maxlen;
+							pc->name=pclist[i].name;
+							pc->x=xpos;
+							pc->y=ypos;
+							if(pclist[i].incheight)
+								ypos+=30;
+							result=TRUE;
+						}
+					}
+					break;
+				}
+			}
+		}
+		if((!result) && pc)
+			free(pc);
+		if(result){
+			result=add_param_control(pl,pc);
+		}
+
 	}
 	return result;
 }
@@ -633,14 +776,6 @@ int create_op_params(OP *o)
 		switch(o->type){
 		case TCUBE:
 			{
-				struct PCLIST{
-					int type;
-					const char *name;
-					const char *text;
-					int x,y,w,h;
-					void *data;
-					int incheight;
-				};
 				struct PCLIST pclist[]={
 					{CSTATIC,"type","cube",6*8,0,40,20,NULL,TRUE},
 					{CEDIT,"name","",6*8,0,8*40,20,NULL,TRUE},
@@ -648,91 +783,66 @@ int create_op_params(OP *o)
 					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
 					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
 				};
-				int i,xpos=0,ypos=0;
 				CUBE_DATA *cube=o->data;
 				if(cube){
 					pclist[2].data=&cube->tessx;
 					pclist[3].data=&cube->tessy;
 					pclist[4].data=&cube->tessz;
 				}
-				for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
-					PARAM_CONTROL *pc=malloc(sizeof(PARAM_CONTROL));
-					if(pc){
-						memset(pc,0,sizeof(PARAM_CONTROL));
-						if(create_param_control(pclist[i].type,pc)){
-							xpos=0;
-							switch(pclist[i].type){
-							case CEDITFLOAT:
-								{
-									EDITFLOAT *c=pc->control.data;
-									if(c){
-										float *f=pclist[i].data;
-										c->x=pclist[i].x+xpos;
-										c->y=pclist[i].y+ypos;
-										c->w=pclist[i].w;
-										c->h=pclist[i].h;
-										if(f){
-											_snprintf(c->str,sizeof(c->str),"%.4f",*f);
-											c->fdata=f;
-										}
-										pc->name=pclist[i].name;
-										pc->x=xpos;
-										pc->y=ypos;
-										if(pclist[i].incheight)
-											ypos+=30;
-										result=TRUE;
-									}
-								}
-								break;
-							case CSTATIC:
-								{
-									STATICTEXT *c=pc->control.data;
-									if(c){
-										c->x=pclist[i].x+xpos;
-										c->y=pclist[i].y+ypos;
-										c->w=pclist[i].w;
-										c->h=pclist[i].h;
-										c->str=pclist[i].text;
-										pc->name=pclist[i].name;
-										pc->x=xpos;
-										pc->y=ypos;
-										if(pclist[i].incheight)
-											ypos+=30;
-										result=TRUE;
-									}
-								}
-								break;
-							case CEDIT:
-								{
-									EDITBOX *c=pc->control.data;
-									if(c){
-										char *str=o->name;
-										int maxlen=sizeof(o->name)-1;
-										c->x=pclist[i].x+xpos;
-										c->y=pclist[i].y+ypos;
-										c->w=pclist[i].w;
-										c->h=pclist[i].h;
-										c->str=pclist[i].text;
-										c->str=str;
-										c->maxlen=maxlen;
-										pc->name=pclist[i].name;
-										pc->x=xpos;
-										pc->y=ypos;
-										if(pclist[i].incheight)
-											ypos+=30;
-										result=TRUE;
-									}
-								}
-								break;
-							}
-						}
-					}
-					if((!result) && pc)
-						free(pc);
-					if(result){
-						add_param_control(pl,pc);
-					}
+				process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),o,pl);
+			}
+			break;
+		case TLIGHT:
+			{
+				struct PCLIST pclist[]={
+					{CSTATIC,"type","light",6*8,0,40,20,NULL,TRUE},
+					{CEDIT,"name","",6*8,0,8*40,20,NULL,TRUE},
+					{CEDITBYTE,"light #","",10*8,0,10*8,20,NULL,TRUE},
+					{CEDITBYTE,"ambient","",10*8,0,10*8,20,NULL,FALSE},
+					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
+					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,FALSE},
+					{CRECT,    0,"",10*8*4+4,0,20,20,NULL,TRUE},
+					{CEDITBYTE,"diffuse","",10*8,0,10*8,20,NULL,FALSE},
+					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
+					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
+					{CEDITBYTE,"specular","",10*8,0,10*8,20,NULL,FALSE},
+					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
+					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
+					{CEDITFLOAT,"position","",10*8,0,10*8,20,NULL,FALSE},
+					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
+					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
+					{CEDITFLOAT,"direction","",10*8,0,10*8,20,NULL,FALSE},
+					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
+					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
+					{CEDITFLOAT,"exponent","",10*8,0,10*8,20,NULL,TRUE},
+					{CEDITFLOAT,"cutoff","",10*8,0,10*8,20,NULL,TRUE},
+					{CEDITINT,  "attenuation","",10*8,0,10*8,20,NULL,TRUE},
+				};
+				LIGHT_DATA *light=o->data;
+				if(light){
+					int index=2;
+					pclist[index++].data=&light->light_num;
+					pclist[index++].data=&light->r_ambient;
+					pclist[index++].data=&light->g_ambient;
+					pclist[index++].data=&light->b_ambient;
+					pclist[index++].data=&light->r_ambient; //rect color
+					pclist[index++].data=&light->r_diffuse;
+					pclist[index++].data=&light->g_diffuse;
+					pclist[index++].data=&light->b_diffuse;
+					pclist[index++].data=&light->r_specular;
+					pclist[index++].data=&light->g_specular;
+					pclist[index++].data=&light->b_specular;
+					pclist[index++].data=&light->posx;
+					pclist[index++].data=&light->posy;
+					pclist[index++].data=&light->posz;
+					pclist[index++].data=&light->dirx;
+					pclist[index++].data=&light->diry;
+					pclist[index++].data=&light->dirz;
+					pclist[index++].data=&light->exponent;
+					pclist[index++].data=&light->cuttoff;
+					pclist[index++].data=&light->attenuation;
 				}
+				process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),o,pl);
 			}
 			break;
 		}

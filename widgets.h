@@ -87,6 +87,26 @@ typedef struct{
 }EDITFLOAT;
 
 typedef struct{
+	char str[4];
+	int cursor;
+	int changed;
+	int overwrite;
+	unsigned char *byte;
+	int x,y;
+	int w,h;
+}EDITBYTE;
+
+typedef struct{
+	char str[12];
+	int cursor;
+	int changed;
+	int overwrite;
+	unsigned int *integer;
+	int x,y;
+	int w,h;
+}EDITINT;
+
+typedef struct{
 	const char *name;
 	int x,y;
 	int w,h;
@@ -106,18 +126,35 @@ typedef struct{
 }CUBE_DATA;
 
 typedef struct{
+	int light_num;
+	unsigned char r_ambient,g_ambient,b_ambient;
+	unsigned char r_diffuse,g_diffuse,b_diffuse;
+	unsigned char r_specular,g_specular,b_specular;
+	float posx,posy,posz;
+	float dirx,diry,dirz;
+	float exponent;
+	float cuttoff;
+	int attenuation;
+}LIGHT_DATA;
+
+typedef struct{
+ int a;
+}TEXTURE_DATA;
+
+
+typedef struct{
 	float	scalex,scaley,scalez;
 	float	rotatex,rotatey,rotatez;
 	float	transx,transy,transz;
 }MULTIPLY_DATA;
 
 typedef enum OPTYPES{
-	TCUBE,TMULTIPLY,
+	TLIGHT,TTEXTURE,TCUBE,TMULTIPLY,
 	TRECT,TDRAG,TRECTSELECT
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CSTATIC,CEDIT,CEDITFLOAT,CRECT,CDRAG
+	CBUTTON,CSCROLL,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT,CRECT,CDRAG
 };
 
 typedef struct{

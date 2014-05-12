@@ -540,7 +540,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	static lmb_down=FALSE;
 	static HMENU hmenu=0;
 	typedef enum CMDMENU{
-		CMD_DELETE,CMD_CUBE,CMD_MULTIPLY,CMD_ACTIVATE
+		CMD_DELETE,CMD_LIGHT,CMD_CUBE,CMD_MULTIPLY,CMD_ACTIVATE
 	};
 #ifdef _DEBUG
 	if(FALSE)
@@ -560,6 +560,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	case WM_CREATE:
 		hmenu=CreatePopupMenu();
 		if(hmenu){
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_LIGHT,"light");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_ACTIVATE,"activate");
@@ -593,6 +594,10 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			y=p->cursory-p->vscroll;
 			hittest_op(p,x+1,y+1,&op);
 			switch(LOWORD(wparam)){
+			case CMD_LIGHT:
+				if(op==0)
+					add_type_op(p,TLIGHT,x,y);
+				break;
 			case CMD_CUBE:
 				if(op==0)
 					add_type_op(p,TCUBE,x,y);
