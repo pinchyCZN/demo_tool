@@ -1461,7 +1461,6 @@ DWORD WINAPI page_ui_thread(void *arg)
 		extern HWND ghpage;
 		page_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
 	}
-	printf("thread exit\n");
 }
 DWORD WINAPI param_ui_thread(void *arg)
 {
@@ -1471,7 +1470,6 @@ DWORD WINAPI param_ui_thread(void *arg)
 		extern HWND ghparams;
 		param_win_message(&scparams,ghparams,msg.message,msg.wParam,msg.lParam);
 	}
-	printf("thread exit\n");
 }
 
 
