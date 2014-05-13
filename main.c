@@ -48,6 +48,12 @@ ENTITY *players[2];
 ENTITY *non_players[100];
 
 CRITICAL_SECTION mutex={0};
+DWORD page_ui_threadid=0;
+DWORD param_ui_threadid=0;
+DWORD view1_ui_threadid=0;
+DWORD WINAPI page_ui_thread(void *arg);
+DWORD WINAPI param_ui_thread(void *arg);
+DWORD WINAPI view1_ui_thread(void *arg);
 
 void gl_init(void)
 {
@@ -498,7 +504,9 @@ LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		tick=GetTickCount();
 	}
 #endif
-	param_win_message(&scparams,hwnd,msg,wparam,lparam);
+	//param_win_message(&scparams,hwnd,msg,wparam,lparam);
+	if(param_ui_threadid)
+		PostThreadMessage(param_ui_threadid,msg,wparam,lparam);
 
 	switch(msg){
 	case WM_CREATE:
@@ -556,7 +564,9 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		tick=GetTickCount();
 	}
 #endif
-	page_win_message(&scpage,hwnd,msg,wparam,lparam);
+	//page_win_message(&scpage,hwnd,msg,wparam,lparam);
+	if(page_ui_threadid)
+		PostThreadMessage(page_ui_threadid,msg,wparam,lparam);
 
 	switch(msg){
 	case WM_CREATE:
@@ -714,6 +724,10 @@ int create_tool_windows(HWND hwnd)
 		}
 	}
 	resize_main_window(hwnd);
+	CreateThread(NULL,0,page_ui_thread,0,0,&page_ui_threadid);
+	CreateThread(NULL,0,param_ui_thread,0,0,&param_ui_threadid);
+	return TRUE;
+
 }
 static int in_range(int x,int min,int max)
 {

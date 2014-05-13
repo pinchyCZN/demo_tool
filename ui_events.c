@@ -590,8 +590,8 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	if(pc==0)
 		return result;
 	switch(type){
-	//case CEDITBYTE: size=sizeof(EDITBYTE);break;
-	//case CEDITINT: size=sizeof(EDITINT);break;
+	case CEDITBYTE: size=sizeof(EDITBYTE);break;
+	case CEDITINT: size=sizeof(EDITINT);break;
 	case CEDITFLOAT: size=sizeof(EDITFLOAT);break;
 	case CSTATIC: size=sizeof(STATICTEXT);break;
 	case CEDIT: size=sizeof(EDITBOX);break;
@@ -649,6 +649,7 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 							result=TRUE;
 						}
 					}
+					break;
 				case CEDITBYTE:
 					{
 						EDITBYTE *c=pc->control.data;
@@ -1452,3 +1453,25 @@ int scroll_page_view(HWND hwnd,SCREEN *sc,int amount,int control)
 	}
 	return 0;
 }
+DWORD WINAPI page_ui_thread(void *arg)
+{
+	MSG msg={0};
+	while(GetMessage(&msg,NULL,0,0)){
+		extern SCREEN scpage;
+		extern HWND ghpage;
+		page_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
+	}
+	printf("thread exit\n");
+}
+DWORD WINAPI param_ui_thread(void *arg)
+{
+	MSG msg={0};
+	while(GetMessage(&msg,NULL,0,0)){
+		extern SCREEN scparams;
+		extern HWND ghparams;
+		param_win_message(&scparams,ghparams,msg.message,msg.wParam,msg.lParam);
+	}
+	printf("thread exit\n");
+}
+
+
