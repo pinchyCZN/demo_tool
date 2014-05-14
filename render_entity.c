@@ -4,6 +4,7 @@
 #include <GL/glu.h>
 
 #include "entity.h"
+#include "widgets.h"
 
 int display_str(char *str,int x,int y)
 {
@@ -226,6 +227,39 @@ int render(ENTITY *e)
 	}
 
 	return 0;
+}
+int byte_to_float(float *f,unsigned char *b,int count)
+{
+	int i;
+	for(i=0;i<count;i++){
+		f[i]=(float)b[i]/(float)255;
+	}
+	return i;
+}
+int float_to_float(float *f,float *fsrc,int count)
+{
+	int i;
+	for(i=0;i<count;i++){
+		f[i]=fsrc[i];
+	}
+	return i;
+}
+int set_light(LIGHT_DATA *l)
+{
+	float f[4]={0,0,0,0};
+	int light_num=GL_LIGHT0+l->light_num;
+	byte_to_float(f,&l->r_ambient,3);
+	glLightfv(light_num,GL_AMBIENT,f);
+	byte_to_float(f,&l->r_diffuse,3);
+	glLightfv(light_num,GL_DIFFUSE,f);
+	byte_to_float(f,&l->r_specular,3);
+	glLightfv(light_num,GL_SPECULAR,f);
+	float_to_float(f,&l->posx,3);
+	glLightfv(light_num,GL_POSITION,f);
+	glLighti(light_num,GL_LINEAR_ATTENUATION,l->attenuation);
+	glEnable(GL_LIGHTING);
+	glEnable(light_num);
+	return TRUE;
 }
 /*
 int render_rect(int w,int h)

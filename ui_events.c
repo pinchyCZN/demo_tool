@@ -215,6 +215,14 @@ int set_control_pos(CONTROL *c,int *x,int *y,int *w,int *h)
 		break;
 	}
 }
+int trans_pos_data(int *x,int *y,int *w,int *h,int sx,int sy,int sw,int sh)
+{
+	if(x)*x=sx;
+	if(y)*y=sy;
+	if(w)*w=sw;
+	if(h)*h=sh;
+	return TRUE;
+}
 int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 	int result=FALSE;
 	if(control==0)
@@ -225,14 +233,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			BUTTON *b;
 			b=control->data;
 			if(b){
-				if(x)
-					*x=b->x;
-				if(y)
-					*y=b->y;
-				if(w)
-					*w=b->w;
-				if(h)
-					*h=b->h;
+				trans_pos_data(x,y,w,h,b->x,b->y,b->w,b->h);
 				result=TRUE;
 			}
 		}
@@ -242,14 +243,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			SCROLLBAR *s;
 			s=control->data;
 			if(s){
-				if(x)
-					*x=s->x;
-				if(y)
-					*y=s->y;
-				if(w)
-					*w=s->w;
-				if(h)
-					*h=s->h;
+				trans_pos_data(x,y,w,h,s->x,s->y,s->w,s->h);
 				result=TRUE;
 			}
 		}
@@ -259,14 +253,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			STATICTEXT *s;
 			s=control->data;
 			if(s){
-				if(x)
-					*x=s->x;
-				if(y)
-					*y=s->y;
-				if(w)
-					*w=s->w;
-				if(h)
-					*h=s->h;
+				trans_pos_data(x,y,w,h,s->x,s->y,s->w,s->h);
 				result=TRUE;
 			}
 		}
@@ -276,14 +263,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			RECTANGLE *r;
 			r=control->data;
 			if(r){
-				if(x)
-					*x=r->x;
-				if(y)
-					*y=r->y;
-				if(w)
-					*w=r->w;
-				if(h)
-					*h=r->h;
+				trans_pos_data(x,y,w,h,r->x,r->y,r->w,r->h);
 				result=TRUE;
 			}
 		}
@@ -293,14 +273,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			EDITBOX *e;
 			e=control->data;
 			if(e){
-				if(x)
-					*x=e->x;
-				if(y)
-					*y=e->y;
-				if(w)
-					*w=e->w;
-				if(h)
-					*h=e->h;
+				trans_pos_data(x,y,w,h,e->x,e->y,e->w,e->h);
 				result=TRUE;
 			}
 		}
@@ -310,14 +283,7 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			EDITFLOAT *e;
 			e=control->data;
 			if(e){
-				if(x)
-					*x=e->x;
-				if(y)
-					*y=e->y;
-				if(w)
-					*w=e->w;
-				if(h)
-					*h=e->h;
+				trans_pos_data(x,y,w,h,e->x,e->y,e->w,e->h);
 				result=TRUE;
 			}
 		}
@@ -327,31 +293,17 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			EDITBYTE *e;
 			e=control->data;
 			if(e){
-				if(x)
-					*x=e->x;
-				if(y)
-					*y=e->y;
-				if(w)
-					*w=e->w;
-				if(h)
-					*h=e->h;
+				trans_pos_data(x,y,w,h,e->x,e->y,e->w,e->h);
 				result=TRUE;
 			}
 		}
 		break;
 	case CEDITINT:
 		{
-			EDITBYTE *e;
+			EDITINT *e;
 			e=control->data;
 			if(e){
-				if(x)
-					*x=e->x;
-				if(y)
-					*y=e->y;
-				if(w)
-					*w=e->w;
-				if(h)
-					*h=e->h;
+				trans_pos_data(x,y,w,h,e->x,e->y,e->w,e->h);
 				result=TRUE;
 			}
 		}
@@ -644,13 +596,12 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 }
 struct PCLIST{
 	int type;
-	const char *name;
-	const char *text;
 	int x,y,w,h;
 	void *data;
+	int data_size;
 	int incheight;
 };
-int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *pl)
+int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 {
 	int result=FALSE;
 	int i,xpos=0,ypos=0;
@@ -677,7 +628,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 								c->b=b+2;
 								c->filled=TRUE;
 							}
-							pc->name=pclist[i].name;
 							pc->x=xpos;
 							pc->y=ypos;
 							if(pclist[i].incheight)
@@ -699,7 +649,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 								_snprintf(c->str,sizeof(c->str),"%i",*b);
 								c->byte=b;
 							}
-							pc->name=pclist[i].name;
 							pc->x=xpos;
 							pc->y=ypos;
 							if(pclist[i].incheight)
@@ -721,7 +670,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 								_snprintf(c->str,sizeof(c->str),"%i",*idata);
 								c->integer=idata;
 							}
-							pc->name=pclist[i].name;
 							pc->x=xpos;
 							pc->y=ypos;
 							if(pclist[i].incheight)
@@ -743,7 +691,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 								_snprintf(c->str,sizeof(c->str),"%.4f",*f);
 								c->fdata=f;
 							}
-							pc->name=pclist[i].name;
 							pc->x=xpos;
 							pc->y=ypos;
 							if(pclist[i].incheight)
@@ -760,8 +707,7 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 							c->y=pclist[i].y+ypos;
 							c->w=pclist[i].w;
 							c->h=pclist[i].h;
-							c->str=pclist[i].text;
-							pc->name=pclist[i].name;
+							c->str=pclist[i].data;
 							pc->x=xpos;
 							pc->y=ypos;
 							if(pclist[i].incheight)
@@ -774,16 +720,12 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 					{
 						EDITBOX *c=pc->control.data;
 						if(c){
-							char *str=op->name;
-							int maxlen=sizeof(op->name)-1;
 							c->x=pclist[i].x+xpos;
 							c->y=pclist[i].y+ypos;
 							c->w=pclist[i].w;
 							c->h=pclist[i].h;
-							c->str=pclist[i].text;
-							c->str=str;
-							c->maxlen=maxlen;
-							pc->name=pclist[i].name;
+							c->str=pclist[i].data;
+							c->maxlen=pclist[i].data_size;
 							pc->x=xpos;
 							pc->y=ypos;
 							if(pclist[i].incheight)
@@ -817,17 +759,26 @@ int create_op_params(OP *o)
 		case TCUBE:
 			{
 				struct PCLIST pclist[]={
-					{CSTATIC,"type","cube",6*8,0,40,20,NULL,TRUE},
-					{CEDIT,"name","",6*8,0,8*40,20,NULL,TRUE},
-					{CEDITFLOAT,"tesselate","",10*8,0,10*8,20,NULL,FALSE},
-					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
+					{CSTATIC,   6*8,     0,40,  20,"type - cube",0,TRUE},
+					{CSTATIC,   6*8,     0,40,  20,"name",       0,FALSE},
+					{CEDIT,     6*8,     0,8*40,20,NULL,         1,TRUE},
+					{CSTATIC,   6*8,     0,40,  20,"tesselate",  0,FALSE},
+					{CEDITFLOAT,10*8,    0,10*8,20,NULL,         2,FALSE},
+					{CEDITFLOAT,10*8*2+1,0,10*8,20,NULL,         2,FALSE},
+					{CEDITFLOAT,10*8*3+2,0,10*8,20,NULL,         2,TRUE},
 				};
 				CUBE_DATA *cube=o->data;
 				if(cube){
-					pclist[2].data=&cube->tessx;
-					pclist[3].data=&cube->tessy;
-					pclist[4].data=&cube->tessz;
+					void *plist[5]={o->name,sizeof(o->name),&cube->tessx,&cube->tessy,&cube->tessz};
+					int i,index=0;
+					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
+						if(pclist[i].data_size==1){
+							pclist[i].data=plist[index++];
+							pclist[i].data_size=plist[index++];
+						}
+						else if(pclist[i].data_size==2)
+							pclist[i].data=plist[index++];
+					}
 				}
 				process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),o,pl);
 			}
@@ -835,30 +786,37 @@ int create_op_params(OP *o)
 		case TLIGHT:
 			{
 				struct PCLIST pclist[]={
-					{CSTATIC,"type","light",6*8,0,40,20,NULL,TRUE},
-					{CEDIT,"name","",6*8,0,8*40,20,NULL,TRUE},
-					{CEDITBYTE,"light #","",10*8,0,10*8,20,NULL,TRUE},
-					{CEDITBYTE,"ambient","",10*8,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,FALSE},
-					{CRECT,    0,"",10*8*4+4,0,20,20,NULL,TRUE},
-					{CEDITBYTE,"diffuse","",10*8,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,FALSE},
-					{CRECT,    0,"",10*8*4+4,0,20,20,NULL,TRUE},
-					{CEDITBYTE,"specular","",10*8,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,FALSE},
-					{CRECT,    0,"",10*8*4+4,0,20,20,NULL,TRUE},
-					{CEDITFLOAT,"position","",10*8,0,10*8,20,NULL,FALSE},
-					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
-					{CEDITFLOAT,"direction","",10*8,0,10*8,20,NULL,FALSE},
-					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
-					{CEDITFLOAT,"exponent","",10*8,0,10*8,20,NULL,TRUE},
-					{CEDITFLOAT,"cutoff","",10*8,0,10*8,20,NULL,TRUE},
-					{CEDITINT,  "attenuation","",10*8,0,10*8,20,NULL,TRUE},
+					{CSTATIC,   6*8,0,40,20,"type - light",0,TRUE},
+					{CEDIT,     6*8,0,8*40,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"light #",0,FALSE},
+					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"ambient",0,FALSE},
+					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,FALSE},
+					{CEDITBYTE, 10*8*2+1,0,10*8,20,NULL,0,FALSE},
+					{CEDITBYTE, 10*8*3+2,0,10*8,20,NULL,0,FALSE},
+					{CRECT,     10*8*4+4,0,20,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"diffuse",0,FALSE},
+					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,FALSE},
+					{CEDITBYTE, 10*8*2+1,0,10*8,20,NULL,0,FALSE},
+					{CEDITBYTE, 10*8*3+2,0,10*8,20,NULL,0,FALSE},
+					{CRECT,     10*8*4+4,0,20,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"specular",0,FALSE},
+					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,FALSE},
+					{CEDITBYTE, 10*8*2+1,0,10*8,20,NULL,0,FALSE},
+					{CEDITBYTE, 10*8*3+2,0,10*8,20,NULL,0,FALSE},
+					{CRECT,     10*8*4+4,0,20,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"position",0,FALSE},
+					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,FALSE},
+					{CEDITFLOAT,10*8*2+1,0,10*8,20,NULL,0,FALSE},
+					{CEDITFLOAT,10*8*3+2,0,10*8,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"positionw",0,FALSE},
+					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"exponent",0,FALSE},
+					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"cutoff",0,FALSE},
+					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,TRUE},
+					{CSTATIC,   6*8,0,40,20,"attenuation",0,FALSE},
+					{CEDITINT,  12*8,0,10*8,20,NULL,0,TRUE},
 				};
 				LIGHT_DATA *light=o->data;
 				if(light){
@@ -879,9 +837,7 @@ int create_op_params(OP *o)
 					pclist[index++].data=&light->posx;
 					pclist[index++].data=&light->posy;
 					pclist[index++].data=&light->posz;
-					pclist[index++].data=&light->dirx;
-					pclist[index++].data=&light->diry;
-					pclist[index++].data=&light->dirz;
+					pclist[index++].data=&light->posw;
 					pclist[index++].data=&light->exponent;
 					pclist[index++].data=&light->cuttoff;
 					pclist[index++].data=&light->attenuation;
@@ -1328,6 +1284,7 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 	}
 	return result;
 }
+
 int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int rmb,int shift,int ctrl)
 {
 	int result=FALSE;
@@ -1351,18 +1308,9 @@ int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int 
 						*e->fdata=0;
 					else
 						(*e->fdata)+=(((float)dx)*scale);
-					_snprintf(e->str,sizeof(e->str),"%.4f",*e->fdata);
+					type_edit_modify("%.4f",e->str,sizeof(e->str),&e->cursor,ETYPE_FLOAT,e->fdata,FALSE);
 				}
 				e->changed=FALSE;
-				{
-					int len;
-					e->str[sizeof(e->str)-1]=0;
-					len=strlen(e->str);
-					if(e->cursor>len)
-						e->cursor=len;
-					if(e->cursor<0)
-						e->cursor=0;
-				}
 			}
 
 		}
@@ -1391,18 +1339,34 @@ int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int 
 						else
 							*e->byte=i;
 					}
-					_snprintf(e->str,sizeof(e->str),"%i",*e->byte);
+					type_edit_modify("%i",e->str,sizeof(e->str),&e->cursor,ETYPE_BYTE,e->byte,FALSE);
 				}
 				e->changed=FALSE;
-				{
-					int len;
-					e->str[sizeof(e->str)-1]=0;
-					len=strlen(e->str);
-					if(e->cursor>len)
-						e->cursor=len;
-					if(e->cursor<0)
-						e->cursor=0;
+			}
+		}
+		break;
+	case CEDITINT:
+		{
+			EDITINT *e=pc->control.data;
+			if(e){
+				if(e->integer){
+					int scale=1;
+					if(shift)
+						scale=10;
+					if(ctrl)
+						scale=2;
+					if(shift && ctrl)
+						scale=4;
+					if(rmb)
+						*e->integer=0;
+					else{
+						int i=*e->integer;
+						i+=(deltax*scale);
+						*e->integer=i;
+					}
+					type_edit_modify("%i",e->str,sizeof(e->str),&e->cursor,ETYPE_INT,e->integer,FALSE);
 				}
+				e->changed=FALSE;
 			}
 		}
 		break;

@@ -270,6 +270,7 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			break;
 			*/
 		}
+		/*
 		if(pc->name){
 			int offset=0;
 			if(height!=0)
@@ -277,6 +278,7 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 
 			draw_string(sc,pc->x,pc->y+offset,pc->name,WHITE);
 		}
+		*/
 		pc=pc->next;
 	}
 	return 0;

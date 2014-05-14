@@ -128,17 +128,46 @@ int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *current_op)
 	}
 	return result;
 }
-int dump_tree(TREENODE *t)
+int dump_tree(TREENODE *t,int render)
 {
 	if(t){
 		int i;
 		OP *o=t->op;
-		if(o)
-			printf("opname=%s\n",o->name);
-		else
+		if(o){
+			if(render){
+				switch(o->type){
+				case TCUBE:
+					{
+						static float theta=0;
+						float rot[3],trans[3],size[2];
+						rot[0]=theta; rot[2]=0;
+						rot[1]=theta;
+						trans[0]=trans[1]=trans[2]=0;
+						size[0]=1;
+						size[1]=1;
+						trans[2]=-100;
+						render_rect(&size,&rot,&trans);
+					}
+					break;
+				case TLIGHT:
+					{
+						LIGHT_DATA *l=o->data;
+						if(l){
+							set_light(l);
+						}
+					}
+					break;
+				}
+
+			}
+			else
+				printf("opname=%s\n",o->name);
+		}
+		else if(!render)
 			printf("node has no OP!\n");
+
 		for(i=0;i<t->lcount;i++){
-			dump_tree(t->links[i]);
+			dump_tree(t->links[i],render);
 		}
 	}
 }
@@ -152,24 +181,10 @@ int build_tree(PAGE_DATA *p,OP *current_op)
 	memset(rootnode,0,sizeof(TREENODE));
 	rootnode.op=current_op;
 	add_stackedops(p,&rootnode,current_op);
-	dump_tree(&rootnode);
+	dump_tree(&rootnode,FALSE);
 }
 
 int display_tree()
 {
-	OP *op;
-	op=rootnode.op;
-	if(op){
-		if(op->type==TCUBE){
-			static float theta=0;
-			float rot[3],trans[3],size[2];
-			rot[0]=theta; rot[2]=0;
-			rot[1]=theta;
-			trans[0]=trans[1]=trans[2]=0;
-			size[0]=1;
-			size[1]=1;
-			trans[2]=-100;
-			render_rect(&size,&rot,&trans);
-		}
-	}
+	dump_tree(&rootnode,TRUE);
 }

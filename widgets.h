@@ -133,8 +133,7 @@ typedef struct{
 	unsigned char r_ambient,g_ambient,b_ambient;
 	unsigned char r_diffuse,g_diffuse,b_diffuse;
 	unsigned char r_specular,g_specular,b_specular;
-	float posx,posy,posz;
-	float dirx,diry,dirz;
+	float posx,posy,posz,posw;
 	float exponent;
 	float cuttoff;
 	int attenuation;
@@ -177,9 +176,7 @@ typedef struct{
 }OP;
 
 typedef struct{
-//	int type;
 	CONTROL control;
-	const char *name;
 	int x,y;
 	int has_focus;
 	void *dref;
