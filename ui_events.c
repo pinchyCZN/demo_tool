@@ -320,7 +320,40 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 					*h=e->h;
 				result=TRUE;
 			}
-
+		}
+		break;
+	case CEDITBYTE:
+		{
+			EDITBYTE *e;
+			e=control->data;
+			if(e){
+				if(x)
+					*x=e->x;
+				if(y)
+					*y=e->y;
+				if(w)
+					*w=e->w;
+				if(h)
+					*h=e->h;
+				result=TRUE;
+			}
+		}
+		break;
+	case CEDITINT:
+		{
+			EDITBYTE *e;
+			e=control->data;
+			if(e){
+				if(x)
+					*x=e->x;
+				if(y)
+					*y=e->y;
+				if(w)
+					*w=e->w;
+				if(h)
+					*h=e->h;
+				result=TRUE;
+			}
 		}
 		break;
 	}
@@ -1260,6 +1293,45 @@ int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int 
 
 		}
 		break;
+	case CEDITBYTE:
+		{
+			EDITBYTE *e=pc->control.data;
+			if(e){
+				if(e->byte){
+					int scale=1;
+					if(shift)
+						scale=10;
+					if(ctrl)
+						scale=2;
+					if(shift && ctrl)
+						scale=4;
+					if(rmb)
+						*e->byte=0;
+					else{
+						int i=*e->byte;
+						i-=(deltax*scale);
+						if(i<0)
+							*e->byte=0;
+						else if(i>255)
+							*e->byte=255;
+						else
+							*e->byte=i;
+					}
+					_snprintf(e->str,sizeof(e->str),"%i",*e->byte);
+				}
+				e->changed=FALSE;
+				{
+					int len;
+					e->str[sizeof(e->str)-1]=0;
+					len=strlen(e->str);
+					if(e->cursor>len)
+						e->cursor=len;
+					if(e->cursor<0)
+						e->cursor=0;
+				}
+			}
+		}
+		break;
 	}
 	return result;
 }
@@ -1289,6 +1361,7 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					rmb=wparam&MK_RBUTTON;
 					shift=wparam&MK_SHIFT;
 					ctrl=wparam&MK_CONTROL;
+					deltax>>=4;
 					send_mouse_move(pc,deltax,0,lmb,mmb,rmb,shift,ctrl);
 				}
 			}
