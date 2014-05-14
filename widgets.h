@@ -67,7 +67,7 @@ typedef struct{
 	int w;
 	int h;
 	int filled;
-	int color;
+	unsigned char *r,*g,*b;
 }RECTANGLE;
 
 typedef struct{
@@ -76,6 +76,9 @@ typedef struct{
 	int color;
 }CONTROLDRAG;
 
+#define ETYPE_FLOAT 1
+#define ETYPE_BYTE 2
+#define ETYPE_INT 3
 typedef struct{
 	char str[16];
 	int cursor;

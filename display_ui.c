@@ -162,7 +162,25 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 
 	return TRUE;
 }
-
+int build_param_edit_type(SCREEN *sc,int has_focus,int overwrite,int cursor,int changed,char *str,int x,int y,int w,int h,int *outheight)
+{
+	if(sc){
+		int color=WHITE;
+		draw_rect(sc,x,y,w,h,0x202020);
+		if(has_focus){
+			if(overwrite)
+				draw_line_h(sc,x+(cursor*8),y+h-1,9,0x7F2020);
+			else
+				draw_line_v(sc,x+(cursor*8),y,h,0x7F2020);
+		}
+		if(changed)
+			color=RED;
+		draw_string(sc,x,y+(h/2)-6,str,color);
+		if(outheight)
+			*outheight=h;
+	}
+	return TRUE;
+}
 int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 {
 	PARAM_CONTROL *pc=param_list.list;
@@ -173,7 +191,10 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			{
 				RECTANGLE *c=pc->control.data;
 				if(c){
-					draw_rect(sc,c->x,c->y,c->w,c->h,c->color);
+					int color=0;
+					if(c->r && c->g && c->b)
+						color=((*c->r)<<16)|((*c->g)<<8)|(*c->b);
+					draw_rect(sc,c->x,c->y,c->w,c->h,color);
 					height=c->h;
 				}
 			}
@@ -208,39 +229,22 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 		case CEDITBYTE:
 			{
 				EDITBYTE *c=pc->control.data;
-				if(c){
-					int color=WHITE;
-					draw_rect(sc,c->x,c->y,c->w,c->h,0x202020);
-					if(pc->has_focus){
-						if(c->overwrite)
-							draw_line_h(sc,c->x+(c->cursor*8),c->y+c->h-1,9,0x7F2020);
-						else
-							draw_line_v(sc,c->x+(c->cursor*8),c->y,c->h,0x7F2020);
-					}
-					if(c->changed)
-						color=RED;
-					draw_string(sc,c->x,c->y+(c->h/2)-6,c->str,color);
-					height=c->h;
-				}
+				if(c)
+					build_param_edit_type(sc,pc->has_focus,c->overwrite,c->cursor,c->changed,c->str,c->x,c->y,c->w,c->h,&height);
+			}
+			break;
+		case CEDITINT:
+			{
+				EDITINT *c=pc->control.data;
+				if(c)
+					build_param_edit_type(sc,pc->has_focus,c->overwrite,c->cursor,c->changed,c->str,c->x,c->y,c->w,c->h,&height);
 			}
 			break;
 		case CEDITFLOAT:
 			{
 				EDITFLOAT *c=pc->control.data;
-				if(c){
-					int color=WHITE;
-					draw_rect(sc,c->x,c->y,c->w,c->h,0x202020);
-					if(pc->has_focus){
-						if(c->overwrite)
-							draw_line_h(sc,c->x+(c->cursor*8),c->y+c->h-1,9,0x7F2020);
-						else
-							draw_line_v(sc,c->x+(c->cursor*8),c->y,c->h,0x7F2020);
-					}
-					if(c->changed)
-						color=RED;
-					draw_string(sc,c->x,c->y+(c->h/2)-6,c->str,color);
-					height=c->h;
-				}
+				if(c)
+					build_param_edit_type(sc,pc->has_focus,c->overwrite,c->cursor,c->changed,c->str,c->x,c->y,c->w,c->h,&height);
 			}
 			break;
 			/*

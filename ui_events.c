@@ -671,7 +671,10 @@ int process_param_list(struct PCLIST *pclist,int list_count,OP *op,PARAM_LIST *p
 							c->w=pclist[i].w;
 							c->h=pclist[i].h;
 							if(b){
-								c->color=(b[0]<<16)|(b[1]<<8)|(b[2]);
+								//c->color=(b[0]<<16)|(b[1]<<8)|(b[2]);
+								c->r=b;
+								c->g=b+1;
+								c->b=b+2;
 								c->filled=TRUE;
 							}
 							pc->name=pclist[i].name;
@@ -841,10 +844,12 @@ int create_op_params(OP *o)
 					{CRECT,    0,"",10*8*4+4,0,20,20,NULL,TRUE},
 					{CEDITBYTE,"diffuse","",10*8,0,10*8,20,NULL,FALSE},
 					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
+					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,FALSE},
+					{CRECT,    0,"",10*8*4+4,0,20,20,NULL,TRUE},
 					{CEDITBYTE,"specular","",10*8,0,10*8,20,NULL,FALSE},
 					{CEDITBYTE,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
-					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
+					{CEDITBYTE,0,"",10*8*3+2,0,10*8,20,NULL,FALSE},
+					{CRECT,    0,"",10*8*4+4,0,20,20,NULL,TRUE},
 					{CEDITFLOAT,"position","",10*8,0,10*8,20,NULL,FALSE},
 					{CEDITFLOAT,0,"",10*8*2+1,0,10*8,20,NULL,FALSE},
 					{CEDITFLOAT,0,"",10*8*3+2,0,10*8,20,NULL,TRUE},
@@ -866,9 +871,11 @@ int create_op_params(OP *o)
 					pclist[index++].data=&light->r_diffuse;
 					pclist[index++].data=&light->g_diffuse;
 					pclist[index++].data=&light->b_diffuse;
+					pclist[index++].data=&light->r_diffuse; //rect color
 					pclist[index++].data=&light->r_specular;
 					pclist[index++].data=&light->g_specular;
 					pclist[index++].data=&light->b_specular;
+					pclist[index++].data=&light->r_specular; //rect color
 					pclist[index++].data=&light->posx;
 					pclist[index++].data=&light->posy;
 					pclist[index++].data=&light->posz;
@@ -1172,11 +1179,41 @@ int handle_edit_keys(int key,int vkey,int shift,int ctrl,char *str,int maxlen,in
 		*cursor = maxlen;
 	return result;
 }
-int float_edit_modify(char *fmt,char *str,int size,int *cursor,float f)
+int type_edit_modify(char *fmt,char *str,int size,int *cursor,int dtype,void *d,int update)
 {
-	if(fmt && str && size>0){
+	if(d && fmt && str && size>0){
 		int len;
-		_snprintf(str,size,fmt,f);
+		switch(dtype){
+		case ETYPE_FLOAT:
+			{
+				float *f=d;
+				if(update)
+					*f=atof(str);
+				_snprintf(str,size,fmt,*f);
+			}
+			break;
+		case ETYPE_BYTE:
+			{
+				unsigned char *b=d;
+				if(update){
+					unsigned int i;
+					i=atoi(str);
+					if(i>255)
+						i=255;
+					*b=i;
+				}
+				_snprintf(str,size,fmt,*b);
+			}
+			break;
+		case ETYPE_INT:
+			{
+				int *i=d;
+				if(update)
+					*i=atoi(str);
+				_snprintf(str,size,fmt,*i);
+			}
+			break;
+		}
 		str[size-1]=0;
 		len=strlen(str);
 		if(*cursor>len)
@@ -1186,8 +1223,75 @@ int float_edit_modify(char *fmt,char *str,int size,int *cursor,float f)
 	}
 	return 0;
 }
-int inc_digit_str(char *str,int size,int pos,int dir)
+
+int handle_edit_control(int key,int vkey,int ctrl,int shift,int dtype,char *str,int str_size,int *cursor,int *changed,int *overwrite,int *data)
 {
+	if(str){
+		if(handle_edit_keys(key,vkey,shift,ctrl,str,str_size-1,cursor,overwrite)){
+			*changed=TRUE;
+		}
+		if(vkey==VK_RETURN){
+			if(data){
+				switch(dtype){
+				case ETYPE_FLOAT:
+					type_edit_modify("%.4f",str,str_size,cursor,dtype,data,TRUE);
+					break;
+				case ETYPE_BYTE:
+				case ETYPE_INT:
+					type_edit_modify("%i",str,str_size,cursor,dtype,data,TRUE);
+					break;
+				}
+			}
+			*changed=FALSE;
+		}
+		else if(vkey==VK_ESCAPE){
+			if(data){
+				switch(dtype){
+				case ETYPE_FLOAT:
+					type_edit_modify("%.4f",str,str_size,cursor,dtype,data,FALSE);
+					break;
+				case ETYPE_BYTE:
+				case ETYPE_INT:
+					type_edit_modify("%i",str,str_size,cursor,dtype,data,FALSE);
+					break;
+				}
+			}
+			*changed=FALSE;
+		}
+		else if(vkey==VK_UP || vkey==VK_DOWN){
+			if(data){
+				if(*cursor<0)
+					*cursor=0;
+				if(*cursor<str_size){
+					unsigned char c;
+					c=str[*cursor];
+					if(isdigit(c)){
+						if(vkey==VK_UP)
+							c++;
+						else
+							c--;
+						if(c>'9'){
+							c='0';
+						}
+						if(c<'0')
+							c='0';
+						str[*cursor]=c;
+						switch(dtype){
+						case ETYPE_FLOAT:
+							type_edit_modify("%.4f",str,str_size,cursor,dtype,data,TRUE);
+							break;
+						case ETYPE_BYTE:
+						case ETYPE_INT:
+							type_edit_modify("%i",str,str_size,cursor,dtype,data,TRUE);
+							break;
+						}
+						*changed=FALSE;
+					}
+				}
+			}
+		}
+	}
+	return TRUE;
 }
 int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 {
@@ -1197,49 +1301,19 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 		case CEDITFLOAT:
 			{
 				EDITFLOAT *e=c->data;
-				if(e && e->str){
-					if(handle_edit_keys(key,vkey,shift,ctrl,e->str,sizeof(e->str)-1,&e->cursor,&e->overwrite)){
-						e->changed=TRUE;
-					}
-					if(vkey==VK_RETURN){
-						if(e->fdata){
-							*e->fdata=atof(e->str);
-							float_edit_modify("%.4f",e->str,sizeof(e->str),&e->cursor,*e->fdata);
-						}
-						e->changed=FALSE;
-					}
-					else if(vkey==VK_ESCAPE){
-						if(e->fdata){
-							float_edit_modify("%.4f",e->str,sizeof(e->str),&e->cursor,*e->fdata);
-						}
-						e->changed=FALSE;
-					}
-					else if(vkey==VK_UP || vkey==VK_DOWN){
-						if(e->fdata){
-							if(e->cursor<0)
-								e->cursor=0;
-							if(e->cursor<sizeof(e->str)){
-								unsigned char c;
-								c=e->str[e->cursor];
-								if(isdigit(c)){
-									if(vkey==VK_UP)
-										c++;
-									else
-										c--;
-									if(c>'9'){
-										c='0';
-									}
-									if(c<'0')
-										c='0';
-									e->str[e->cursor]=c;
-									*e->fdata=atof(e->str);
-									float_edit_modify("%.4f",e->str,sizeof(e->str),&e->cursor,*e->fdata);
-									e->changed=FALSE;
-								}
-							}
-						}
-					}
-				}
+				handle_edit_control(key,vkey,ctrl,shift,ETYPE_FLOAT,e->str,sizeof(e->str),&e->cursor,&e->changed,&e->overwrite,e->fdata);
+			}
+			break;
+		case CEDITBYTE:
+			{
+				EDITBYTE *e=c->data;
+				handle_edit_control(key,vkey,ctrl,shift,ETYPE_BYTE,e->str,sizeof(e->str),&e->cursor,&e->changed,&e->overwrite,e->byte);
+			}
+			break;
+		case CEDITINT:
+			{
+				EDITINT *e=c->data;
+				handle_edit_control(key,vkey,ctrl,shift,ETYPE_INT,e->str,sizeof(e->str),&e->cursor,&e->changed,&e->overwrite,e->integer);
 			}
 			break;
 		case CEDIT:
@@ -1309,7 +1383,7 @@ int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int 
 						*e->byte=0;
 					else{
 						int i=*e->byte;
-						i-=(deltax*scale);
+						i+=(deltax*scale);
 						if(i<0)
 							*e->byte=0;
 						else if(i>255)
@@ -1378,8 +1452,8 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			ctrl=wparam&MK_CONTROL;
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
-			deltax=clickx-x;
-			deltay=clicky-y;
+			deltax=x-clickx;
+			deltay=y-clicky;
 			if(debounce==0){
 				int size=4;
 				if((deltax<-size) || (deltax>size))
