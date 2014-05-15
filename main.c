@@ -70,7 +70,7 @@ void gl_init(void)
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
-//	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 //		glLightfv(GL_LIGHT0,GL_POSITION,light_position);
 
 /*
@@ -464,11 +464,26 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		SetFocus(hwnd);
 		print_globs();
 		break;
-
+	case WM_MOUSEWHEEL:
+		{
+			short delta=HIWORD(wparam);
+			int mod=LOWORD(wparam);
+			int scale=1;
+			if(mod&(MK_RBUTTON|MK_CONTROL))
+				scale=10;
+			else if(mod&MK_SHIFT)
+				scale=100;
+			delta/=120;
+			delta*=scale;
+			gz+=delta;
+			print_globs();
+		}
+		break;
 	case WM_MOUSEMOVE:
 		{
 			POINT p;
 			int deltax,deltay;
+			int mod=LOWORD(wparam);
 			p.x=LOWORD(lparam);
 			p.y=HIWORD(lparam);
 			deltax=p.x-mpoint.x;
@@ -480,8 +495,14 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				print_globs();
 			}
 			if(wparam&MK_RBUTTON){
-				gz+=deltay;
-			//	gx+=deltay;
+				float scale=4;
+				if(mod&MK_SHIFT)
+					scale=.99;
+				else if(mod&MK_CONTROL)
+					scale=8;
+
+				gx+=(float)deltax/scale;
+				gy-=(float)deltay/scale;
 				print_globs();
 			}
 			mpoint=p;

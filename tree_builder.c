@@ -128,6 +128,25 @@ int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *current_op)
 	}
 	return result;
 }
+int handle_multiply(TREENODE *t,MULTIPLY_DATA *m)
+{
+	if(m && t){
+		int i;
+		push_model_matrix();
+		for(i=0;i<m->count;i++){
+			int j;
+			float *scale,*rot,*trans;
+			scale=&m->scalex;
+			rot=&m->rotx;
+			trans=&m->transx;
+			transform_mesh(scale,rot,trans);
+			for(j=0;j<t->lcount;j++){
+				dump_tree(t->links[j],TRUE);
+			}
+		}
+		pop_model_matrix();
+	}
+}
 int dump_tree(TREENODE *t,int render)
 {
 	if(t){
@@ -146,7 +165,8 @@ int dump_tree(TREENODE *t,int render)
 						size[0]=1;
 						size[1]=1;
 						//trans[2]=-100;
-						render_rect(&size,&rot,&trans);
+						//render_rect(&rot,&trans);
+						render_cube();
 					}
 					break;
 				case TLIGHT:
@@ -155,6 +175,13 @@ int dump_tree(TREENODE *t,int render)
 						if(l){
 							set_light(l);
 						}
+					}
+					break;
+				case TMULTIPLY:
+					{
+						MULTIPLY_DATA *m=o->data;
+						if(m)
+							handle_multiply(t,m);
 					}
 					break;
 				}

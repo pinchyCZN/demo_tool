@@ -143,20 +143,27 @@ typedef struct{
  int a;
 }TEXTURE_DATA;
 
+typedef struct{
+	float scalex,scaley,scalez;
+	float rotx,roty,rotz;
+	float transx,transy,transz;
+}TRANSFORM_DATA;
+
 
 typedef struct{
-	float	scalex,scaley,scalez;
-	float	rotatex,rotatey,rotatez;
-	float	transx,transy,transz;
+	float scalex,scaley,scalez;
+	float rotx,roty,rotz;
+	float transx,transy,transz;
+	int count;
 }MULTIPLY_DATA;
 
 typedef enum OPTYPES{
-	TLIGHT,TTEXTURE,TCUBE,TMULTIPLY,
+	TLIGHT,TTEXTURE,TCUBE,TMULTIPLY,TTRANSFORM,
 	TRECT,TDRAG,TRECTSELECT
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT,CRECT,CDRAG
+	CBUTTON,CSCROLL,CRECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT
 };
 
 typedef struct{

@@ -135,7 +135,14 @@ int create_op(int type,OP *op,int x,int y)
 		result=create_op_button(type,sizeof(CUBE_DATA),op,x,y);
 		break;
 	case TMULTIPLY:
-		result=create_op_button(type,sizeof(MULTIPLY_DATA),op,x,y);
+		{
+			MULTIPLY_DATA *m;
+			result=create_op_button(type,sizeof(MULTIPLY_DATA),op,x,y);
+			m=op->data;
+			if(m){
+				m->scalex=m->scaley=m->scalez=1.0;
+			}
+		}
 		break;
 	case TDRAG:
 		{
@@ -764,6 +771,48 @@ int create_op_params(OP *o)
 				}
 			}
 			break;
+		case TMULTIPLY:
+			{
+				struct PCLIST pclist[]={
+					{CSTATIC,   8,  0,40,  20,"type - multiply",0,30},
+					{CSTATIC,   8,  0,8*4, 20,"name",0,0},
+					{CEDIT,     8,  0,8*40,20,NULL,1,30},
+					{CSTATIC,   8,  0,8*9, 20,"scale",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"rotate",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"translate",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9, 20,"count",0,0},
+					{CEDITBYTE, 8,  0,10*8,20,NULL,2,30},
+				};
+				MULTIPLY_DATA *mult=o->data;
+				if(mult){
+					void *plist[12]={o->name,sizeof(o->name),
+							&mult->scalex,&mult->scaley,&mult->scalez,
+							&mult->rotx,&mult->roty,&mult->rotz,
+							&mult->transx,&mult->transy,&mult->transz,
+							&mult->count,
+						};
+					int i,index=0;
+					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
+						if(pclist[i].data_size==1){
+							pclist[i].data=plist[index++];
+							pclist[i].data_size=plist[index++];
+						}
+						else if(pclist[i].data_size==2)
+							pclist[i].data=plist[index++];
+					}
+					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
+				}
+			}
+			break;
 		case TLIGHT:
 			{
 				struct PCLIST pclist[]={
@@ -1174,10 +1223,37 @@ int type_edit_modify(char *fmt,char *str,int size,int *cursor,int dtype,void *d,
 	}
 	return 0;
 }
-
-int handle_edit_control(int key,int vkey,int ctrl,int shift,int dtype,char *str,int str_size,int *cursor,int *changed,int *overwrite,int *data)
+int zero_edit_data(int dtype,void *data)
+{
+	switch(dtype){
+	case ETYPE_FLOAT:
+		{
+			float *f=data;
+			if(f)
+				*f=0;
+		}
+		break;
+	case ETYPE_BYTE:
+		{
+			unsigned char *b=data;
+			if(b)
+				*b=0;
+		}
+		break;
+	case ETYPE_INT:
+		{
+			int *i=data;
+			if(i)
+				*i=0;
+		}
+		break;
+	}
+	return TRUE;
+}
+int handle_edit_control(int key,int vkey,int ctrl,int shift,int dtype,char *str,int str_size,int *cursor,int *changed,int *overwrite,void *data)
 {
 	if(str){
+		int tilde=VkKeyScan('`');
 		if(handle_edit_keys(key,vkey,shift,ctrl,str,str_size-1,cursor,overwrite)){
 			*changed=TRUE;
 		}
@@ -1195,8 +1271,10 @@ int handle_edit_control(int key,int vkey,int ctrl,int shift,int dtype,char *str,
 			}
 			*changed=FALSE;
 		}
-		else if(vkey==VK_ESCAPE){
+		else if(vkey==VK_ESCAPE || vkey==tilde){
 			if(data){
+				if(vkey==tilde)
+					zero_edit_data(dtype,data);
 				switch(dtype){
 				case ETYPE_FLOAT:
 					type_edit_modify("%.4f",str,str_size,cursor,dtype,data,FALSE);
@@ -1470,12 +1548,12 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 						PARAM_CONTROL *tmp=list;
 						if(shift){
 							tmp=list->prev;
-							while(tmp && tmp->control.type==CSTATIC)
+							while(tmp && (!((tmp->control.type>=CEDIT) && (tmp->control.type<=CEDITFLOAT))))
 								tmp=tmp->prev;
 						}
 						else{
 							tmp=list->next;
-							while(tmp && tmp->control.type==CSTATIC)
+							while(tmp && (!((tmp->control.type>=CEDIT) && (tmp->control.type<=CEDITFLOAT))))
 								tmp=tmp->next;
 						}
 						if(tmp){

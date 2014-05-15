@@ -98,7 +98,7 @@ int render_rect_(float x,float y,float z,float w,float h)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, indices);
 }
 
-int render_rect(float *size,float *rot,float *trans)
+int render_rect(float *rot,float *trans)
 {
 	static float theta=0;
 	int i;
@@ -116,8 +116,8 @@ int render_rect(float *size,float *rot,float *trans)
 		0, 0, 1
 	};
 	for(i=0;i<4;i++){
-		vertices[ 3 * i + 0 ] *= size[0];
-		vertices[ 3 * i + 1 ] *= size[1];
+		//vertices[ 3 * i + 0 ] *= size[0];
+		//vertices[ 3 * i + 1 ] *= size[1];
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
@@ -139,9 +139,75 @@ int render_rect(float *size,float *rot,float *trans)
 }
 
 
-int render_cube(float x,float y,float z,float w,float h,float d)
+int render_cube()
 {
+	float rot[]={0,0,0};
+	float trans[]={0,0,0};
+	static theta=0;
 
+	trans[0]=-.5;
+	trans[1]=-.5;
+	trans[2]=.5;
+	render_rect(rot,trans); //front
+
+	trans[0]=-.5;
+	trans[1]=.5;
+	trans[2]=-.5;
+	rot[0]=180;
+	render_rect(rot,trans); //back
+	theta++;
+
+	trans[0]=-.5;
+	trans[1]=.5;
+	trans[2]=.5;
+	rot[0]=-90;
+	render_rect(rot,trans); //top
+
+	trans[0]=-.5;
+	trans[1]=-.5;
+	trans[2]=-.5;
+	rot[0]=90;
+	render_rect(rot,trans); //bottom
+
+	trans[0]=.5;
+	trans[1]=-.5;
+	trans[2]=.5;
+	rot[0]=0;
+	rot[1]=90;
+	render_rect(rot,trans); //right
+
+	trans[0]=-.5;
+	trans[1]=-.5;
+	trans[2]=-.5;
+	rot[0]=0;
+	rot[1]=-90;
+	render_rect(rot,trans); //left
+}
+
+int transform_mesh(float *scale,float *rot,float *trans)
+{
+	if(scale){
+		glScalef(scale[0],scale[1],scale[2]);	
+	}
+	if(rot){
+		glRotatef(rot[0], 1.0f, 0.0f, 0.0f);
+		glRotatef(rot[1], 0.0f, 1.0f, 0.0f);
+		glRotatef(rot[2], 0.0f, 0.0f, 1.0f);
+	}
+	if(trans){
+		glTranslatef(trans[0], trans[1], trans[2]);
+	}
+	return TRUE;
+}
+int push_model_matrix()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+}
+int pop_model_matrix()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 }
 int render(ENTITY *e)
 {
@@ -247,9 +313,10 @@ int float_to_float(float *f,float *fsrc,int count)
 	}
 	return i;
 }
+
 int set_light(LIGHT_DATA *l)
 {
-	float f[4]={0,0,0,0};
+	float f[4]={0,0,0,1};
 	int light_num=GL_LIGHT0+l->light_num;
 	byte_to_float(f,&l->r_ambient,3);
 	glLightfv(light_num,GL_AMBIENT,f);
@@ -257,6 +324,9 @@ int set_light(LIGHT_DATA *l)
 	glLightfv(light_num,GL_DIFFUSE,f);
 	byte_to_float(f,&l->r_specular,3);
 	glLightfv(light_num,GL_SPECULAR,f);
+	f[0]=f[1]=f[2]=.4;
+	f[3]=1.0;
+	glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,f);
 	float_to_float(f,&l->posx,4);
 	glLightfv(light_num,GL_POSITION,f);
 	glLighti(light_num,GL_LINEAR_ATTENUATION,l->attenuation);
