@@ -121,17 +121,20 @@ int render_rect(float *size,float *rot,float *trans)
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
+	glTranslatef(trans[0], trans[1], trans[2]);
 	glRotatef(rot[0], 1.0f, 0.0f, 0.0f);
 	glRotatef(rot[1], 0.0f, 1.0f, 0.0f);
 	glRotatef(rot[2], 0.0f, 0.0f, 1.0f);
-	glTranslatef(trans[0], trans[1], trans[2]);
+	//glRotatef(theta, 0.0f, 1.0f, 0.0f);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
+	glDisable(GL_TEXTURE_2D);
 	glVertexPointer(3,GL_FLOAT,0,vertices);
 	glNormalPointer(GL_FLOAT,0,normals);
 	glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,indices);
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
+	theta+=1;
 
 }
 
@@ -254,7 +257,7 @@ int set_light(LIGHT_DATA *l)
 	glLightfv(light_num,GL_DIFFUSE,f);
 	byte_to_float(f,&l->r_specular,3);
 	glLightfv(light_num,GL_SPECULAR,f);
-	float_to_float(f,&l->posx,3);
+	float_to_float(f,&l->posx,4);
 	glLightfv(light_num,GL_POSITION,f);
 	glLighti(light_num,GL_LINEAR_ATTENUATION,l->attenuation);
 	glEnable(GL_LIGHTING);

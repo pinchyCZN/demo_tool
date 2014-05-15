@@ -177,7 +177,6 @@ typedef struct{
 
 typedef struct{
 	CONTROL control;
-	int x,y;
 	int has_focus;
 	void *dref;
 	void *next;

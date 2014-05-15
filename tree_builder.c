@@ -145,7 +145,7 @@ int dump_tree(TREENODE *t,int render)
 						trans[0]=trans[1]=trans[2]=0;
 						size[0]=1;
 						size[1]=1;
-						trans[2]=-100;
+						//trans[2]=-100;
 						render_rect(&size,&rot,&trans);
 					}
 					break;

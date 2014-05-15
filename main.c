@@ -34,7 +34,7 @@ int g_draw=0;
 int g_screenw=1024;
 int g_screenh=758;
 
-float gx=0,gy=0,gz=0;
+float gx=0,gy=0,gz=-10;
 float grx=0,gry=0,grz=0;
 
 int g_ztri=-100;
@@ -127,10 +127,10 @@ void display(void)
 //	glMatrixMode(GL_PROJECTION);
 	
 	glLoadIdentity();
+	glTranslatef(gx,gy,gz);
 	glRotatef(grx,1,0,0);
 	glRotatef(gry,0,1,0);
 	glRotatef(grz,0,0,1);
-	glTranslatef(gx,gy,gz);
 	{
 		unsigned int tick,global_tick;
 		tick=GetTickCount();
@@ -144,7 +144,7 @@ void display(void)
 	get_modifiers();
 
 
-	test_triangle();
+	//test_triangle();
 
 
 	display_tree();
@@ -448,6 +448,7 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		case 'R':
 			grx=gry=grz=0;
 			gx=gy=gz=0;
+			gz=-10;
 			print_globs();
 			break;
 		case VK_ESCAPE:
@@ -474,8 +475,8 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			deltay=p.y-mpoint.y;
 
 			if(wparam&MK_LBUTTON){
-				grx+=deltax;
-				gry+=deltay;
+				gry-=deltax;
+				grx-=deltay;
 				print_globs();
 			}
 			if(wparam&MK_RBUTTON){

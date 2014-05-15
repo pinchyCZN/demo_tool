@@ -599,7 +599,7 @@ struct PCLIST{
 	int x,y,w,h;
 	void *data;
 	int data_size;
-	int incheight;
+	int incypos;
 };
 int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 {
@@ -610,7 +610,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 		if(pc){
 			memset(pc,0,sizeof(PARAM_CONTROL));
 			if(create_param_control(pclist[i].type,pc)){
-				xpos=0;
 				switch(pclist[i].type){
 				case CRECT:
 					{
@@ -628,10 +627,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 								c->b=b+2;
 								c->filled=TRUE;
 							}
-							pc->x=xpos;
-							pc->y=ypos;
-							if(pclist[i].incheight)
-								ypos+=30;
 							result=TRUE;
 						}
 					}
@@ -649,10 +644,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 								_snprintf(c->str,sizeof(c->str),"%i",*b);
 								c->byte=b;
 							}
-							pc->x=xpos;
-							pc->y=ypos;
-							if(pclist[i].incheight)
-								ypos+=30;
 							result=TRUE;
 						}
 					}
@@ -670,10 +661,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 								_snprintf(c->str,sizeof(c->str),"%i",*idata);
 								c->integer=idata;
 							}
-							pc->x=xpos;
-							pc->y=ypos;
-							if(pclist[i].incheight)
-								ypos+=30;
 							result=TRUE;
 						}
 					}
@@ -691,10 +678,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 								_snprintf(c->str,sizeof(c->str),"%.4f",*f);
 								c->fdata=f;
 							}
-							pc->x=xpos;
-							pc->y=ypos;
-							if(pclist[i].incheight)
-								ypos+=30;
 							result=TRUE;
 						}
 					}
@@ -708,10 +691,6 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 							c->w=pclist[i].w;
 							c->h=pclist[i].h;
 							c->str=pclist[i].data;
-							pc->x=xpos;
-							pc->y=ypos;
-							if(pclist[i].incheight)
-								ypos+=30;
 							result=TRUE;
 						}
 					}
@@ -726,16 +705,18 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 							c->h=pclist[i].h;
 							c->str=pclist[i].data;
 							c->maxlen=pclist[i].data_size;
-							pc->x=xpos;
-							pc->y=ypos;
-							if(pclist[i].incheight)
-								ypos+=30;
 							result=TRUE;
 						}
 					}
 					break;
 				}
 			}
+			ypos+=pclist[i].incypos;
+			if(pclist[i].incypos)
+				xpos=0;
+			else
+				xpos+=pclist[i].x+pclist[i].w;
+
 		}
 		if((!result) && pc)
 			free(pc);
@@ -759,13 +740,13 @@ int create_op_params(OP *o)
 		case TCUBE:
 			{
 				struct PCLIST pclist[]={
-					{CSTATIC,   6*8,     0,40,  20,"type - cube",0,TRUE},
-					{CSTATIC,   6*8,     0,40,  20,"name",       0,FALSE},
-					{CEDIT,     6*8,     0,8*40,20,NULL,         1,TRUE},
-					{CSTATIC,   6*8,     0,40,  20,"tesselate",  0,FALSE},
-					{CEDITFLOAT,10*8,    0,10*8,20,NULL,         2,FALSE},
-					{CEDITFLOAT,10*8*2+1,0,10*8,20,NULL,         2,FALSE},
-					{CEDITFLOAT,10*8*3+2,0,10*8,20,NULL,         2,TRUE},
+					{CSTATIC,   8,       8,   0, 20,"type - cube",0,30},
+					{CSTATIC,   8,       0, 8*4, 20,"name",       0,0},
+					{CEDIT,     8,       0,8*40, 20,NULL,         1,30},
+					{CSTATIC,   8,       0, 8*9, 20,"tesselate",  0,0},
+					{CEDITFLOAT,8,    0,10*8,20,NULL,         2,0},
+					{CEDITFLOAT,2,    0,10*8,20,NULL,         2,0},
+					{CEDITFLOAT,2,    0,10*8,20,NULL,         2,30},
 				};
 				CUBE_DATA *cube=o->data;
 				if(cube){
@@ -779,70 +760,84 @@ int create_op_params(OP *o)
 						else if(pclist[i].data_size==2)
 							pclist[i].data=plist[index++];
 					}
+					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
 				}
-				process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),o,pl);
 			}
 			break;
 		case TLIGHT:
 			{
 				struct PCLIST pclist[]={
-					{CSTATIC,   6*8,0,40,20,"type - light",0,TRUE},
-					{CEDIT,     6*8,0,8*40,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"light #",0,FALSE},
-					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"ambient",0,FALSE},
-					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,FALSE},
-					{CEDITBYTE, 10*8*2+1,0,10*8,20,NULL,0,FALSE},
-					{CEDITBYTE, 10*8*3+2,0,10*8,20,NULL,0,FALSE},
-					{CRECT,     10*8*4+4,0,20,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"diffuse",0,FALSE},
-					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,FALSE},
-					{CEDITBYTE, 10*8*2+1,0,10*8,20,NULL,0,FALSE},
-					{CEDITBYTE, 10*8*3+2,0,10*8,20,NULL,0,FALSE},
-					{CRECT,     10*8*4+4,0,20,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"specular",0,FALSE},
-					{CEDITBYTE, 10*8,0,10*8,20,NULL,0,FALSE},
-					{CEDITBYTE, 10*8*2+1,0,10*8,20,NULL,0,FALSE},
-					{CEDITBYTE, 10*8*3+2,0,10*8,20,NULL,0,FALSE},
-					{CRECT,     10*8*4+4,0,20,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"position",0,FALSE},
-					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,FALSE},
-					{CEDITFLOAT,10*8*2+1,0,10*8,20,NULL,0,FALSE},
-					{CEDITFLOAT,10*8*3+2,0,10*8,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"positionw",0,FALSE},
-					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"exponent",0,FALSE},
-					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"cutoff",0,FALSE},
-					{CEDITFLOAT,10*8,0,10*8,20,NULL,0,TRUE},
-					{CSTATIC,   6*8,0,40,20,"attenuation",0,FALSE},
-					{CEDITINT,  12*8,0,10*8,20,NULL,0,TRUE},
+					{CSTATIC,   8,  0,40,  20,"type - light",0,30},
+					{CSTATIC,   8,  0,8*4, 20,"name",0,0},
+					{CEDIT,     8,  0,8*40,20,NULL,1,30},
+					{CSTATIC,   8,  0,8*9, 20,"light #",0,0},
+					{CEDITBYTE, 8,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9, 20,"ambient",0,0},
+					{CEDITBYTE, 8,  0,10*8,20,NULL,2,0},
+					{CEDITBYTE, 2,  0,10*8,20,NULL,2,0},
+					{CEDITBYTE, 2,  0,10*8,20,NULL,2,0},
+					{CRECT,     2,  0,20,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"diffuse",0,0},
+					{CEDITBYTE, 8,  0,10*8,20,NULL,2,0},
+					{CEDITBYTE, 2,  0,10*8,20,NULL,2,0},
+					{CEDITBYTE, 2,  0,10*8,20,NULL,2,0},
+					{CRECT,     2,  0,20,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"specular",0,0},
+					{CEDITBYTE, 8,  0,10*8,20,NULL,2,0},
+					{CEDITBYTE, 2,  0,10*8,20,NULL,2,0},
+					{CEDITBYTE, 2,  0,10*8,20,NULL,2,0},
+					{CRECT,     2,  0,20,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"position",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"positionw",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"exponent",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"cutoff",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*12,20,"attenuation",0,0},
+					{CEDITINT,  8,  0,10*8,20,NULL,2,30},
 				};
 				LIGHT_DATA *light=o->data;
 				if(light){
-					int index=2;
-					pclist[index++].data=&light->light_num;
-					pclist[index++].data=&light->r_ambient;
-					pclist[index++].data=&light->g_ambient;
-					pclist[index++].data=&light->b_ambient;
-					pclist[index++].data=&light->r_ambient; //rect color
-					pclist[index++].data=&light->r_diffuse;
-					pclist[index++].data=&light->g_diffuse;
-					pclist[index++].data=&light->b_diffuse;
-					pclist[index++].data=&light->r_diffuse; //rect color
-					pclist[index++].data=&light->r_specular;
-					pclist[index++].data=&light->g_specular;
-					pclist[index++].data=&light->b_specular;
-					pclist[index++].data=&light->r_specular; //rect color
-					pclist[index++].data=&light->posx;
-					pclist[index++].data=&light->posy;
-					pclist[index++].data=&light->posz;
-					pclist[index++].data=&light->posw;
-					pclist[index++].data=&light->exponent;
-					pclist[index++].data=&light->cuttoff;
-					pclist[index++].data=&light->attenuation;
+					void *plist[22]={
+						o->name,sizeof(o->name),
+						&light->light_num,
+						&light->r_ambient,
+						&light->g_ambient,
+						&light->b_ambient,
+						&light->r_ambient,
+						&light->r_diffuse,
+						&light->g_diffuse,
+						&light->b_diffuse,
+						&light->r_diffuse,
+						&light->r_specular,
+						&light->g_specular,
+						&light->b_specular,
+						&light->r_specular, 
+						&light->posx,
+						&light->posy,
+						&light->posz,
+						&light->posw,
+						&light->exponent,
+						&light->cuttoff,
+						&light->attenuation
+					};
+					int i,index=0;
+					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
+						if(pclist[i].data_size==1){
+							pclist[i].data=plist[index++];
+							pclist[i].data_size=plist[index++];
+						}
+						else if(pclist[i].data_size==2)
+							pclist[i].data=plist[index++];
+					}
+					if(index==22)
+						index=index;
+					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
 				}
-				process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),o,pl);
 			}
 			break;
 		}
@@ -1473,10 +1468,16 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					shift=GetKeyState(VK_SHIFT)&0x8000;
 					if(vkey==VK_TAB){
 						PARAM_CONTROL *tmp=list;
-						if(shift)
+						if(shift){
 							tmp=list->prev;
-						else
+							while(tmp && tmp->control.type==CSTATIC)
+								tmp=tmp->prev;
+						}
+						else{
 							tmp=list->next;
+							while(tmp && tmp->control.type==CSTATIC)
+								tmp=tmp->next;
+						}
 						if(tmp){
 							tmp->has_focus=TRUE;
 							list->has_focus=FALSE;
