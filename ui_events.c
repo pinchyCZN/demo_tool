@@ -1370,13 +1370,13 @@ int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int 
 			if(e){
 				float dx=deltax;
 				if(e->fdata){
-					float scale=10;
+					float scale=.1;
 					if(shift)
-						scale=100;
+						scale=10;
 					if(ctrl)
-						scale=1;
+						scale=.01;
 					if(shift && ctrl)
-						scale=.1;
+						scale=1;
 					if(rmb)
 						*e->fdata=0;
 					else
