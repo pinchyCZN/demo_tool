@@ -16,6 +16,7 @@ HWND	ghview1=0;
 HWND	ghpage=0;
 HWND	ghpagelist=0;
 HWND	ghparams=0;
+HWND	ghsubparams=0;
 SCREEN scpage={0};
 SCREEN scpagelist={0};
 SCREEN scparams={0};
@@ -25,6 +26,7 @@ HWND		ghfocus=0;
 HINSTANCE	ghinstance=0;
 HACCEL		ghaccel=0;
 //int view1_divider=0;
+int sub_params_divider=0;
 int params_divider=0;
 int horiz_divider=0;
 int page_divider=0;
@@ -512,6 +514,35 @@ LRESULT CALLBACK win_view1_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	}
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
+LRESULT CALLBACK win_subparams_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
+{
+#ifdef _DEBUG
+	if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
+	{
+		static DWORD tick;
+		if((GetTickCount()-tick)>500)
+			printf("--\n");
+		printf("p");
+		print_msg(msg,lparam,wparam,hwnd);
+		tick=GetTickCount();
+	}
+#endif
+
+	switch(msg){
+	case WM_CREATE:
+		return 0;
+	case WM_MBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+	case WM_LBUTTONDOWN:
+		SetFocus(hwnd);
+		break;
+	case WM_MOUSEMOVE:
+		set_focus(hwnd);
+		break;
+	}
+	return DefWindowProc(hwnd,msg,wparam,lparam);
+}
 LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 #ifdef _DEBUG
@@ -668,8 +699,10 @@ int resize_main_window(HWND hwnd)
 		horiz_divider=rect.bottom/2;
 //	if(view1_divider<=0)
 //		view1_divider=rect.right/2;
+	if(sub_params_divider<=0)
+		sub_params_divider=rect.right/3;
 	if(params_divider<=0)
-		params_divider=rect.right/2;
+		params_divider=rect.right*2/3;
 
 	x=y=0;
 	w=params_divider-line;
@@ -720,6 +753,12 @@ int create_tool_windows(HWND hwnd)
 	wnd.lpfnWndProc=win_params_proc;
 	RegisterClass(&wnd);
 	ghparams=CreateWindow(wnd.lpszClassName,"params",WS_CHILD|WS_VISIBLE,
+		0,0,0,0,hwnd,NULL,ghinstance,NULL);
+
+	wnd.lpszClassName="SUBPARAMS";
+	wnd.lpfnWndProc=win_subparams_proc;
+	RegisterClass(&wnd);
+	ghsubparams=CreateWindow(wnd.lpszClassName,"subparams",WS_CHILD|WS_VISIBLE,
 		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
 	wnd.lpszClassName="PAGELIST";

@@ -16,6 +16,7 @@ typedef struct{
 
 #define DEFBUTTONH 25
 #define DEFBUTTONW (DEFBUTTONH*3)
+#define RESIZE_MARGIN 8
 
 typedef struct{
 	int type;
@@ -75,6 +76,12 @@ typedef struct{
 	int filled;
 	int color;
 }CONTROLDRAG;
+
+typedef struct{
+	int x,y,w,h;
+	int filled;
+	int color;
+}RESIZERECT;
 
 #define ETYPE_FLOAT 1
 #define ETYPE_BYTE 2
@@ -159,11 +166,11 @@ typedef struct{
 
 typedef enum OPTYPES{
 	TLIGHT,TTEXTURE,TCUBE,TMULTIPLY,TTRANSFORM,
-	TRECT,TDRAG,TRECTSELECT
+	TRESIZE,TDRAG
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CRECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT
+	CBUTTON,CSCROLL,CRECT,CRESIZERECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT
 };
 
 typedef struct{
@@ -178,7 +185,7 @@ typedef struct{
 	char name[20];
 	void *list_prev,*list_next;
 	int selected;
-	int activated;
+	int isroot;
 	int error;
 }OP;
 

@@ -53,11 +53,30 @@ int test_build(PAGE_DATA *p)
 	OP *o=0;
 	if(p==0)
 		return 0;
-	find_selected_op(p,&o);
+	find_root_op(p,&o);
 	if(o){
 		build_tree(p,o);
 	}
 	return 0;
+}
+int free_tree(TREENODE *root)
+{
+	int result=FALSE;
+	if(root){
+		int i;
+		for(i=0;i<root->lcount;i++){
+			free_tree(root->links[i]);
+			if(root->links[i]){
+				free(root->links[i]);
+				root->links[i]=0;
+				result=TRUE;
+			}
+		}
+		if(root->links)
+			free(root->links);
+		memset(root,0,sizeof(TREENODE));
+	}
+	return result;
 }
 int add_tree_node(TREENODE *t,OP *o)
 {
@@ -88,25 +107,6 @@ int add_tree_node(TREENODE *t,OP *o)
 	}
 	return result;
 }
-int free_tree(TREENODE *root)
-{
-	int result=FALSE;
-	if(root){
-		int i;
-		for(i=0;i<root->lcount;i++){
-			free_tree(root->links[i]);
-			if(root->links[i]){
-				free(root->links[i]);
-				root->links[i]=0;
-				result=TRUE;
-			}
-		}
-		if(root->links)
-			free(root->links);
-		memset(root,0,sizeof(TREENODE));
-	}
-	return result;
-}
 int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *current_op)
 {
 	int result=FALSE;
@@ -119,7 +119,8 @@ int add_stackedops(PAGE_DATA *p,TREENODE *node,OP *current_op)
 				if(is_stacked(&current_op->control,&oplist->control)){
 					oplist->error=1;
 					add_tree_node(node,oplist);
-					add_stackedops(p,node,oplist);
+					if(node->lcount > 0)
+						add_stackedops(p,node->links[node->lcount-1],oplist);
 					result=TRUE;
 				}
 			}
@@ -201,7 +202,7 @@ int dump_tree(TREENODE *t,int render)
 int build_tree(PAGE_DATA *p,OP *current_op)
 {
 	int result=FALSE;
-	if(p==0 || current_op==0 || current_op->selected==0)
+	if(p==0 || current_op==0)
 		return result;
 	clear_page_errors(p);
 	free_tree(&rootnode);

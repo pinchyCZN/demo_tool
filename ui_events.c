@@ -21,6 +21,7 @@ int add_op(PAGE_DATA *pd,OP *op)
 		op->list_prev=o;
 		result=TRUE;
 	}
+	return result;
 }
 int del_op(PAGE_DATA *pd,OP *op)
 {
@@ -155,6 +156,26 @@ int create_op(int type,OP *op,int x,int y)
 				op->type=type;
 				result=TRUE;
 			}
+		}
+		break;
+	case TRESIZE:
+		{
+			RESIZERECT *r;
+			r=malloc(sizeof(RESIZERECT));
+			if(r){
+				memset(r,0,sizeof(RESIZERECT));
+				op->control.type=CRESIZERECT;
+				op->control.data=r;
+				op->type=type;
+				r->x=x;
+				r->y=y;
+				r->w=10;
+				r->h=10;
+				r->color=0xFFFFFF;
+				r->filled=1;
+				result=TRUE;
+			}
+
 		}
 		break;
 	}
@@ -318,6 +339,25 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 	}
 	return result;
 }
+int find_root_op(PAGE_DATA *p,OP **op)
+{
+	int result=FALSE;
+	OP *oplist;
+	if(p==0)
+		return result;
+	oplist=p->list;
+	while(oplist){
+		if(oplist->isroot){
+			if(op){
+				*op=oplist;
+			}
+			result=TRUE;
+			break;
+		}
+		oplist=oplist->list_next;
+	}
+	return result;
+}
 int find_selected_op(PAGE_DATA *p,OP **op)
 {
 	int result=FALSE;
@@ -337,7 +377,7 @@ int find_selected_op(PAGE_DATA *p,OP **op)
 	}
 	return result;
 }
-int find_drag_op(PAGE_DATA *p,OP **op)
+int find_op_type(PAGE_DATA *p,OP **op,int type)
 {
 	int result=FALSE;
 	OP *oplist;
@@ -345,7 +385,7 @@ int find_drag_op(PAGE_DATA *p,OP **op)
 		return result;
 	oplist=p->list;
 	while(oplist){
-		if(oplist->type==TDRAG){
+		if(oplist->type==type){
 			if(op)
 				*op=oplist;
 			result=TRUE;
@@ -354,6 +394,19 @@ int find_drag_op(PAGE_DATA *p,OP **op)
 		oplist=oplist->list_next;
 	}
 	return result;
+}
+int set_root(PAGE_DATA *p,OP *o)
+{
+	OP *oplist;
+	if(p==0 || o==0)
+		return FALSE;
+	oplist=p->list;
+	while(oplist){
+		oplist->isroot=FALSE;
+		oplist=oplist->list_next;
+	}
+	o->isroot=TRUE;
+	return TRUE;
 }
 int clear_pressed_all(PAGE_DATA *p)
 {
@@ -416,7 +469,7 @@ int drag_control(SCREEN *sc,PAGE_DATA *p,int x,int y,int startx,int starty)
 	int result=FALSE;
 	if(p){
 		OP *op=0;
-		if(!find_drag_op(p,&op)){
+		if(!find_op_type(p,&op,TDRAG)){
 			op=malloc(sizeof(OP));
 			if(op){
 				memset(op,0,sizeof(OP));
@@ -437,6 +490,55 @@ int drag_control(SCREEN *sc,PAGE_DATA *p,int x,int y,int startx,int starty)
 				d->color=0xFF;
 			}
 			op->selected=TRUE;
+		}
+	}
+	return result;
+}
+int add_resize_op(PAGE_DATA *p,CONTROL *c)
+{
+	int result=FALSE;
+	OP *op=0;
+	find_op_type(p,&op,TRESIZE);
+	if(op==0){
+		op=malloc(sizeof(OP));
+		if(op){
+			int x=0,y=0;
+			get_control_pos(c,&x,&y,0,0);
+			memset(op,0,sizeof(OP));
+			if(create_op(TRESIZE,op,x,y)){
+				add_op(p,op);
+			}
+			else{
+				free(op);
+				op=0;
+			}
+		}
+	}
+	if(op)
+		result=TRUE;
+	return result;
+}
+int resize_selected(PAGE_DATA *p,int x,int y,int startx,int starty)
+{
+	int result=FALSE;
+	if(p){
+		OP *oplist=p->list;
+		while(oplist){
+			if(oplist->selected){
+				if(oplist->control.type==CBUTTON){
+					BUTTON *b=oplist->control.data;
+					if(b){
+						int deltax=startx-b->x + (x-startx);
+						deltax-=deltax%DEFBUTTONH;
+						b->w=deltax+DEFBUTTONH;
+						b->w-=b->w%DEFBUTTONH;
+						if(b->w<DEFBUTTONW)
+							b->w=DEFBUTTONW;
+						result=TRUE;
+					}
+				}
+			}
+			oplist=oplist->list_next;
 		}
 	}
 	return result;
@@ -894,7 +996,7 @@ int create_op_params(OP *o)
 }
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
-	static int drag=0,clickx=0,clicky=0,debounce=0;
+	static int drag=0,resize=0,clickx=0,clicky=0,debounce=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
 	p=page_list.current;
@@ -944,34 +1046,22 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			int x,y;
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
-			if(lmb && drag){
+			if(lmb){
 				if(debounce==0){
 					int size=4;
-					int deltax,deltay;
+					int deltax=0,deltay=0;
 					deltax=clickx-x;
 					deltay=clicky-y;
 					if((deltax<-size) || (deltax>size))
 						debounce=1;
 					if((deltay<-size) || (deltay>size))
 						debounce=1;
-					if(debounce==0)
-						;
-					else{
-						if(deltax<0)
-							deltax+=size;
-						else
-							deltax-=size;
-						if(deltay<0)
-							deltay+=size;
-						else
-							deltay-=size;
-					}
-
 				}
-				if(debounce!=0){
-					x+=p->hscroll;
-					y+=p->vscroll;
-					drag_control(sc,p,x,y,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
+				if(drag && debounce!=0){
+					drag_control(sc,p,x+p->hscroll,y+p->vscroll,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
+				}
+				if(resize && debounce!=0){
+					resize_selected(p,x+p->hscroll,y+p->vscroll,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
 				}
 			}
 			if(p->vscroll_pressed){
@@ -1022,11 +1112,17 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		{
 			OP *op=0;
 			if(drag){
-				if(find_drag_op(p,&op)){
+				if(find_op_type(p,&op,TDRAG)){
 					drag_finish(sc,p,op);
 					del_op(p,op);
 				}
 				drag=0;
+			}
+			if(resize){
+				if(find_op_type(p,&op,TRESIZE)){
+					del_op(p,op);
+				}
+				resize=0;
 			}
 			p->hscroll_pressed=0;
 			p->vscroll_pressed=0;
@@ -1049,16 +1145,24 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				clear_pressed_all(p);
 			hittest_op(p,x,y,&op);
 			if(op){
-				drag=TRUE;
 				clear_selected_all(p);
+				if(wparam&MK_CONTROL)
+					set_root(p,op);
 				op->selected=TRUE;
 				create_op_params(op);
 				if(op->control.type==CBUTTON){
 					BUTTON *b=op->control.data;
 					if(b){
+						int xright=b->x+b->w;
+						if(x<xright && x>=(xright-RESIZE_MARGIN)){
+							resize=TRUE;
+							add_resize_op(p,&op->control);
+						}
 						b->pressed=TRUE;
 					}
 				}
+				if(!resize)
+					drag=TRUE;
 			}
 			else{
 			}

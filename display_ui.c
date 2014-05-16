@@ -87,10 +87,20 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 
 					if(list->selected)
 						draw_rect(sc,b->x+4,b->y+4,5,5,0xFF0000);
-					if(list->activated)
+					if(list->isroot)
 						draw_rect(sc,b->x+4,b->y+b->h-10,5,5,0xFF00);
 					if(list->error)
 						draw_line_h(sc,b->x+2,b->y+1,b->w-5,0xFF0000);
+					draw_line_v(sc,b->x+b->w-RESIZE_MARGIN,b->y,b->h,0);
+				}
+				break;
+			case TRESIZE:
+				{
+					RESIZERECT *rr=list->control.data;
+					if(rr){
+						draw_rect(sc,rr->x,rr->y,12,12,rr->color);
+						draw_char(sc,rr->x,rr->y,'R',0);
+					}
 				}
 				break;
 			case TDRAG:
