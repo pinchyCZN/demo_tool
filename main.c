@@ -705,9 +705,15 @@ int resize_main_window(HWND hwnd)
 		params_divider=rect.right*2/3;
 
 	x=y=0;
-	w=params_divider-line;
+	w=sub_params_divider-line;
 	h=horiz_divider-line;
 	SetWindowPos(ghview1,NULL,x,y,w,h,SWP_NOZORDER);
+
+	x=sub_params_divider+line;
+	y=0;
+	w=params_divider-x-line;
+	h=horiz_divider-line;
+	SetWindowPos(ghsubparams,NULL,x,y,w,h,SWP_NOZORDER);
 
 	x=params_divider+line;
 	y=0;
@@ -807,6 +813,13 @@ static int adjust_dividers(HWND hwnd,int x,int y,int grab)
 	if(grab){
 		divider=0;
 		xaxis=TRUE;
+		if(in_range(x,sub_params_divider-4,sub_params_divider+4)){
+			if(in_range(y,0,horiz_divider-1)){
+				divider=&sub_params_divider;
+				result=TRUE;
+				goto exit;
+			}
+		}
 		if(in_range(x,params_divider-4,params_divider+4)){
 			if(in_range(y,0,horiz_divider-1)){
 				divider=&params_divider;
@@ -836,6 +849,8 @@ static int adjust_dividers(HWND hwnd,int x,int y,int grab)
 				*divider=x;
 				result=TRUE;
 			}
+			if(sub_params_divider > params_divider-5)
+				sub_params_divider=params_divider-5;
 		}
 		else{
 			if(in_range(y,5,rect.bottom-5)){
