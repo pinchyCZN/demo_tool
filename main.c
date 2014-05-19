@@ -20,6 +20,7 @@ HWND	ghsubparams=0;
 SCREEN scpage={0};
 SCREEN scpagelist={0};
 SCREEN scparams={0};
+SCREEN scsubparams={0};
 
 HWND		ghfocus=0;
 
@@ -720,7 +721,7 @@ int resize_main_window(HWND hwnd)
 	if(sub_params_divider<=0)
 		sub_params_divider=rect.right/3;
 	if(params_divider<=0)
-		params_divider=rect.right*2/3;
+		params_divider=sub_params_divider+4;//rect.right*2/3;
 
 	x=y=0;
 	w=sub_params_divider-line;
@@ -798,9 +799,9 @@ int create_tool_windows(HWND hwnd)
 		0,0,0,0,hwnd,NULL,ghinstance,NULL);
 
 	{
-		SCREEN *s[3]={&scpage,&scpagelist,&scparams};
+		SCREEN *s[4]={&scpage,&scpagelist,&scparams,&scsubparams};
 		int i;
-		for(i=0;i<3;i++){
+		for(i=0;i<sizeof(s)/sizeof(SCREEN *);i++){
 			s[i]->buffer=malloc(1024*1024*4);
 			s[i]->w=1024;
 			s[i]->h=1024;
@@ -1013,6 +1014,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					EnterCriticalSection(&mutex);
 					display_page(ghpage,&scpage);
 					display_params(ghparams,&scparams);
+					display_subparams(ghsubparams,&scsubparams);
 					LeaveCriticalSection(&mutex);
 				}
 				if(hbrush && ghfocus && hdc){

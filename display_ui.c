@@ -5,6 +5,7 @@
 
 PAGE_LIST page_list={0};
 PARAM_LIST param_list={0};
+PARAM_LIST subparam_list={0};
 
 int init_page_list()
 {
@@ -193,9 +194,8 @@ int build_param_edit_type(SCREEN *sc,int has_focus,int overwrite,int cursor,int 
 	}
 	return TRUE;
 }
-int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
+int build_params(SCREEN *sc,PARAM_CONTROL *pc,RECT *rect,int *xscroll,int *yscroll)
 {
-	PARAM_CONTROL *pc=param_list.list;
 	while(pc){
 		int height=0;
 		switch(pc->control.type){
@@ -259,38 +259,15 @@ int build_params(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 					build_param_edit_type(sc,pc->has_focus,c->overwrite,c->cursor,c->changed,c->str,c->x,c->y,c->w,c->h,&height);
 			}
 			break;
-			/*
-		case PC_3FLOATA:
+		case CBUTTON:
 			{
-				C3FLOATA *c=pc->control.data;
-				if(c){
-					int ypos=c->h/2-6;
-					int fwidth=(c->w-12)/3;
-					int i;
-					float f[3]={c->a,c->b,c->c};
-					char *str[3]={c->numa,c->numb,c->numc};
-					for(i=0;i<3;i++){
-						int x=c->x+(i*fwidth);
-						draw_rect(sc,x,c->y,fwidth-1,c->h,0x202020);
-						draw_string(sc,x+4,c->y+ypos,str[i],WHITE);
-					}
-					draw_rect(sc,c->x+3*fwidth,c->y,16,c->h,0x202020);
-					draw_string(sc,c->x+4+3*fwidth,c->y+ypos,"A",WHITE);
-					height=c->h;
+				BUTTON *b=pc->control.data;
+				if(b){
+					draw_button(sc,b);
 				}
 			}
 			break;
-			*/
 		}
-		/*
-		if(pc->name){
-			int offset=0;
-			if(height!=0)
-				offset=(height/2)-6;
-
-			draw_string(sc,pc->x,pc->y+offset,pc->name,WHITE);
-		}
-		*/
 		pc=pc->next;
 	}
 	return 0;
@@ -344,14 +321,46 @@ int display_params(HWND hwnd,SCREEN *sc)
 	HDC hdc;
 	RECT rect={0};
 	int *buffer,w,h,xscroll=0,yscroll=0;
-	if(sc==0 || sc->buffer==0)
+	PARAM_CONTROL *pc=param_list.list;
+
+	if(sc==0 || sc->buffer==0 || pc==0)
 		return 0;
 	buffer=sc->buffer;
 	w=sc->w;
 	h=sc->h;
 	memset(buffer,0x8,w*h*4);
 	GetWindowRect(hwnd,&rect);
-	build_params(sc,&rect,&xscroll,&yscroll);
+	build_params(sc,pc,&rect,&xscroll,&yscroll);
+	hdc=GetDC(hwnd);
+	if(hdc){
+		BITMAPINFO bmi;
+		memset(&bmi,0,sizeof(BITMAPINFO));
+		bmi.bmiHeader.biBitCount=32;
+		bmi.bmiHeader.biWidth=w;
+		bmi.bmiHeader.biHeight=h;
+		bmi.bmiHeader.biPlanes=1;
+		bmi.bmiHeader.biSize=40;
+		SetDIBitsToDevice(hdc,-xscroll,-yscroll,w,h,0,0,0,w,buffer,&bmi,DIB_RGB_COLORS);
+	}
+	return 0;
+}
+
+
+int display_subparams(HWND hwnd,SCREEN *sc)
+{
+	HDC hdc;
+	RECT rect={0};
+	int *buffer,w,h,xscroll=0,yscroll=0;
+	PARAM_CONTROL *pc=subparam_list.list;
+
+	if(sc==0 || sc->buffer==0 || pc==0)
+		return 0;
+	buffer=sc->buffer;
+	w=sc->w;
+	h=sc->h;
+	memset(buffer,0x8,w*h*4);
+	GetWindowRect(hwnd,&rect);
+	build_params(sc,pc,&rect,&xscroll,&yscroll);
 	hdc=GetDC(hwnd);
 	if(hdc){
 		BITMAPINFO bmi;

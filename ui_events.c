@@ -700,6 +700,7 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	case CSTATIC: size=sizeof(STATICTEXT);break;
 	case CEDIT: size=sizeof(EDITBOX);break;
 	case CRECT: size=sizeof(RECTANGLE);break;
+	case CBUTTON: size=sizeof(BUTTON);break;
 	}
 	if(size!=0){
 		void *data=0;
@@ -717,7 +718,7 @@ struct PCLIST{
 	int type;
 	int x,y,w,h;
 	void *data;
-	int data_size;
+	int data_ex;
 	int incypos;
 };
 int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
@@ -823,7 +824,21 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 							c->w=pclist[i].w;
 							c->h=pclist[i].h;
 							c->str=pclist[i].data;
-							c->maxlen=pclist[i].data_size;
+							c->maxlen=pclist[i].data_ex;
+							result=TRUE;
+						}
+					}
+					break;
+				case CBUTTON:
+					{
+						BUTTON *b=pc->control.data;
+						if(b){
+							b->x=pclist[i].x+xpos;
+							b->y=pclist[i].y+ypos;
+							b->w=pclist[i].w;
+							b->h=pclist[i].h;
+							b->text=pclist[i].data;
+							b->id=pclist[i].data_ex;
 							result=TRUE;
 						}
 					}
@@ -872,11 +887,11 @@ int create_op_params(OP *o)
 					void *plist[5]={o->name,sizeof(o->name),&cube->tessx,&cube->tessy,&cube->tessz};
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
-						if(pclist[i].data_size==1){
+						if(pclist[i].data_ex==1){
 							pclist[i].data=plist[index++];
-							pclist[i].data_size=plist[index++];
+							pclist[i].data_ex=plist[index++];
 						}
-						else if(pclist[i].data_size==2)
+						else if(pclist[i].data_ex==2)
 							pclist[i].data=plist[index++];
 					}
 					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
@@ -914,11 +929,11 @@ int create_op_params(OP *o)
 						};
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
-						if(pclist[i].data_size==1){
+						if(pclist[i].data_ex==1){
 							pclist[i].data=plist[index++];
-							pclist[i].data_size=plist[index++];
+							pclist[i].data_ex=plist[index++];
 						}
-						else if(pclist[i].data_size==2)
+						else if(pclist[i].data_ex==2)
 							pclist[i].data=plist[index++];
 					}
 					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
@@ -943,21 +958,22 @@ int create_op_params(OP *o)
 					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CBUTTON,   4,  0,10*8,25,NULL,1,30},
 				};
 				TRANSFORM_DATA *t=o->data;
 				if(t){
-					void *plist[11]={o->name,sizeof(o->name),
+					void *plist[17]={o->name,sizeof(o->name),
 							&t->scalex,&t->scaley,&t->scalez,
 							&t->rotx,&t->roty,&t->rotz,
-							&t->transx,&t->transy,&t->transz,
+							&t->transx,&t->transy,&t->transz,"Animate",0,
 						};
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
-						if(pclist[i].data_size==1){
+						if(pclist[i].data_ex==1){
 							pclist[i].data=plist[index++];
-							pclist[i].data_size=plist[index++];
+							pclist[i].data_ex=plist[index++];
 						}
-						else if(pclist[i].data_size==2)
+						else if(pclist[i].data_ex==2)
 							pclist[i].data=plist[index++];
 					}
 					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
@@ -1027,11 +1043,11 @@ int create_op_params(OP *o)
 					};
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
-						if(pclist[i].data_size==1){
+						if(pclist[i].data_ex==1){
 							pclist[i].data=plist[index++];
-							pclist[i].data_size=plist[index++];
+							pclist[i].data_ex=plist[index++];
 						}
-						else if(pclist[i].data_size==2)
+						else if(pclist[i].data_ex==2)
 							pclist[i].data=plist[index++];
 					}
 					if(index==22)
@@ -1669,6 +1685,11 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		}
 		break;
 	case WM_LBUTTONUP:
+		if(pcdrag && pcdrag->control.type==CBUTTON){
+			BUTTON *b=pcdrag->control.data;
+			if(b)
+				b->pressed=FALSE;
+		}
 		pcdrag=0;
 		break;
 	case WM_LBUTTONDOWN:
@@ -1681,6 +1702,11 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			clear_param_selected(p);
 			if(hittest_param(p,x,y,&pc)){
 				pc->has_focus=TRUE;
+				if(pc->control.type==CBUTTON){
+					BUTTON *b=pc->control.data;
+					if(b)
+						b->pressed=TRUE;
+				}
 				pcdrag=pc;
 			}
 			else

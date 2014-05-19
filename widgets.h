@@ -19,7 +19,7 @@ typedef struct{
 #define RESIZE_MARGIN 8
 
 typedef struct{
-	int type;
+	int id;
 	int x;
 	int y;
 	int w;
@@ -151,9 +151,24 @@ typedef struct{
 }TEXTURE_DATA;
 
 typedef struct{
+	float time;
+	float pos;
+	void *prev,*next;
+}SPLINE_KEY;
+
+typedef struct{
+	int enabled;
+	int type;
+	char name[16];
+	SPLINE_KEY *key;
+}ANIMATE_DATA;
+
+
+typedef struct{
 	float scalex,scaley,scalez;
 	float rotx,roty,rotz;
 	float transx,transy,transz;
+	ANIMATE_DATA anim[9];
 }TRANSFORM_DATA;
 
 
@@ -163,6 +178,7 @@ typedef struct{
 	float transx,transy,transz;
 	int count;
 }MULTIPLY_DATA;
+
 
 typedef enum OPTYPES{
 	TLIGHT,TTEXTURE,TCUBE,TMULTIPLY,TTRANSFORM,
@@ -192,7 +208,6 @@ typedef struct{
 typedef struct{
 	CONTROL control;
 	int has_focus;
-	void *dref;
 	void *next;
 	void *prev;
 }PARAM_CONTROL;
