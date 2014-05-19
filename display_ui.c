@@ -58,6 +58,7 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 			case TLIGHT:
 			case TMULTIPLY:
 			case TCUBE:
+			case TTRANSFORM:
 				{
 					BUTTON *b=list->control.data;
 					static char *str="";
@@ -65,6 +66,7 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 						case TLIGHT:str="LIGHT";break;
 						case TCUBE:str="CUBE";break;
 						case TMULTIPLY:str="MULTIPLY";break;
+						case TTRANSFORM:str="TRANSFORM";break;
 					}
 					if(list->name[0]==0)
 						b->text=str;

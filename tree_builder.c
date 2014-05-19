@@ -185,6 +185,16 @@ int dump_tree(TREENODE *t,int render)
 							handle_multiply(t,m);
 					}
 					break;
+				case TTRANSFORM:
+					{
+						TRANSFORM_DATA *t=o->data;
+						if(t){
+							//push_model_matrix();
+							transform_mesh(&t->scalex,&t->rotx,&t->transx);
+							//pop_model_matrix();
+						}
+					}
+					break;
 				}
 
 			}

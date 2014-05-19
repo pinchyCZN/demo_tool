@@ -137,12 +137,12 @@ void display(void)
 		unsigned int tick,global_tick;
 		tick=GetTickCount();
 		global_tick=get_global_tick();
-		update_world(players,sizeof(players)/sizeof(ENTITY*),global_tick,tick);
-		global_tick=update_world(non_players,sizeof(non_players)/sizeof(ENTITY*),global_tick,tick);
+		//update_world(players,sizeof(players)/sizeof(ENTITY*),global_tick,tick);
+		//global_tick=update_world(non_players,sizeof(non_players)/sizeof(ENTITY*),global_tick,tick);
 		set_global_tick(global_tick);
 	}
-	render_entitys(players,sizeof(players)/sizeof(ENTITY*));
-	render_entitys(non_players,sizeof(non_players)/sizeof(ENTITY*));
+//	render_entitys(players,sizeof(players)/sizeof(ENTITY*));
+//	render_entitys(non_players,sizeof(non_players)/sizeof(ENTITY*));
 	get_modifiers();
 
 
@@ -157,11 +157,27 @@ void display(void)
 	glFinish();
 
 	{
-		static DWORD tick=0,delta;
-		tick=GetTickCount();
-		delta=GetTickCount()-tick;
-		if(delta>0)
-			printf("delta=%u\n",delta);
+		static DWORD tick=0,t,delta;
+		static float avg[60]={0};
+		static int avg_count=0;
+		float fps=0;
+		int i;
+		char str[12];
+		t=GetTickCount();
+		delta=t-tick;
+		if(delta!=0)
+			fps=((float)1/(float)delta)*(float)1000;
+		avg[avg_count++]=fps;
+		if(avg_count>=sizeof(avg)/sizeof(float))
+			avg_count=0;
+		fps=0;
+		for(i=0;i<sizeof(avg)/sizeof(float);i++){
+			fps+=avg[i];
+		}
+		fps/=sizeof(avg)/sizeof(float);
+		snprintf(str,sizeof(str),"FPS=%02.1f",fps);
+		display_str(str,0,0);
+		tick=t;	
 	}
 //	bezier();
 	/*
@@ -603,7 +619,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	static lmb_down=FALSE;
 	static HMENU hmenu=0;
 	typedef enum CMDMENU{
-		CMD_DELETE,CMD_LIGHT,CMD_CUBE,CMD_MULTIPLY,CMD_ACTIVATE
+		CMD_DELETE,CMD_LIGHT,CMD_CUBE,CMD_MULTIPLY,CMD_TRANSFORM
 	};
 #ifdef _DEBUG
 	if(FALSE)
@@ -628,7 +644,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_LIGHT,"light");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
-			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_ACTIVATE,"activate");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_TRANSFORM,"transform");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION|MF_SEPARATOR,0,0);
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_DELETE,"delete");
 		}
@@ -671,10 +687,12 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				if(op==0)
 					add_type_op(p,TMULTIPLY,x,y);
 				break;
+			case CMD_TRANSFORM:
+				if(op==0)
+					add_type_op(p,TTRANSFORM,x,y);
+				break;
 			case CMD_DELETE:
 				del_op(p,op);
-				break;
-			case CMD_ACTIVATE:
 				break;
 			}
 		}

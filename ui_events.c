@@ -145,6 +145,16 @@ int create_op(int type,OP *op,int x,int y)
 			}
 		}
 		break;
+	case TTRANSFORM:
+		{
+			TRANSFORM_DATA *t;
+			result=create_op_button(type,sizeof(TRANSFORM_DATA),op,x,y);
+			t=op->data;
+			if(t){
+				t->scalex=t->scaley=t->scalez=1.0;
+			}
+		}
+		break;
 	case TDRAG:
 		{
 			CONTROLDRAG *drag;
@@ -901,6 +911,45 @@ int create_op_params(OP *o)
 							&mult->rotx,&mult->roty,&mult->rotz,
 							&mult->transx,&mult->transy,&mult->transz,
 							&mult->count,
+						};
+					int i,index=0;
+					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
+						if(pclist[i].data_size==1){
+							pclist[i].data=plist[index++];
+							pclist[i].data_size=plist[index++];
+						}
+						else if(pclist[i].data_size==2)
+							pclist[i].data=plist[index++];
+					}
+					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
+				}
+			}
+			break;
+		case TTRANSFORM:
+			{
+				struct PCLIST pclist[]={
+					{CSTATIC,   8,  0,40,  20,"type - transform",0,30},
+					{CSTATIC,   8,  0,8*4, 20,"name",0,0},
+					{CEDIT,     8,  0,8*40,20,NULL,1,30},
+					{CSTATIC,   8,  0,8*9, 20,"scale",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"rotate",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"translate",0,0},
+					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
+					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+				};
+				TRANSFORM_DATA *t=o->data;
+				if(t){
+					void *plist[11]={o->name,sizeof(o->name),
+							&t->scalex,&t->scaley,&t->scalez,
+							&t->rotx,&t->roty,&t->rotz,
+							&t->transx,&t->transy,&t->transz,
 						};
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
