@@ -643,11 +643,13 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 	}
 	return result;
 }
-int clear_params()
+int clear_params(PARAM_LIST *param_list)
 {
-	extern PARAM_LIST param_list;
 	extern CRITICAL_SECTION mutex;
-	PARAM_CONTROL *p=param_list.list;
+	PARAM_CONTROL *p;
+	if(param_list==0)
+		return FALSE;
+	p=param_list->list;
 	EnterCriticalSection(&mutex);
 	while(p){
 		PARAM_CONTROL *tmp;
@@ -664,7 +666,7 @@ int clear_params()
 		p=p->next;
 		free(tmp);
 	}
-	param_list.list=0;
+	param_list->list=0;
 	LeaveCriticalSection(&mutex);
 	return TRUE;
 }
@@ -865,11 +867,12 @@ int create_op_params(OP *o)
 {
 	extern PARAM_LIST param_list;
 	int result=FALSE;
-	clear_params();
+	clear_params(&param_list);
 	if(o==0)
 		return result;
 	else{
 		PARAM_LIST *pl=&param_list;
+		pl->ref=o;
 		switch(o->type){
 		case TCUBE:
 			{
@@ -1704,8 +1707,10 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				pc->has_focus=TRUE;
 				if(pc->control.type==CBUTTON){
 					BUTTON *b=pc->control.data;
-					if(b)
+					if(b){
 						b->pressed=TRUE;
+						create_subparams(param_list.ref,pc);
+					}
 				}
 				pcdrag=pc;
 			}
