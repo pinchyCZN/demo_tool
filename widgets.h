@@ -159,7 +159,7 @@ typedef struct{
 typedef struct{
 	int enabled;
 	int type;
-	char name[16];
+	float amount;
 	SPLINE_KEY *key;
 }ANIMATE_DATA;
 
@@ -218,6 +218,15 @@ typedef struct{
 	int hscroll;
 	int vscroll;
 }PARAM_LIST;
+
+struct PCLIST{
+	int type;
+	int x,y,w,h;
+	void *data;
+	int data_ex;
+	int incypos;
+};
+
 
 typedef struct{
 	OP *list;

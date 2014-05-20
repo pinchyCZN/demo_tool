@@ -54,8 +54,10 @@ CRITICAL_SECTION mutex={0};
 DWORD page_ui_threadid=0;
 DWORD param_ui_threadid=0;
 DWORD view1_ui_threadid=0;
+DWORD subparam_ui_threadid=0;
 DWORD WINAPI page_ui_thread(void *arg);
 DWORD WINAPI param_ui_thread(void *arg);
+DWORD WINAPI subparam_ui_thread(void *arg);
 DWORD WINAPI view1_ui_thread(void *arg);
 
 void gl_init(void)
@@ -721,7 +723,7 @@ int resize_main_window(HWND hwnd)
 	if(sub_params_divider<=0)
 		sub_params_divider=rect.right/3;
 	if(params_divider<=0)
-		params_divider=sub_params_divider+4;//rect.right*2/3;
+		params_divider=sub_params_divider+12;//rect.right*2/3;
 
 	x=y=0;
 	w=sub_params_divider-line;
@@ -812,6 +814,7 @@ int create_tool_windows(HWND hwnd)
 	resize_main_window(hwnd);
 	CreateThread(NULL,0,page_ui_thread,0,0,&page_ui_threadid);
 	CreateThread(NULL,0,param_ui_thread,0,0,&param_ui_threadid);
+	CreateThread(NULL,0,subparam_ui_thread,0,0,&subparam_ui_threadid);
 	return TRUE;
 
 }
@@ -1081,7 +1084,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 	InitializeCriticalSection(&mutex);
 	UpdateWindow(ghwindow);
 	//ghaccel=LoadAccelerators(ghinstance,MAKEINTRESOURCE(IDR_ACCELERATOR));
-	_beginthread(worker_thread,0,0);
 	while(GetMessage(&msg,NULL,0,0))
 	{
 		{

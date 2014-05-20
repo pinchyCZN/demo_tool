@@ -716,13 +716,6 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	}
 	return result;
 }
-struct PCLIST{
-	int type;
-	int x,y,w,h;
-	void *data;
-	int data_ex;
-	int incypos;
-};
 int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 {
 	int result=FALSE;
@@ -1755,6 +1748,7 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		break;
 	}
 }
+
 int check_scroll_hit(SCREEN *sc,PAGE_DATA *p,HWND hwnd,int x,int y)
 {
 	int result=FALSE;
@@ -1846,4 +1840,13 @@ DWORD WINAPI param_ui_thread(void *arg)
 	}
 }
 
+DWORD WINAPI subparam_ui_thread(void *arg)
+{
+	MSG msg={0};
+	while(GetMessage(&msg,NULL,0,0)){
+		extern SCREEN scsubparams;
+		extern HWND ghsubparams;
+		subparam_win_message(&scsubparams,ghsubparams,msg.message,msg.wParam,msg.lParam);
+	}
+}
 
