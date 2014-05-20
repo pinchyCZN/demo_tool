@@ -72,6 +72,17 @@ typedef struct{
 }RECTANGLE;
 
 typedef struct{
+	int x;
+	int y;
+	int w;
+	int h;
+	int current;
+	char *list;
+	int dropped;
+}DROPLIST;
+
+
+typedef struct{
 	int deltax,deltay;
 	int filled;
 	int color;
@@ -186,7 +197,7 @@ typedef enum OPTYPES{
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CRECT,CRESIZERECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT
+	CBUTTON,CSCROLL,CRECT,CDROPLIST,CRESIZERECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT
 };
 
 typedef struct{

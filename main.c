@@ -55,6 +55,7 @@ DWORD page_ui_threadid=0;
 DWORD param_ui_threadid=0;
 DWORD view1_ui_threadid=0;
 DWORD subparam_ui_threadid=0;
+DWORD idle_threadid=0;
 DWORD WINAPI page_ui_thread(void *arg);
 DWORD WINAPI param_ui_thread(void *arg);
 DWORD WINAPI subparam_ui_thread(void *arg);
@@ -333,28 +334,21 @@ int init_entity_array(ENTITY **e,int count)
 	}
 	return 0;
 }
-void idle()
+DWORD WINAPI idle()
 {
 	static DWORD tick=0;
-	DWORD delta,current=GetTickCount();
-	delta=current-tick;
-	if(delta>=12){// && g_draw){
-		tick=current;
-//		display();
-		InvalidateRect(ghwindow,0,FALSE);
-//		glutPostRedisplay();
-		//printf(" delta=%i\n",delta);
-	}
-	else{
-		Sleep(1);
-//		printf("delta=%i\n",delta);
-	}
-
-}
-int worker_thread()
-{
+	DWORD delta,current;
 	while(TRUE){
-		idle();
+		current=GetTickCount();
+		delta=current-tick;
+		if(delta>=12){// && g_draw){
+			tick=current;
+			if(ghwindow && !IsIconic(ghwindow))
+				InvalidateRect(ghwindow,0,FALSE);
+		}
+		else{
+			Sleep(1);
+		}
 	}
 }
 /*
@@ -547,6 +541,8 @@ LRESULT CALLBACK win_subparams_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 		tick=GetTickCount();
 	}
 #endif
+	if(subparam_ui_threadid)
+		PostThreadMessage(subparam_ui_threadid,msg,wparam,lparam);
 
 	switch(msg){
 	case WM_CREATE:
@@ -815,6 +811,7 @@ int create_tool_windows(HWND hwnd)
 	CreateThread(NULL,0,page_ui_thread,0,0,&page_ui_threadid);
 	CreateThread(NULL,0,param_ui_thread,0,0,&param_ui_threadid);
 	CreateThread(NULL,0,subparam_ui_thread,0,0,&subparam_ui_threadid);
+	CreateThread(NULL,0,idle,0,0,&idle_threadid);
 	return TRUE;
 
 }

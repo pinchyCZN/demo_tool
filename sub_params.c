@@ -19,7 +19,8 @@ int create_subpcontrols(OP *o)
 			{
 
 				struct PCLIST pclist[]={
-					{CSTATIC,   8,  0,8*9, 20,0,1,30},
+					{CSTATIC,   8,  0,8*10,20,"animtype",0,0},
+					{CDROPLIST, 8,  0,8*20,20,"test1\nlist2\nlist3\n",0,30},
 					{CSTATIC,   8,  0,8*9,20,"scale",0,0},
 					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
@@ -32,16 +33,13 @@ int create_subpcontrols(OP *o)
 					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CDROPLIST, 2,  0,10*8,20,NULL,0,30},
 				};
 				TRANSFORM_DATA *t=o->data;
 				if(t){
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
-						if(pclist[i].data_ex==1){
-							pclist[i].data="test";
-							pclist[i].data_ex=0;
-						}
-						else if(pclist[i].data_ex==2)
+						if(pclist[i].data_ex==2)
 							pclist[i].data=&t->anim[index++].amount;
 					}
 					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);

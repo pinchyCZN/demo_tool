@@ -25,11 +25,12 @@ int add_op(PAGE_DATA *pd,OP *op)
 }
 int del_op(PAGE_DATA *pd,OP *op)
 {
+	extern PARAM_LIST param_list;
 	int result=FALSE;
 	if(pd==0 || op==0)
 		return result;
 	if(op->selected && op->type!=TDRAG)
-		clear_params();
+		clear_params(&param_list);
 	{
 		OP *prev,*next;
 		prev=op->list_prev;
@@ -643,13 +644,13 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 	}
 	return result;
 }
-int clear_params(PARAM_LIST *param_list)
+int clear_params(PARAM_LIST *pl)
 {
 	extern CRITICAL_SECTION mutex;
 	PARAM_CONTROL *p;
-	if(param_list==0)
+	if(pl==0)
 		return FALSE;
-	p=param_list->list;
+	p=pl->list;
 	EnterCriticalSection(&mutex);
 	while(p){
 		PARAM_CONTROL *tmp;
@@ -661,12 +662,13 @@ int clear_params(PARAM_LIST *param_list)
 				break;
 			}
 			free(p->control.data);
+			p->control.data=0;
 		}
 		tmp=p;
 		p=p->next;
 		free(tmp);
 	}
-	param_list->list=0;
+	pl->list=0;
 	LeaveCriticalSection(&mutex);
 	return TRUE;
 }
@@ -686,6 +688,14 @@ int add_param_control(PARAM_LIST *pl,PARAM_CONTROL *c)
 		list->next=c;
 		c->prev=list;
 		result=TRUE;
+		list=pl->list;
+		while(list->next!=0){
+			int i;
+			if(list->prev==0x111)
+				i=i;
+			list=list->next;
+		}
+
 	}
 	return result;
 }
@@ -703,6 +713,7 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	case CEDIT: size=sizeof(EDITBOX);break;
 	case CRECT: size=sizeof(RECTANGLE);break;
 	case CBUTTON: size=sizeof(BUTTON);break;
+	case CDROPLIST: size=sizeof(DROPLIST);break;
 	}
 	if(size!=0){
 		void *data=0;
@@ -834,6 +845,20 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 							b->h=pclist[i].h;
 							b->text=pclist[i].data;
 							b->id=pclist[i].data_ex;
+							result=TRUE;
+						}
+					}
+					break;
+				case CDROPLIST:
+					{
+						DROPLIST *dl=pc->control.data;
+						if(dl){
+							dl->x=pclist[i].x+xpos;
+							dl->y=pclist[i].y+ypos;
+							dl->w=pclist[i].w;
+							dl->h=pclist[i].h;
+							dl->list=pclist[i].data;
+							dl->current=pclist[i].data_ex;
 							result=TRUE;
 						}
 					}
@@ -1419,8 +1444,9 @@ int handle_edit_control(int key,int vkey,int ctrl,int shift,int dtype,char *str,
 {
 	if(str){
 		int tilde=VkKeyScan('`');
-		if(handle_edit_keys(key,vkey,shift,ctrl,str,str_size-1,cursor,overwrite)){
-			*changed=TRUE;
+		if(vkey!=tilde){
+			if(handle_edit_keys(key,vkey,shift,ctrl,str,str_size-1,cursor,overwrite))
+				*changed=TRUE;
 		}
 		if(vkey==VK_RETURN){
 			if(data){

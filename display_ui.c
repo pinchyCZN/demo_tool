@@ -194,8 +194,23 @@ int build_param_edit_type(SCREEN *sc,int has_focus,int overwrite,int cursor,int 
 	}
 	return TRUE;
 }
+int get_droplist_height(DROPLIST *dl,int *h)
+{
+	if(dl && dl->dropped){
+		int height,index=0,num_items=0;
+		while(dl->list && dl->list[index]!=0){
+			if(dl->list[index]=='\n')
+				num_items++;
+			index++;
+		}
+		if(h)
+			*h=dl->h*num_items;
+	}
+	return TRUE;
+}
 int build_params(SCREEN *sc,PARAM_CONTROL *pc,RECT *rect,int *xscroll,int *yscroll)
 {
+	CONTROL *lastshow=0;
 	while(pc){
 		int height=0;
 		switch(pc->control.type){
@@ -267,8 +282,85 @@ int build_params(SCREEN *sc,PARAM_CONTROL *pc,RECT *rect,int *xscroll,int *yscro
 				}
 			}
 			break;
+		case CDROPLIST:
+			{
+				DROPLIST *dl=pc->control.data;
+				if(dl){
+					draw_rect(sc,dl->x,dl->y,dl->w,dl->h,0x202020);
+					if(dl->list){
+						char str[40]={0};
+						int index=0,sindex=0;
+						while(TRUE){
+							char c=dl->list[sindex++];
+							if(c=='\n')
+								index++;
+							if(index==dl->current){
+								int z=0;
+								while(z<sizeof(str)){
+									if(c=='\n')
+										c=0;
+									if(z>=(sizeof(str)-1))
+										c=0;
+									str[z++]=c;
+									if(c==0)
+										break;
+									c=dl->list[sindex++];
+								}
+								break;
+							}
+							if(c==0)
+								break;
+						}
+						draw_string(sc,dl->x+1,dl->y+(dl->h/2)-6,str,WHITE);
+					}
+					if(dl->dropped)
+						lastshow=&pc->control;
+
+				}
+			}
+			break;
 		}
 		pc=pc->next;
+	}
+	if(lastshow){
+		switch(lastshow->type){
+		case CDROPLIST:
+			{
+				DROPLIST *dl=pc->control.data;
+				if(dl && dl->dropped){
+					int copy=0,index=0,count=0,h;
+					char str[40]={0};
+					h=dl->h;
+					get_droplist_height(dl,&h);
+					draw_rect(sc,dl->x,dl->y+dl->h,dl->w,h,0x202020);
+					while(dl->list){
+						char c=dl->list[index++];
+						if(c!='\n')
+							str[copy++]=c;
+						if(c=='\n' || copy>(sizeof(str)-1)){
+							str[copy]=0;
+							draw_string(sc,dl->x,dl->y+(dl->h*count),str,WHITE);
+							if(c!='\n' && copy>(sizeof(str)-1)){
+								while(TRUE){
+									char a=dl->list[++index];
+									if(a==0)
+										break;
+									else if(a=='\n'){
+										index++;
+										break;
+									}
+								}
+							}
+							copy=0;
+							count++;
+						}
+						if(c==0)
+							break;
+					}
+				}
+			}
+			break;
+		}
 	}
 	return 0;
 }
