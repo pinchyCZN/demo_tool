@@ -33,7 +33,6 @@ int create_subpcontrols(OP *o)
 					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
-					{CDROPLIST, 2,  0,10*8,20,NULL,0,30},
 				};
 				TRANSFORM_DATA *t=o->data;
 				if(t){
@@ -65,7 +64,10 @@ int create_subparams(OP *op,PARAM_CONTROL *pc)
 		}
 	}
 }
+int insert_head_plist()
+{
 
+}
 int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static int clickx=0,clicky=0,debounce=0;
@@ -152,6 +154,37 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 			debounce=0;
 			clear_param_selected(p);
 			if(hittest_param(p,x,y,&pc)){
+				if(pc->control.type==CDROPLIST){
+					DROPLIST *dl=pc->control.data;
+					if(dl){
+						if(dl->dropped==FALSE){
+							PARAM_CONTROL *pcpopup;
+							pcpopup=malloc(sizeof(PARAM_CONTROL));
+							if(pcpopup){
+								memset(pcpopup,0,sizeof(PARAM_CONTROL));
+								dl->dropped=TRUE;
+								create_param_control(CPOPUPLIST,pcpopup);
+								if(pcpopup){
+									POPUPLIST *popup;
+									pcpopup->has_focus=TRUE;
+									popup=pcpopup->control.data;
+									if(popup){
+										popup->x=dl->x;
+										popup->y=dl->y+dl->h;
+										popup->w=dl->w;
+										popup->h=dl->h*4;
+										popup->list=dl->list;
+										popup->parent=&dl;
+									}
+								}
+								else{
+									free(pcpopup);
+									pcpopup=0;
+								}
+							}
+						}
+					}
+				}
 				pc->has_focus=TRUE;
 				pcdrag=pc;
 			}

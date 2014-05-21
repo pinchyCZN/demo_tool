@@ -208,9 +208,9 @@ int get_droplist_height(DROPLIST *dl,int *h)
 	}
 	return TRUE;
 }
-int build_params(SCREEN *sc,PARAM_CONTROL *pc,RECT *rect,int *xscroll,int *yscroll)
+int build_params(SCREEN *sc,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *yscroll)
 {
-	CONTROL *lastshow=0;
+	PARAM_CONTROL *pc=paramc;
 	while(pc){
 		int height=0;
 		switch(pc->control.type){
@@ -313,54 +313,11 @@ int build_params(SCREEN *sc,PARAM_CONTROL *pc,RECT *rect,int *xscroll,int *yscro
 						}
 						draw_string(sc,dl->x+1,dl->y+(dl->h/2)-6,str,WHITE);
 					}
-					if(dl->dropped)
-						lastshow=&pc->control;
-
 				}
 			}
 			break;
 		}
 		pc=pc->next;
-	}
-	if(lastshow){
-		switch(lastshow->type){
-		case CDROPLIST:
-			{
-				DROPLIST *dl=pc->control.data;
-				if(dl && dl->dropped){
-					int copy=0,index=0,count=0,h;
-					char str[40]={0};
-					h=dl->h;
-					get_droplist_height(dl,&h);
-					draw_rect(sc,dl->x,dl->y+dl->h,dl->w,h,0x202020);
-					while(dl->list){
-						char c=dl->list[index++];
-						if(c!='\n')
-							str[copy++]=c;
-						if(c=='\n' || copy>(sizeof(str)-1)){
-							str[copy]=0;
-							draw_string(sc,dl->x,dl->y+(dl->h*count),str,WHITE);
-							if(c!='\n' && copy>(sizeof(str)-1)){
-								while(TRUE){
-									char a=dl->list[++index];
-									if(a==0)
-										break;
-									else if(a=='\n'){
-										index++;
-										break;
-									}
-								}
-							}
-							copy=0;
-							count++;
-						}
-						if(c==0)
-							break;
-					}
-				}
-			}
-			break;
-		}
 	}
 	return 0;
 }

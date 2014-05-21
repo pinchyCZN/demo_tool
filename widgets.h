@@ -79,7 +79,18 @@ typedef struct{
 	int current;
 	char *list;
 	int dropped;
+	void *child;
 }DROPLIST;
+
+typedef struct{
+	int x;
+	int y;
+	int w;
+	int h;
+	int highlighted;
+	char *list;
+	void *parent;
+}POPUPLIST;
 
 
 typedef struct{
@@ -197,7 +208,7 @@ typedef enum OPTYPES{
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CRECT,CDROPLIST,CRESIZERECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT
+	CBUTTON,CSCROLL,CRECT,CDROPLIST,CPOPUPLIST,CRESIZERECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT
 };
 
 typedef struct{

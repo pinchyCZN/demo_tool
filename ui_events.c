@@ -267,6 +267,16 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 	if(control==0)
 		return result;
 	switch(control->type){
+	case CDROPLIST:
+		{
+			DROPLIST *dl;
+			dl=control->data;
+			if(dl){
+				trans_pos_data(x,y,w,h,dl->x,dl->y,dl->w,dl->h);
+				result=TRUE;
+			}
+		}
+		break;
 	case CBUTTON:
 		{
 			BUTTON *b;
@@ -714,6 +724,7 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	case CRECT: size=sizeof(RECTANGLE);break;
 	case CBUTTON: size=sizeof(BUTTON);break;
 	case CDROPLIST: size=sizeof(DROPLIST);break;
+	case CPOPUPLIST: size=sizeof(CPOPUPLIST);break;
 	}
 	if(size!=0){
 		void *data=0;
