@@ -272,6 +272,9 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 			BUTTON *b=pcdrag->control.data;
 			if(b)
 				b->pressed=FALSE;
+			if(subparam_list.ref && subparam_list.ref->type==TTRANSFORM){
+				//set_page_mode(TRUE);
+			}
 		}
 		pcdrag=0;
 		break;
@@ -284,16 +287,23 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 			debounce=0;
 			clear_param_selected(p);
 			if(hittest_param(p,x,y,&pc)){
+				int list_handled=FALSE;
 				if(pc->control.type==CDROPLIST){
 					DROPLIST *dl=pc->control.data;
 					handle_drop_list(&subparam_list,pc);
+					list_handled=TRUE;
 				}
 				else if(pc->control.type==CPOPUPLIST){
 					handle_popup_list(&subparam_list,pc,y);
+					list_handled=TRUE;
 				}
-				else{
+				else if(pc->control.type==CBUTTON){
+					BUTTON *b=pc->control.data;
+					if(b)
+						b->pressed=TRUE;
+				}
+				if(!list_handled)
 					remove_popup(&subparam_list);
-				}
 				pc->has_focus=TRUE;
 				pcdrag=pc;
 			}

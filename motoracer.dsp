@@ -181,6 +181,10 @@ SOURCE=.\types.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ui_params.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\widgets.h
 # End Source File
 # End Group
