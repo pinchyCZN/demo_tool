@@ -288,30 +288,55 @@ int build_params(SCREEN *sc,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *y
 				if(dl){
 					draw_rect(sc,dl->x,dl->y,dl->w,dl->h,0x202020);
 					if(dl->list){
-						char str[40]={0};
-						int index=0,sindex=0;
-						while(TRUE){
-							char c=dl->list[sindex++];
+						int i=0,index=0,xpos=0;
+						while(index<dl->current){
+							char c=dl->list[i++];
 							if(c=='\n')
 								index++;
-							if(index==dl->current){
-								int z=0;
-								while(z<sizeof(str)){
-									if(c=='\n')
-										c=0;
-									if(z>=(sizeof(str)-1))
-										c=0;
-									str[z++]=c;
-									if(c==0)
-										break;
-									c=dl->list[sindex++];
-								}
-								break;
-							}
-							if(c==0)
+							else if(c==0)
 								break;
 						}
-						draw_string(sc,dl->x+1,dl->y+(dl->h/2)-6,str,WHITE);
+						while(TRUE){
+							char c=dl->list[i++];
+							if(c=='\n' || c==0)
+								break;
+							else{
+								draw_char(sc,dl->x+1+xpos,dl->y+(dl->h/2)-6,c,WHITE);
+								xpos+=8;
+							}
+						}
+					}
+
+				}
+			}
+			break;
+		case CPOPUPLIST:
+			{
+				POPUPLIST *pu=pc->control.data;
+				if(pu){
+					int i=0,xpos=0,ypos=0;
+					int count=pu->count;
+					if(count==0)
+						count=1;
+					draw_rect(sc,pu->x,pu->y,pu->w,pu->h,0x402020);
+					while(pu->list){
+						int done=FALSE;
+						while(xpos<pu->w){
+							char c=pu->list[i++];
+							if(c==0 || c=='\n'){
+								ypos+=pu->h/count;
+								xpos=0;
+								if(c==0)
+									done=TRUE;
+								break;
+							}
+							else{
+								draw_char(sc,pu->x+1+xpos,pu->y+ypos+6,c,WHITE);
+								xpos+=8;
+							}
+						}
+						if(done)
+							break;
 					}
 				}
 			}

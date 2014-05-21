@@ -20,7 +20,7 @@ int create_subpcontrols(OP *o)
 
 				struct PCLIST pclist[]={
 					{CSTATIC,   8,  0,8*10,20,"animtype",0,0},
-					{CDROPLIST, 8,  0,8*20,20,"test1\nlist2\nlist3\n",0,30},
+					{CDROPLIST, 8,  0,8*20,20,"linear\nspline\nother\n",0,30},
 					{CSTATIC,   8,  0,8*9,20,"scale",0,0},
 					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
@@ -33,6 +33,7 @@ int create_subpcontrols(OP *o)
 					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
+					{CBUTTON,   8,  0,14*8,25,"Spline editor",0,30},
 				};
 				TRANSFORM_DATA *t=o->data;
 				if(t){
@@ -64,9 +65,138 @@ int create_subparams(OP *op,PARAM_CONTROL *pc)
 		}
 	}
 }
-int insert_head_plist()
+int get_droplist_count(char *list)
 {
-
+	int result=0;
+	if(list!=0){
+		int i=0;
+		int wordstart=TRUE;
+		char c;
+		while((c=list[i++])!=0){
+			if(c!=0 && c!='\n'){
+				if(wordstart){
+					result++;
+					wordstart=FALSE;
+				}
+			}
+			else
+				wordstart=TRUE;
+		}
+	}
+	return result;
+}
+int handle_drop_list(PARAM_LIST *plist,PARAM_CONTROL *pc)
+{
+	int result=FALSE;
+	if(plist && pc){
+		DROPLIST *dl=pc->control.data;
+		if(dl->dropped==FALSE && dl->child==0){
+			PARAM_CONTROL *pcpopup;
+			pcpopup=malloc(sizeof(PARAM_CONTROL));
+			if(pcpopup){
+				memset(pcpopup,0,sizeof(PARAM_CONTROL));
+				dl->dropped=TRUE;
+				create_param_control(CPOPUPLIST,pcpopup);
+				if(pcpopup->control.data){
+					POPUPLIST *popup;
+					pcpopup->has_focus=TRUE;
+					popup=pcpopup->control.data;
+					if(popup){
+						int count=get_droplist_count(dl->list);
+						if(count==0)
+							count=1;
+						popup->x=dl->x;
+						popup->y=dl->y+dl->h;
+						popup->w=dl->w;
+						popup->h=dl->h*count;
+						popup->count=count;
+						popup->list=dl->list;
+						popup->parent=pc;
+						dl->child=pcpopup;
+						add_param_control(plist,pcpopup);
+						result=TRUE;
+					}
+				}
+				if(!result){
+					free(pcpopup);
+					pcpopup=0;
+				}
+			}
+		}
+		else if(dl->child!=0){
+			if(remove_param(plist,dl->child)){
+				dl->child=0;
+				dl->dropped=FALSE;
+				result=TRUE;
+			}
+		}
+	}
+	return result;
+}
+int handle_popup_list(PARAM_LIST *plist,PARAM_CONTROL *pc,int y)
+{
+	int result=FALSE;
+	if(plist && pc){
+		POPUPLIST *pu=pc->control.data;
+		PARAM_CONTROL *parent=0;
+		int selected=-1;
+		if(pu){
+			int ypos=y-pu->y;
+			parent=pu->parent;
+			if(ypos>=0 && ypos<=pu->h){
+				if(pu->count!=0){
+					int h=pu->h/pu->count;
+					if(h!=0){
+						int pos=ypos/h;
+						if(pos<pu->count)
+							selected=pos;
+					}
+				}
+			}
+		}
+		if(remove_param(plist,pc)){
+			if(parent){
+				DROPLIST *dl=parent->control.data;
+				if(dl){
+					dl->child=0;
+					dl->dropped=FALSE;
+					if(selected>=0)
+						dl->current=selected;
+					result=TRUE;
+				}
+				parent->has_focus=TRUE;
+			}
+		}
+	}
+	return result;
+}
+int find_param_type(PARAM_LIST *plist,int type,PARAM_CONTROL **pc)
+{
+	int result=FALSE;
+	if(plist){
+		PARAM_CONTROL *list=plist->list;
+		while(list){
+			if(list->control.type==type){
+				if(pc)
+					*pc=list;
+				result=TRUE;
+				break;
+			}
+			list=list->next;
+		}
+	}
+	return result;
+}
+int remove_popup(PARAM_LIST *plist)
+{
+	int result=FALSE;
+	if(plist){
+		PARAM_CONTROL *pc=0;
+		if(find_param_type(plist,CPOPUPLIST,&pc)){
+			result=handle_popup_list(plist,pc,-1);
+		}
+	}
+	return result;
 }
 int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
@@ -156,40 +286,21 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 			if(hittest_param(p,x,y,&pc)){
 				if(pc->control.type==CDROPLIST){
 					DROPLIST *dl=pc->control.data;
-					if(dl){
-						if(dl->dropped==FALSE){
-							PARAM_CONTROL *pcpopup;
-							pcpopup=malloc(sizeof(PARAM_CONTROL));
-							if(pcpopup){
-								memset(pcpopup,0,sizeof(PARAM_CONTROL));
-								dl->dropped=TRUE;
-								create_param_control(CPOPUPLIST,pcpopup);
-								if(pcpopup){
-									POPUPLIST *popup;
-									pcpopup->has_focus=TRUE;
-									popup=pcpopup->control.data;
-									if(popup){
-										popup->x=dl->x;
-										popup->y=dl->y+dl->h;
-										popup->w=dl->w;
-										popup->h=dl->h*4;
-										popup->list=dl->list;
-										popup->parent=&dl;
-									}
-								}
-								else{
-									free(pcpopup);
-									pcpopup=0;
-								}
-							}
-						}
-					}
+					handle_drop_list(&subparam_list,pc);
+				}
+				else if(pc->control.type==CPOPUPLIST){
+					handle_popup_list(&subparam_list,pc,y);
+				}
+				else{
+					remove_popup(&subparam_list);
 				}
 				pc->has_focus=TRUE;
 				pcdrag=pc;
 			}
-			else
+			else{
 				pcdrag=0;
+				remove_popup(&subparam_list);
+			}
 		}
 		break;
 	case WM_KEYFIRST:

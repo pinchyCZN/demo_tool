@@ -79,7 +79,7 @@ typedef struct{
 	int current;
 	char *list;
 	int dropped;
-	void *child;
+	void *child; //paramcontrol
 }DROPLIST;
 
 typedef struct{
@@ -88,8 +88,9 @@ typedef struct{
 	int w;
 	int h;
 	int highlighted;
+	int count;
 	char *list;
-	void *parent;
+	void *parent; //paramcontrol
 }POPUPLIST;
 
 

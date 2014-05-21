@@ -267,6 +267,16 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 	if(control==0)
 		return result;
 	switch(control->type){
+	case CPOPUPLIST:
+		{
+			POPUPLIST *pu;
+			pu=control->data;
+			if(pu){
+				trans_pos_data(x,y,w,h,pu->x,pu->y,pu->w,pu->h);
+				result=TRUE;
+			}
+		}
+		break;
 	case CDROPLIST:
 		{
 			DROPLIST *dl;
@@ -654,6 +664,30 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 	}
 	return result;
 }
+int remove_param(PARAM_LIST *pl,PARAM_CONTROL *pc)
+{
+	extern CRITICAL_SECTION mutex;
+	if(pl==0 || pc==0)
+		return FALSE;
+	EnterCriticalSection(&mutex);
+	if(pc->prev==0){
+		pl->list=pc->next;
+	}
+	else{
+		PARAM_CONTROL *prev,*next;
+		prev=pc->prev;
+		next=pc->next;
+		if(prev)
+			prev->next=next;
+		if(next)
+			next->prev=prev;
+	}
+	if(pc->control.data)
+		free(pc->control.data);
+	free(pc);
+	LeaveCriticalSection(&mutex);
+	return TRUE;
+}
 int clear_params(PARAM_LIST *pl)
 {
 	extern CRITICAL_SECTION mutex;
@@ -666,8 +700,10 @@ int clear_params(PARAM_LIST *pl)
 		PARAM_CONTROL *tmp;
 		if(p->control.data){
 			switch(p->control.type){
-			case CEDIT:
+			case CPOPUPLIST:
 				{
+					int i;
+					i=i;
 				}
 				break;
 			}
@@ -698,14 +734,6 @@ int add_param_control(PARAM_LIST *pl,PARAM_CONTROL *c)
 		list->next=c;
 		c->prev=list;
 		result=TRUE;
-		list=pl->list;
-		while(list->next!=0){
-			int i;
-			if(list->prev==0x111)
-				i=i;
-			list=list->next;
-		}
-
 	}
 	return result;
 }
@@ -724,7 +752,7 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	case CRECT: size=sizeof(RECTANGLE);break;
 	case CBUTTON: size=sizeof(BUTTON);break;
 	case CDROPLIST: size=sizeof(DROPLIST);break;
-	case CPOPUPLIST: size=sizeof(CPOPUPLIST);break;
+	case CPOPUPLIST: size=sizeof(POPUPLIST);break;
 	}
 	if(size!=0){
 		void *data=0;
@@ -1282,22 +1310,29 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 int hittest_param(PARAM_CONTROL *pclist,int x,int y,PARAM_CONTROL **pc)
 {
 	int result=FALSE;
+	PARAM_CONTROL *pl=pclist;
 	if(pclist==0)
 		return result;
-	while(pclist){
+	while(pl){
+		if(pl->next==0)
+			break;
+		else
+			pl=pl->next;
+	}
+	while(pl){
 		int tx,ty,tw,th;
-		if(get_control_pos(&pclist->control,&tx,&ty,&tw,&th)){
+		if(get_control_pos(&pl->control,&tx,&ty,&tw,&th)){
 			if(x>=tx && x<=(tx+tw)){
 				if(y>=ty && y<=(ty+th)){
 					if(pc)
-						*pc=pclist;
+						*pc=pl;
 					result=TRUE;
 					break;
 				}
 
 			}
 		}
-		pclist=pclist->next;
+		pl=pl->prev;
 	}
 	return result;
 }
