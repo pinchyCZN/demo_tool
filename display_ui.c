@@ -6,6 +6,7 @@
 PAGE_LIST page_list={0};
 PARAM_LIST param_list={0};
 PARAM_LIST subparam_list={0};
+SPLINE_EDIT spline_edit={0};
 
 int init_page_list()
 {
@@ -175,6 +176,12 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 
 	return TRUE;
 }
+
+int build_spline(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
+{
+
+}
+
 int build_param_edit_type(SCREEN *sc,int has_focus,int overwrite,int cursor,int changed,char *str,int x,int y,int w,int h,int *outheight)
 {
 	if(sc){
@@ -344,6 +351,46 @@ int build_params(SCREEN *sc,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *y
 		}
 		pc=pc->next;
 	}
+	{
+		PARAM_LIST *p=&param_list;
+		if(p){
+			int rect_height=rect->bottom-rect->top;
+			int rect_width=rect->right-rect->left;
+			if(rect_height<sc->h){
+				SCROLLBAR scroll={0};
+				int x;
+				scroll.w=SCROLL_WIDTH;
+				scroll.h=rect_height;
+				scroll.pos=p->vscroll;
+				scroll.range=sc->h-rect_height;
+				x=p->hscroll+rect_width;
+				if(x>=sc->w)
+					x=sc->w;
+				scroll.x=x-SCROLL_WIDTH;
+				scroll.y=p->vscroll;
+				scroll.pressed=p->vscroll_pressed;
+				draw_vscroll(sc,&scroll);
+			}
+			if(rect_width<sc->w){
+				SCROLLBAR scroll={0};
+				int x,y;
+				scroll.w=rect_width-SCROLL_WIDTH;
+				scroll.h=SCROLL_WIDTH;
+				scroll.pos=p->hscroll;
+				scroll.range=sc->w-rect_width;
+				x=p->hscroll;
+				y=p->vscroll+rect_height;
+				if(x>=sc->w)
+					x=sc->w;
+				if(y>=sc->h)
+					y=sc->h;
+				scroll.x=x;
+				scroll.y=y-SCROLL_WIDTH;
+				scroll.pressed=p->hscroll_pressed;
+				draw_hscroll(sc,&scroll);
+			}
+		}
+	}
 	return 0;
 }
 int display_view1(HWND hwnd,HGLRC hglrc)
@@ -370,7 +417,10 @@ int display_page(HWND hwnd,SCREEN *sc)
 	h=sc->h;
 	memset(buffer,0x10,w*h*4);
 	GetWindowRect(hwnd,&rect);
-	build_page(sc,&rect,&xscroll,&yscroll);
+	if(spline_edit.count)
+		build_spline(sc,&rect,&xscroll,&yscroll);
+	else
+		build_page(sc,&rect,&xscroll,&yscroll);
 	hdc=GetDC(hwnd);
 	if(hdc){
 		BITMAPINFO bmi;

@@ -240,6 +240,8 @@ typedef struct{
 	OP *ref;
 	int hscroll;
 	int vscroll;
+	int vscroll_pressed;
+	int hscroll_pressed;
 }PARAM_LIST;
 
 struct PCLIST{
@@ -270,7 +272,10 @@ typedef struct{
 	int vscroll;
 }PAGE_LIST;
 
-
+typedef struct{
+	ANIMATE_DATA *anim;
+	int count;
+}SPLINE_EDIT;
 
 typedef struct{
 	void **links;
