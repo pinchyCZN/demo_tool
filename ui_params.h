@@ -539,6 +539,9 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			clicky=y=HIWORD(lparam);
 			debounce=0;
 			clear_param_selected(p);
+			if(check_scroll_hit(sc,p,hwnd,x,y))
+				break;
+
 			if(hittest_param(p,x,y,&pc)){
 				pc->has_focus=TRUE;
 				if(pc->control.type==CBUTTON){

@@ -270,6 +270,8 @@ typedef struct{
 	PAGE_DATA *current;
 	int hscroll;
 	int vscroll;
+	int vscroll_pressed;
+	int hscroll_pressed;
 }PAGE_LIST;
 
 typedef struct{

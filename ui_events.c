@@ -813,6 +813,13 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			get_nearest_grid(sc,&cx,&cy);
 			if(!(wparam&MK_CONTROL))
 				clear_pressed_all(p);
+			if(!check_scroll_hit(sc,p,hwnd,x,y)){
+				p->cursorx=cx;
+				p->cursory=cy;
+			}
+			else
+				break;
+
 			hittest_op(p,x,y,&op);
 			if(op){
 				clear_selected_all(p);
@@ -835,10 +842,6 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					drag=TRUE;
 			}
 			else{
-			}
-			if(!check_scroll_hit(sc,p,hwnd,x,y)){
-				p->cursorx=cx;
-				p->cursory=cy;
 			}
 		}
 		break;
