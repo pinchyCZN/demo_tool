@@ -23,9 +23,76 @@ int init_page_list()
 	}
 	return result;
 }
-int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
+int begin_scroll_adjust(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll,SCROLL_INFO *si)
 {
 	int rect_height,rect_width;
+	if(sc==0 || rect==0 || si==0)
+		return FALSE;
+	rect_height=rect->bottom-rect->top;
+	rect_width=rect->right-rect->left;
+	if(si->vscroll > (sc->h - rect_height))
+		si->vscroll=(sc->h - rect_height);
+	if(si->vscroll<0)
+		si->vscroll=0;
+
+	if(si->hscroll > (sc->w - rect_width))
+		si->hscroll=(sc->w - rect_width);
+	if(si->hscroll<0)
+		si->hscroll=0;
+	if(xscroll)
+		*xscroll=si->hscroll;
+	if(yscroll)
+		*yscroll=si->vscroll;
+	sc->clipxl=si->hscroll;
+	sc->clipxr=si->hscroll+rect_width;
+	sc->clipyt=si->vscroll;
+	sc->clipyb=si->vscroll+rect_height;
+	return TRUE;
+}
+int end_scroll_adjust(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll,SCROLL_INFO *si)
+{
+	int rect_height,rect_width;
+	if(sc==0 || rect==0 || si==0)
+		return FALSE;
+	rect_height=rect->bottom-rect->top;
+	rect_width=rect->right-rect->left;
+	if(rect_height<sc->h){
+		SCROLLBAR scroll={0};
+		int x;
+		scroll.w=SCROLL_WIDTH;
+		scroll.h=rect_height;
+		scroll.pos=si->vscroll;
+		scroll.range=sc->h-rect_height;
+		x=si->hscroll+rect_width;
+		if(x>=sc->w)
+			x=sc->w;
+		scroll.x=x-SCROLL_WIDTH;
+		scroll.y=si->vscroll;
+		scroll.pressed=si->vscroll_pressed;
+		draw_vscroll(sc,&scroll);
+	}
+	if(rect_width<sc->w){
+		SCROLLBAR scroll={0};
+		int x,y;
+		scroll.w=rect_width-SCROLL_WIDTH;
+		scroll.h=SCROLL_WIDTH;
+		scroll.pos=si->hscroll;
+		scroll.range=sc->w-rect_width;
+		x=si->hscroll;
+		y=si->vscroll+rect_height;
+		if(x>=sc->w)
+			x=sc->w;
+		if(y>=sc->h)
+			y=sc->h;
+		scroll.x=x;
+		scroll.y=y-SCROLL_WIDTH;
+		scroll.pressed=si->hscroll_pressed;
+		draw_hscroll(sc,&scroll);
+	}
+	return TRUE;
+}
+int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
+{
 	PAGE_DATA *p;
 	p=page_list.current;
 	if(p==0)
@@ -33,23 +100,7 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 	if(p==0)
 		return FALSE;
 
-	rect_height=rect->bottom-rect->top;
-	rect_width=rect->right-rect->left;
-	if(p->si.vscroll > (sc->h - rect_height))
-		p->si.vscroll=(sc->h - rect_height);
-	if(p->si.vscroll<0)
-		p->si.vscroll=0;
-
-	if(p->si.hscroll > (sc->w - rect_width))
-		p->si.hscroll=(sc->w - rect_width);
-	if(p->si.hscroll<0)
-		p->si.hscroll=0;
-	*xscroll=p->si.hscroll;
-	*yscroll=p->si.vscroll;
-	sc->clipxl=p->si.hscroll;
-	sc->clipxr=p->si.hscroll+rect_width;
-	sc->clipyt=p->si.vscroll;
-	sc->clipyb=p->si.vscroll+rect_height;
+	begin_scroll_adjust(sc,rect,xscroll,yscroll,&p->si);
 
 	if(p->list){
 		OP *list=p->list;
@@ -138,40 +189,7 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 		}
 	}
 	draw_cursor(sc,p->cursorx,p->cursory);
-	if(rect_height<sc->h){
-		SCROLLBAR scroll={0};
-		int x;
-		scroll.w=SCROLL_WIDTH;
-		scroll.h=rect_height;
-		scroll.pos=p->si.vscroll;
-		scroll.range=sc->h-rect_height;
-		x=p->si.hscroll+rect_width;
-		if(x>=sc->w)
-			x=sc->w;
-		scroll.x=x-SCROLL_WIDTH;
-		scroll.y=p->si.vscroll;
-		scroll.pressed=p->si.vscroll_pressed;
-		draw_vscroll(sc,&scroll);
-	}
-	if(rect_width<sc->w){
-		SCROLLBAR scroll={0};
-		int x,y;
-		scroll.w=rect_width-SCROLL_WIDTH;
-		scroll.h=SCROLL_WIDTH;
-		scroll.pos=p->si.hscroll;
-		scroll.range=sc->w-rect_width;
-		x=p->si.hscroll;
-		y=p->si.vscroll+rect_height;
-		if(x>=sc->w)
-			x=sc->w;
-		if(y>=sc->h)
-			y=sc->h;
-		scroll.x=x;
-		scroll.y=y-SCROLL_WIDTH;
-		scroll.pressed=p->si.hscroll_pressed;
-		draw_hscroll(sc,&scroll);
-	}
-
+	end_scroll_adjust(sc,rect,xscroll,yscroll,&p->si);
 	return TRUE;
 }
 
@@ -216,26 +234,7 @@ int get_droplist_height(DROPLIST *dl,int *h)
 int build_params(SCREEN *sc,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *yscroll)
 {
 	PARAM_CONTROL *pc=paramc;
-	{
-		PARAM_LIST *p=&param_list;
-		int rect_height=rect->bottom-rect->top;
-		int rect_width=rect->right-rect->left;
-		if(p->si.vscroll > (sc->h - rect_height))
-			p->si.vscroll=(sc->h - rect_height);
-		if(p->si.vscroll<0)
-			p->si.vscroll=0;
-
-		if(p->si.hscroll > (sc->w - rect_width))
-			p->si.hscroll=(sc->w - rect_width);
-		if(p->si.hscroll<0)
-			p->si.hscroll=0;
-		*xscroll=p->si.hscroll;
-		*yscroll=p->si.vscroll;
-		sc->clipxl=p->si.hscroll;
-		sc->clipxr=p->si.hscroll+rect_width;
-		sc->clipyt=p->si.vscroll;
-		sc->clipyb=p->si.vscroll+rect_height;
-	}
+	begin_scroll_adjust(sc,rect,xscroll,yscroll,&param_list.si);
 	while(pc){
 		int height=0;
 		switch(pc->control.type){
@@ -369,46 +368,7 @@ int build_params(SCREEN *sc,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *y
 		}
 		pc=pc->next;
 	}
-	{
-		PARAM_LIST *p=&param_list;
-		if(p){
-			int rect_height=rect->bottom-rect->top;
-			int rect_width=rect->right-rect->left;
-			if(rect_height<sc->h){
-				SCROLLBAR scroll={0};
-				int x;
-				scroll.w=SCROLL_WIDTH;
-				scroll.h=rect_height;
-				scroll.pos=p->si.vscroll;
-				scroll.range=sc->h-rect_height;
-				x=p->si.hscroll+rect_width;
-				if(x>=sc->w)
-					x=sc->w;
-				scroll.x=x-SCROLL_WIDTH;
-				scroll.y=p->si.vscroll;
-				scroll.pressed=p->si.vscroll_pressed;
-				draw_vscroll(sc,&scroll);
-			}
-			if(rect_width<sc->w){
-				SCROLLBAR scroll={0};
-				int x,y;
-				scroll.w=rect_width-SCROLL_WIDTH;
-				scroll.h=SCROLL_WIDTH;
-				scroll.pos=p->si.hscroll;
-				scroll.range=sc->w-rect_width;
-				x=p->si.hscroll;
-				y=p->si.vscroll+rect_height;
-				if(x>=sc->w)
-					x=sc->w;
-				if(y>=sc->h)
-					y=sc->h;
-				scroll.x=x;
-				scroll.y=y-SCROLL_WIDTH;
-				scroll.pressed=p->si.hscroll_pressed;
-				draw_hscroll(sc,&scroll);
-			}
-		}
-	}
+	end_scroll_adjust(sc,rect,xscroll,yscroll,&param_list.si);
 	return 0;
 }
 int display_view1(HWND hwnd,HGLRC hglrc)
