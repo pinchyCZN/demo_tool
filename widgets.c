@@ -210,6 +210,10 @@ int draw_rect(SCREEN *sc,int x,int y,int w,int h,int color)
 				break;
 			if((y+i)>=bh)
 				break;
+			if((y+i)<0)
+				break;
+			if((x+j)<0)
+				break;
 			if(offset<0)
 				break;
 			buffer[offset]=color;

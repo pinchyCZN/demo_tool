@@ -522,6 +522,51 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			clickx=x;
 			clicky=y;
 		}
+		else{
+			int x,y;
+			x=LOWORD(lparam);
+			y=HIWORD(lparam);
+			if(param_list.si.vscroll_pressed){
+				float delta=y-clicky;
+				RECT rect={0};
+				int h,bh,range,d;
+				GetWindowRect(hwnd,&rect);
+				h=rect.bottom-rect.top;
+				range=sc->h-h;
+				bh=h-(range/3);
+				if(bh<10){
+					bh=10;
+					if(h<10)
+						bh=h;
+				}
+				d=h-bh;
+				if(d<=0)
+					d=1;
+				delta=delta*range/d;
+				param_list.si.vscroll+=(int)delta;
+				clicky=y;
+			}
+			if(param_list.si.hscroll_pressed){
+				float delta=x-clickx;
+				RECT rect={0};
+				int w,bw,range,d;
+				GetWindowRect(hwnd,&rect);
+				w=rect.right-rect.left;
+				range=sc->w-w;
+				bw=w-(range/3);
+				if(bw<10){
+					bw=10;
+					if(w<10)
+						bw=w;
+				}
+				d=w-bw;
+				if(d<=0)
+					d=1;
+				delta=delta*range/d;
+				param_list.si.hscroll+=(int)delta;
+				clickx=x;
+			}
+		}
 		break;
 	case WM_LBUTTONUP:
 		if(pcdrag && pcdrag->control.type==CBUTTON){
@@ -530,6 +575,8 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				b->pressed=FALSE;
 		}
 		pcdrag=0;
+		param_list.si.hscroll_pressed=0;
+		param_list.si.vscroll_pressed=0;
 		break;
 	case WM_LBUTTONDOWN:
 		{
@@ -539,7 +586,7 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			clicky=y=HIWORD(lparam);
 			debounce=0;
 			clear_param_selected(p);
-			if(check_scroll_hit(sc,p,hwnd,x,y))
+			if(check_scroll_hit(sc,&param_list.si,hwnd,x,y))
 				break;
 
 			if(hittest_param(p,x,y,&pc)){

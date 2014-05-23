@@ -670,8 +670,8 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			p=page_list.current;
 			if(p==0)
 				break;
-			x=p->cursorx-p->hscroll;
-			y=p->cursory-p->vscroll;
+			x=p->cursorx-p->si.hscroll;
+			y=p->cursory-p->si.vscroll;
 			hittest_op(p,x+1,y+1,&op);
 			switch(LOWORD(wparam)){
 			case CMD_LIGHT:

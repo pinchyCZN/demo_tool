@@ -199,7 +199,7 @@ int add_type_op(PAGE_DATA *p,int type,int x,int y)
 	op=malloc(sizeof(OP));
 	if(op){
 		memset(op,0,sizeof(OP));
-		if(create_op(type,op,x+p->hscroll,y+p->vscroll)){
+		if(create_op(type,op,x+p->si.hscroll,y+p->si.vscroll)){
 			if(add_op(p,op))
 				result=TRUE;
 		}
@@ -728,13 +728,13 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 						debounce=1;
 				}
 				if(drag && debounce!=0){
-					drag_control(sc,p,x+p->hscroll,y+p->vscroll,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
+					drag_control(sc,p,x+p->si.hscroll,y+p->si.vscroll,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
 				}
 				if(resize && debounce!=0){
-					resize_selected(p,x+p->hscroll,y+p->vscroll,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
+					resize_selected(p,x+p->si.hscroll,y+p->si.vscroll,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
 				}
 			}
-			if(p->vscroll_pressed){
+			if(p->si.vscroll_pressed){
 				float delta=y-clicky;
 				RECT rect={0};
 				int h,bh,range,d;
@@ -751,10 +751,10 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				if(d<=0)
 					d=1;
 				delta=delta*range/d;
-				p->vscroll+=(int)delta;
+				p->si.vscroll+=(int)delta;
 				clicky=y;
 			}
-			if(p->hscroll_pressed){
+			if(p->si.hscroll_pressed){
 				float delta=x-clickx;
 				RECT rect={0};
 				int w,bw,range,d;
@@ -771,7 +771,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				if(d<=0)
 					d=1;
 				delta=delta*range/d;
-				p->hscroll+=(int)delta;
+				p->si.hscroll+=(int)delta;
 				clickx=x;
 			}
 		}
@@ -794,8 +794,8 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				}
 				resize=0;
 			}
-			p->hscroll_pressed=0;
-			p->vscroll_pressed=0;
+			p->si.hscroll_pressed=0;
+			p->si.vscroll_pressed=0;
 			test_build(p);
 		}
 		break;
@@ -806,14 +806,14 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			clickx=x=LOWORD(lparam);
 			clicky=y=HIWORD(lparam);
 			debounce=0;
-			x+=p->hscroll;
-			y+=p->vscroll;
+			x+=p->si.hscroll;
+			y+=p->si.vscroll;
 			cx=x;
 			cy=y;
 			get_nearest_grid(sc,&cx,&cy);
 			if(!(wparam&MK_CONTROL))
 				clear_pressed_all(p);
-			if(!check_scroll_hit(sc,p,hwnd,x,y)){
+			if(!check_scroll_hit(sc,&p->si,hwnd,x,y)){
 				p->cursorx=cx;
 				p->cursory=cy;
 			}
@@ -1232,7 +1232,7 @@ int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int 
 	return result;
 }
 
-int check_scroll_hit(SCREEN *sc,PAGE_DATA *p,HWND hwnd,int x,int y)
+int check_scroll_hit(SCREEN *sc,SCROLL_INFO *si,HWND hwnd,int x,int y)
 {
 	int result=FALSE;
 	if(sc==0)
@@ -1248,20 +1248,20 @@ int check_scroll_hit(SCREEN *sc,PAGE_DATA *p,HWND hwnd,int x,int y)
 		if(rheight>sc->h)
 			rheight=sc->h;
 		if(sc->h > rheight){
-			if(x > (p->hscroll+rwidth-SCROLL_WIDTH)){
-				p->vscroll_pressed=TRUE;
+			if(x > (si->hscroll+rwidth-SCROLL_WIDTH)){
+				si->vscroll_pressed=TRUE;
 				result=TRUE;
 			}
 			else
-				p->vscroll_pressed=FALSE;
+				si->vscroll_pressed=FALSE;
 		}
 		if(sc->w > rwidth){
-			if(y > (p->vscroll+rheight-SCROLL_WIDTH)){
-				p->hscroll_pressed=TRUE;
+			if(y > (si->vscroll+rheight-SCROLL_WIDTH)){
+				si->hscroll_pressed=TRUE;
 				result=TRUE;
 			}
 			else
-				p->hscroll_pressed=FALSE;
+				si->hscroll_pressed=FALSE;
 		}
 	}
 	return result;
@@ -1280,26 +1280,26 @@ int scroll_page_view(HWND hwnd,SCREEN *sc,int amount,int control)
 		rw=rect.right-rect.left;
 		rh=rect.bottom-rect.top;
 		if((!control) && rh>=sc->h){
-			p->vscroll=0;
+			p->si.vscroll=0;
 			return 0;
 		}
 		if(control && rw>=sc->w){
-			p->hscroll=0;
+			p->si.hscroll=0;
 			return 0;
 		}
 		if(control){
-			p->hscroll+=amount;
-			if(p->hscroll>=sc->w)
-				p->hscroll=sc->w-1;
-			if(p->hscroll<0)
-				p->hscroll=0;
+			p->si.hscroll+=amount;
+			if(p->si.hscroll>=sc->w)
+				p->si.hscroll=sc->w-1;
+			if(p->si.hscroll<0)
+				p->si.hscroll=0;
 		}
 		else{
-			p->vscroll+=amount;
-			if(p->vscroll>=sc->h)
-				p->vscroll=sc->h-1;
-			if(p->vscroll<0)
-				p->vscroll=0;
+			p->si.vscroll+=amount;
+			if(p->si.vscroll>=sc->h)
+				p->si.vscroll=sc->h-1;
+			if(p->si.vscroll<0)
+				p->si.vscroll=0;
 		}
 	}
 	return 0;

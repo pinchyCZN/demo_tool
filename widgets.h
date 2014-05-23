@@ -236,12 +236,17 @@ typedef struct{
 }PARAM_CONTROL;
 
 typedef struct{
-	PARAM_CONTROL *list;
-	OP *ref;
 	int hscroll;
 	int vscroll;
 	int vscroll_pressed;
 	int hscroll_pressed;
+}SCROLL_INFO;
+
+
+typedef struct{
+	PARAM_CONTROL *list;
+	OP *ref;
+	SCROLL_INFO si;
 }PARAM_LIST;
 
 struct PCLIST{
@@ -256,10 +261,7 @@ struct PCLIST{
 typedef struct{
 	OP *list;
 	char name[20];
-	int hscroll;
-	int vscroll;
-	int vscroll_pressed;
-	int hscroll_pressed;
+	SCROLL_INFO si;
 	int cursorx,cursory;
 	void *next;
 	void *prev;
@@ -268,10 +270,7 @@ typedef struct{
 typedef struct{
 	PAGE_DATA *list;
 	PAGE_DATA *current;
-	int hscroll;
-	int vscroll;
-	int vscroll_pressed;
-	int hscroll_pressed;
+	SCROLL_INFO si;
 }PAGE_LIST;
 
 typedef struct{
