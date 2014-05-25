@@ -133,6 +133,10 @@ SOURCE=.\render_entity.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\spline_editor.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\sub_params.c
 # End Source File
 # Begin Source File
