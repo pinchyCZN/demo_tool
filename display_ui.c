@@ -220,7 +220,7 @@ int build_param_edit_type(SCREEN *sc,int has_focus,int overwrite,int cursor,int 
 int get_droplist_height(DROPLIST *dl,int *h)
 {
 	if(dl && dl->dropped){
-		int height,index=0,num_items=0;
+		int index=0,num_items=0;
 		while(dl->list && dl->list[index]!=0){
 			if(dl->list[index]=='\n')
 				num_items++;
@@ -231,10 +231,10 @@ int get_droplist_height(DROPLIST *dl,int *h)
 	}
 	return TRUE;
 }
-int build_params(SCREEN *sc,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *yscroll)
+int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *yscroll)
 {
 	PARAM_CONTROL *pc=paramc;
-	begin_scroll_adjust(sc,rect,xscroll,yscroll,&param_list.si);
+	begin_scroll_adjust(sc,rect,xscroll,yscroll,si);
 	while(pc){
 		int height=0;
 		switch(pc->control.type){
@@ -368,7 +368,7 @@ int build_params(SCREEN *sc,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *y
 		}
 		pc=pc->next;
 	}
-	end_scroll_adjust(sc,rect,xscroll,yscroll,&param_list.si);
+	end_scroll_adjust(sc,rect,xscroll,yscroll,si);
 	return 0;
 }
 int display_view1(HWND hwnd,HGLRC hglrc)
@@ -432,7 +432,7 @@ int display_params(HWND hwnd,SCREEN *sc)
 	h=sc->h;
 	memset(buffer,0x8,w*h*4);
 	GetWindowRect(hwnd,&rect);
-	build_params(sc,pc,&rect,&xscroll,&yscroll);
+	build_params(sc,&param_list.si,pc,&rect,&xscroll,&yscroll);
 	hdc=GetDC(hwnd);
 	if(hdc){
 		BITMAPINFO bmi;
@@ -462,7 +462,7 @@ int display_subparams(HWND hwnd,SCREEN *sc)
 	h=sc->h;
 	memset(buffer,0x8,w*h*4);
 	GetWindowRect(hwnd,&rect);
-	build_params(sc,pc,&rect,&xscroll,&yscroll);
+	build_params(sc,&subparam_list.si,pc,&rect,&xscroll,&yscroll);
 	hdc=GetDC(hwnd);
 	if(hdc){
 		BITMAPINFO bmi;

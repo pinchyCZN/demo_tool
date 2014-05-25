@@ -686,10 +686,10 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			case 'A':
 				break;
 			case VK_PRIOR:
-				scroll_page_view(hwnd,sc,-rect.bottom,control);
+				scroll_view(hwnd,sc,&p->si,-rect.bottom,control);
 				break;
 			case VK_NEXT:
-				scroll_page_view(hwnd,sc,rect.bottom,control);
+				scroll_view(hwnd,sc,&p->si,rect.bottom,control);
 				break;
 			}
 		}
@@ -707,7 +707,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 
 			if(w>0)
 				amount=-amount;
-			scroll_page_view(hwnd,sc,amount,control);
+			scroll_view(hwnd,sc,&p->si,amount,control);
 		}
 		break;
 	case WM_MOUSEMOVE:
@@ -733,6 +733,10 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				if(resize && debounce!=0){
 					resize_selected(p,x+p->si.hscroll,y+p->si.vscroll,p->cursorx+DEFBUTTONH/2,p->cursory+DEFBUTTONH/2);
 				}
+			}
+			if(!(wparam&MK_LBUTTON)){
+				p->si.vscroll_pressed=FALSE;
+				p->si.hscroll_pressed=FALSE;
 			}
 			if(p->si.vscroll_pressed){
 				float delta=y-clicky;
@@ -1266,40 +1270,35 @@ int check_scroll_hit(SCREEN *sc,SCROLL_INFO *si,HWND hwnd,int x,int y)
 	}
 	return result;
 }
-int scroll_page_view(HWND hwnd,SCREEN *sc,int amount,int control)
+int scroll_view(HWND hwnd,SCREEN *sc,SCROLL_INFO *si,int amount,int control)
 {
-	PAGE_DATA *p;
-	extern PAGE_LIST page_list;
-	p=page_list.current;
-	if(p==0)
-		p=page_list.list;
-	if(p){
+	if(hwnd && sc && si){
 		RECT rect={0};
 		int rw,rh;
 		GetWindowRect(hwnd,&rect);
 		rw=rect.right-rect.left;
 		rh=rect.bottom-rect.top;
 		if((!control) && rh>=sc->h){
-			p->si.vscroll=0;
+			si->vscroll=0;
 			return 0;
 		}
 		if(control && rw>=sc->w){
-			p->si.hscroll=0;
+			si->hscroll=0;
 			return 0;
 		}
 		if(control){
-			p->si.hscroll+=amount;
-			if(p->si.hscroll>=sc->w)
-				p->si.hscroll=sc->w-1;
-			if(p->si.hscroll<0)
-				p->si.hscroll=0;
+			si->hscroll+=amount;
+			if(si->hscroll>=sc->w)
+				si->hscroll=sc->w-1;
+			if(si->hscroll<0)
+				si->hscroll=0;
 		}
 		else{
-			p->si.vscroll+=amount;
-			if(p->si.vscroll>=sc->h)
-				p->si.vscroll=sc->h-1;
-			if(p->si.vscroll<0)
-				p->si.vscroll=0;
+			si->vscroll+=amount;
+			if(si->vscroll>=sc->h)
+				si->vscroll=sc->h-1;
+			if(si->vscroll<0)
+				si->vscroll=0;
 		}
 	}
 	return 0;
@@ -1312,7 +1311,11 @@ DWORD WINAPI page_ui_thread(void *arg)
 	while(GetMessage(&msg,NULL,0,0)){
 		extern SCREEN scpage;
 		extern HWND ghpage;
-		page_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
+		extern SPLINE_EDIT spline_edit;
+		if(spline_edit.count)
+			spline_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
+		else
+			page_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
 	}
 }
 DWORD WINAPI param_ui_thread(void *arg)

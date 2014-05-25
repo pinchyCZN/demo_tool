@@ -1089,9 +1089,9 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 			lparam=msg.lParam;
 			wparam=msg.wParam;
 			if(FALSE)
-			if(_msg!=WM_MOUSEFIRST&&_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE&&_msg!=WM_DRAWITEM
-				&&_msg!=WM_CTLCOLORBTN&&_msg!=WM_CTLCOLOREDIT&&_msg!=WM_PAINT)
-			//if(_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE)
+			//if(_msg!=WM_MOUSEFIRST&&_msg!=WM_NCHITTEST&&_msg!=WM_SETCURSOR&&_msg!=WM_ENTERIDLE&&_msg!=WM_DRAWITEM
+			//	&&_msg!=WM_CTLCOLORBTN&&_msg!=WM_CTLCOLOREDIT&&_msg!=WM_PAINT)
+			if(_msg!=WM_PAINT)
 			{
 				static DWORD tick=0;
 				if((GetTickCount()-tick)>500)

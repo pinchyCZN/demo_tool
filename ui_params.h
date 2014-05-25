@@ -471,6 +471,8 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			point.x=LOWORD(lparam);
 			point.y=HIWORD(lparam);
 			MapWindowPoints(NULL,hwnd,&point,1);
+			point.x+=param_list.si.hscroll;
+			point.y+=param_list.si.vscroll;
 			if(hittest_param(p,point.x,point.y,&pc)){
 				if(pc->has_focus){
 					signed short deltax=(HIWORD(wparam));
@@ -483,6 +485,19 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					deltax>>=4;
 					send_mouse_move(pc,deltax,0,lmb,mmb,rmb,shift,ctrl);
 				}
+			}
+			else{
+				short w=HIWORD(wparam);
+				int key=LOWORD(wparam);
+				int amount=DEFBUTTONH;
+				int control=0;
+				if(key&MK_SHIFT)
+					amount<<=2;
+				if(key&MK_CONTROL)
+					control=1;
+				if(w>0)
+					amount=-amount;
+				scroll_view(hwnd,sc,&param_list.si,amount,control);
 			}
 		}
 		break;
@@ -518,7 +533,10 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 						deltay-=size;
 				}
 			}
-			send_mouse_move(pcdrag,deltax,deltay,lmb,mmb,rmb,shift,ctrl);
+			if(lmb==0 && mmb==0 && rmb==0)
+				pcdrag=0;
+			else
+				send_mouse_move(pcdrag,deltax,deltay,lmb,mmb,rmb,shift,ctrl);
 			clickx=x;
 			clicky=y;
 		}
@@ -526,6 +544,10 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			int x,y;
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
+			if(!(wparam&MK_LBUTTON)){
+				param_list.si.vscroll_pressed=FALSE;
+				param_list.si.hscroll_pressed=FALSE;
+			}
 			if(param_list.si.vscroll_pressed){
 				float delta=y-clicky;
 				RECT rect={0};
@@ -584,10 +606,12 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			PARAM_CONTROL *pc=0;
 			clickx=x=LOWORD(lparam);
 			clicky=y=HIWORD(lparam);
+			x+=param_list.si.hscroll;
+			y+=param_list.si.vscroll;
 			debounce=0;
-			clear_param_selected(p);
 			if(check_scroll_hit(sc,&param_list.si,hwnd,x,y))
 				break;
+			clear_param_selected(p);
 
 			if(hittest_param(p,x,y,&pc)){
 				pc->has_focus=TRUE;

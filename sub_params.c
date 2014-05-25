@@ -198,6 +198,21 @@ int remove_popup(PARAM_LIST *plist)
 	}
 	return result;
 }
+int handle_subparam_button(PARAM_LIST *spl,PARAM_CONTROL *b)
+{
+	if(spl && b){
+		OP *o=spl->ref;
+		if(o){
+			if(o->type==TTRANSFORM){
+				extern SPLINE_EDIT spline_edit;
+				if(spline_edit.count)
+					spline_edit.count=0;
+				else
+					spline_edit.count=1;
+			}
+		}
+	}
+}
 int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	static int clickx=0,clicky=0,debounce=0;
@@ -227,6 +242,19 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 					deltax>>=4;
 					send_mouse_move(pc,deltax,0,lmb,mmb,rmb,shift,ctrl);
 				}
+			}
+			else{
+				short w=HIWORD(wparam);
+				int key=LOWORD(wparam);
+				int amount=DEFBUTTONH;
+				int control=0;
+				if(key&MK_SHIFT)
+					amount<<=2;
+				if(key&MK_CONTROL)
+					control=1;
+				if(w>0)
+					amount=-amount;
+				scroll_view(hwnd,sc,&subparam_list.si,amount,control);
 			}
 		}
 		break;
@@ -266,6 +294,55 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 			clickx=x;
 			clicky=y;
 		}
+		else{
+			int x,y;
+			x=LOWORD(lparam);
+			y=HIWORD(lparam);
+			if(!(wparam&MK_LBUTTON)){
+				subparam_list.si.vscroll_pressed=FALSE;
+				subparam_list.si.hscroll_pressed=FALSE;
+			}
+			if(subparam_list.si.vscroll_pressed){
+				float delta=y-clicky;
+				RECT rect={0};
+				int h,bh,range,d;
+				GetWindowRect(hwnd,&rect);
+				h=rect.bottom-rect.top;
+				range=sc->h-h;
+				bh=h-(range/3);
+				if(bh<10){
+					bh=10;
+					if(h<10)
+						bh=h;
+				}
+				d=h-bh;
+				if(d<=0)
+					d=1;
+				delta=delta*range/d;
+				subparam_list.si.vscroll+=(int)delta;
+				clicky=y;
+			}
+			if(subparam_list.si.hscroll_pressed){
+				float delta=x-clickx;
+				RECT rect={0};
+				int w,bw,range,d;
+				GetWindowRect(hwnd,&rect);
+				w=rect.right-rect.left;
+				range=sc->w-w;
+				bw=w-(range/3);
+				if(bw<10){
+					bw=10;
+					if(w<10)
+						bw=w;
+				}
+				d=w-bw;
+				if(d<=0)
+					d=1;
+				delta=delta*range/d;
+				subparam_list.si.hscroll+=(int)delta;
+				clickx=x;
+			}
+		}
 		break;
 	case WM_LBUTTONUP:
 		if(pcdrag && pcdrag->control.type==CBUTTON){
@@ -276,6 +353,8 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 				//set_page_mode(TRUE);
 			}
 		}
+		subparam_list.si.hscroll_pressed=0;
+		subparam_list.si.vscroll_pressed=0;
 		pcdrag=0;
 		break;
 	case WM_LBUTTONDOWN:
@@ -284,7 +363,11 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 			PARAM_CONTROL *pc=0;
 			clickx=x=LOWORD(lparam);
 			clicky=y=HIWORD(lparam);
+			x+=subparam_list.si.hscroll;
+			y+=subparam_list.si.vscroll;
 			debounce=0;
+			if(check_scroll_hit(sc,&subparam_list.si,hwnd,x,y))
+				break;
 			clear_param_selected(p);
 			if(hittest_param(p,x,y,&pc)){
 				int list_handled=FALSE;
@@ -301,6 +384,7 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 					BUTTON *b=pc->control.data;
 					if(b)
 						b->pressed=TRUE;
+					handle_subparam_button(&subparam_list,pc);
 				}
 				if(!list_handled)
 					remove_popup(&subparam_list);
