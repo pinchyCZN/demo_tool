@@ -1312,7 +1312,7 @@ DWORD WINAPI page_ui_thread(void *arg)
 		extern SCREEN scpage;
 		extern HWND ghpage;
 		extern SPLINE_EDIT spline_edit;
-		if(spline_edit.count)
+		if(spline_edit.plist.list)
 			spline_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
 		else
 			page_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);

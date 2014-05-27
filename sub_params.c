@@ -205,10 +205,25 @@ int handle_subparam_button(PARAM_LIST *spl,PARAM_CONTROL *b)
 		if(o){
 			if(o->type==TTRANSFORM){
 				extern SPLINE_EDIT spline_edit;
-				if(spline_edit.count)
-					spline_edit.count=0;
-				else
-					spline_edit.count=1;
+				if(spline_edit.plist.list){
+					clear_params(&spline_edit.plist);
+				}
+				else{
+					TRANSFORM_DATA *t=o->data;
+					if(t){
+						int i,index=0;
+						struct PCLIST pclist[]={
+							{CSTATIC,   8,  0,8*10,20,"spline",0,0},
+							{CDROPLIST, 8,  0,8*20,20,"scalex\nscaley\nscalez\nrotx\nroty\nrotz\ntransx\ntransy\ntransz\n",0,30},
+						};
+						for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
+							if(pclist[i].data_ex==2)
+								pclist[i].data=&t->anim[index++].amount;
+						}
+						process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),&spline_edit.plist);
+
+					}
+				}
 			}
 		}
 	}

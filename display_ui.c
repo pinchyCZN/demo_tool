@@ -195,7 +195,10 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 
 int build_spline(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 {
-
+	if(spline_edit.plist.list){
+		build_params(sc,&spline_edit.plist.si,spline_edit.plist.list,rect,xscroll,yscroll);
+		//draw_string(sc,10,10,"324234243",WHITE);
+	}
 }
 
 int build_param_edit_type(SCREEN *sc,int has_focus,int overwrite,int cursor,int changed,char *str,int x,int y,int w,int h,int *outheight)
@@ -395,7 +398,7 @@ int display_page(HWND hwnd,SCREEN *sc)
 	h=sc->h;
 	memset(buffer,0x10,w*h*4);
 	GetWindowRect(hwnd,&rect);
-	if(spline_edit.count)
+	if(spline_edit.plist.list)
 		build_spline(sc,&rect,&xscroll,&yscroll);
 	else
 		build_page(sc,&rect,&xscroll,&yscroll);
