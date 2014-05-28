@@ -12,6 +12,8 @@ typedef struct{
 	int clipxr;
 	int clipyt;
 	int clipyb;
+	int xscroll;
+	int yscroll;
 }SCREEN;
 
 #define DEFBUTTONH 25
@@ -204,7 +206,9 @@ typedef struct{
 
 typedef struct{
 	ANIMATE_DATA *anim;
+	int x,y,w,h;
 	int count;
+	int selected;
 }SPLINE_CONTROL;
 
 
@@ -275,7 +279,6 @@ typedef struct{
 typedef struct{
 	PAGE_DATA *list;
 	PAGE_DATA *current;
-	SCROLL_INFO si;
 }PAGE_LIST;
 
 typedef struct{

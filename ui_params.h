@@ -87,6 +87,7 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	case CBUTTON: size=sizeof(BUTTON);break;
 	case CDROPLIST: size=sizeof(DROPLIST);break;
 	case CPOPUPLIST: size=sizeof(POPUPLIST);break;
+	case CSPLINE: size=sizeof(SPLINE_CONTROL);break;
 	}
 	if(size!=0){
 		void *data=0;
@@ -232,6 +233,20 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 							dl->h=pclist[i].h;
 							dl->list=pclist[i].data;
 							dl->current=pclist[i].data_ex;
+							result=TRUE;
+						}
+					}
+					break;
+				case CSPLINE:
+					{
+						SPLINE_CONTROL *s=pc->control.data;
+						if(s){
+							s->x=pclist[i].x+xpos;
+							s->y=pclist[i].y+ypos;
+							s->w=pclist[i].w;
+							s->h=pclist[i].h;
+							s->anim=pclist[i].data;
+							s->count=pclist[i].data_ex;
 							result=TRUE;
 						}
 					}
@@ -461,8 +476,6 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	PARAM_CONTROL *p;
 	extern PARAM_LIST param_list;
 	p=param_list.list;
-	if(p==0)
-		return FALSE;
 	switch(msg){
 	case WM_MOUSEWHEEL:
 		{
@@ -502,9 +515,11 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		}
 		break;
 	case WM_MOUSEMOVE:
+		set_focus(hwnd);
 		if(pcdrag){
 			int x,y,deltax,deltay;
 			int lmb,mmb,rmb,ctrl,shift;
+			set_focus(hwnd);
 			lmb=wparam&MK_LBUTTON;
 			mmb=wparam&MK_MBUTTON;
 			rmb=wparam&MK_RBUTTON;

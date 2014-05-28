@@ -215,10 +215,13 @@ int handle_subparam_button(PARAM_LIST *spl,PARAM_CONTROL *b)
 						struct PCLIST pclist[]={
 							{CSTATIC,   8,  0,8*10,20,"spline",0,0},
 							{CDROPLIST, 8,  0,8*20,20,"scalex\nscaley\nscalez\nrotx\nroty\nrotz\ntransx\ntransy\ntransz\n",0,30},
+							{CSPLINE,   8,  0,8*20,20,0,1,30},
 						};
 						for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
-							if(pclist[i].data_ex==2)
-								pclist[i].data=&t->anim[index++].amount;
+							if(pclist[i].data_ex==1){
+								pclist[i].data=t->anim;
+								pclist[i].data_ex=9;
+							}
 						}
 						process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),&spline_edit.plist);
 
@@ -235,8 +238,6 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 	PARAM_CONTROL *p;
 	extern PARAM_LIST subparam_list;
 	p=subparam_list.list;
-	if(p==0)
-		return FALSE;
 	switch(msg){
 	case WM_MOUSEWHEEL:
 		{
@@ -274,6 +275,7 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 		}
 		break;
 	case WM_MOUSEMOVE:
+		set_focus(hwnd);
 		if(pcdrag){
 			int x,y,deltax,deltay;
 			int lmb,mmb,rmb,ctrl,shift;

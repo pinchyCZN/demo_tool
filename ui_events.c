@@ -666,15 +666,77 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 }
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
+	typedef enum CMDMENU{
+		CMD_DELETE,CMD_LIGHT,CMD_CUBE,CMD_MULTIPLY,CMD_TRANSFORM
+	};
+	static lmb_down=FALSE;
+	static HMENU hmenu=0;
 	static int drag=0,resize=0,clickx=0,clicky=0,debounce=0;
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
+	extern SPLINE_EDIT spline_edit;
+	if(spline_edit.plist.list){
+		spline_win_message(sc,hwnd,msg,wparam,lparam);
+		return TRUE;
+	}
 	p=page_list.current;
 	if(p==0)
 		p=page_list.list;
-	if(p==0)
-		return FALSE;
+//	if(p==0)
+//		return FALSE;
 	switch(msg){
+	case WM_CREATE:
+		hmenu=CreatePopupMenu();
+		if(hmenu){
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_LIGHT,"light");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_TRANSFORM,"transform");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION|MF_SEPARATOR,0,0);
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_DELETE,"delete");
+		}
+		return 0;
+	case WM_CONTEXTMENU:
+		if(hmenu){
+			int x=LOWORD(lparam),y=HIWORD(lparam);
+			TrackPopupMenu(hmenu,TPM_LEFTALIGN,x,y,0,hwnd,NULL);
+		}
+		break;
+	case WM_COMMAND:
+		{
+			extern PAGE_LIST page_list;
+			PAGE_DATA *p;
+			OP *op=0;
+			int x,y;
+			p=page_list.current;
+			if(p==0)
+				break;
+			x=p->cursorx-p->si.hscroll;
+			y=p->cursory-p->si.vscroll;
+			hittest_op(p,x+1,y+1,&op);
+			switch(LOWORD(wparam)){
+			case CMD_LIGHT:
+				if(op==0)
+					add_type_op(p,TLIGHT,x,y);
+				break;
+			case CMD_CUBE:
+				if(op==0)
+					add_type_op(p,TCUBE,x,y);
+				break;
+			case CMD_MULTIPLY:
+				if(op==0)
+					add_type_op(p,TMULTIPLY,x,y);
+				break;
+			case CMD_TRANSFORM:
+				if(op==0)
+					add_type_op(p,TTRANSFORM,x,y);
+				break;
+			case CMD_DELETE:
+				del_op(p,op);
+				break;
+			}
+		}
+		break;
 	case WM_KEYFIRST:
 		{
 			int key=wparam;
@@ -690,6 +752,9 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				break;
 			case VK_NEXT:
 				scroll_view(hwnd,sc,&p->si,rect.bottom,control);
+				break;
+			case VK_ESCAPE:
+				exit(0);
 				break;
 			}
 		}
@@ -716,6 +781,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			int x,y;
 			x=LOWORD(lparam);
 			y=HIWORD(lparam);
+			set_focus(hwnd);
 			if(lmb){
 				if(debounce==0){
 					int size=4;
@@ -1304,37 +1370,4 @@ int scroll_view(HWND hwnd,SCREEN *sc,SCROLL_INFO *si,int amount,int control)
 	return 0;
 }
 #include "ui_params.h"
-
-DWORD WINAPI page_ui_thread(void *arg)
-{
-	MSG msg={0};
-	while(GetMessage(&msg,NULL,0,0)){
-		extern SCREEN scpage;
-		extern HWND ghpage;
-		extern SPLINE_EDIT spline_edit;
-		if(spline_edit.plist.list)
-			spline_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
-		else
-			page_win_message(&scpage,ghpage,msg.message,msg.wParam,msg.lParam);
-	}
-}
-DWORD WINAPI param_ui_thread(void *arg)
-{
-	MSG msg={0};
-	while(GetMessage(&msg,NULL,0,0)){
-		extern SCREEN scparams;
-		extern HWND ghparams;
-		param_win_message(&scparams,ghparams,msg.message,msg.wParam,msg.lParam);
-	}
-}
-
-DWORD WINAPI subparam_ui_thread(void *arg)
-{
-	MSG msg={0};
-	while(GetMessage(&msg,NULL,0,0)){
-		extern SCREEN scsubparams;
-		extern HWND ghsubparams;
-		subparam_win_message(&scsubparams,ghsubparams,msg.message,msg.wParam,msg.lParam);
-	}
-}
 

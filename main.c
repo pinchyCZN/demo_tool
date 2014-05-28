@@ -343,8 +343,14 @@ DWORD WINAPI idle()
 		delta=current-tick;
 		if(delta>=12){// && g_draw){
 			tick=current;
-			if(ghwindow && !IsIconic(ghwindow))
+			if(ghwindow && !IsIconic(ghwindow)){
+				EnterCriticalSection(&mutex);
+				draw_page(ghpage,&scpage);
+				draw_params(ghparams,&scparams);
+				draw_subparams(ghsubparams,&scsubparams);
+				LeaveCriticalSection(&mutex);
 				InvalidateRect(ghwindow,0,FALSE);
+			}
 		}
 		else{
 			Sleep(1);
@@ -541,21 +547,7 @@ LRESULT CALLBACK win_subparams_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 		tick=GetTickCount();
 	}
 #endif
-	if(subparam_ui_threadid)
-		PostThreadMessage(subparam_ui_threadid,msg,wparam,lparam);
-
-	switch(msg){
-	case WM_CREATE:
-		return 0;
-	case WM_MBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-	case WM_LBUTTONDOWN:
-		SetFocus(hwnd);
-		break;
-	case WM_MOUSEMOVE:
-		set_focus(hwnd);
-		break;
-	}
+	subparam_win_message(&scsubparams,hwnd,msg,wparam,lparam);
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
 LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
@@ -572,22 +564,7 @@ LRESULT CALLBACK win_params_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		tick=GetTickCount();
 	}
 #endif
-	//param_win_message(&scparams,hwnd,msg,wparam,lparam);
-	if(param_ui_threadid)
-		PostThreadMessage(param_ui_threadid,msg,wparam,lparam);
-
-	switch(msg){
-	case WM_CREATE:
-		return 0;
-	case WM_MBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-	case WM_LBUTTONDOWN:
-		SetFocus(hwnd);
-		break;
-	case WM_MOUSEMOVE:
-		set_focus(hwnd);
-		break;
-	}
+	param_win_message(&scparams,hwnd,msg,wparam,lparam);
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
 LRESULT CALLBACK win_pagelist_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
@@ -615,11 +592,6 @@ LRESULT CALLBACK win_pagelist_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpara
 }
 LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
-	static lmb_down=FALSE;
-	static HMENU hmenu=0;
-	typedef enum CMDMENU{
-		CMD_DELETE,CMD_LIGHT,CMD_CUBE,CMD_MULTIPLY,CMD_TRANSFORM
-	};
 #ifdef _DEBUG
 	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&msg!=WM_MOUSEMOVE)
@@ -632,76 +604,7 @@ LRESULT CALLBACK win_page_proc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		tick=GetTickCount();
 	}
 #endif
-	//page_win_message(&scpage,hwnd,msg,wparam,lparam);
-	if(page_ui_threadid)
-		PostThreadMessage(page_ui_threadid,msg,wparam,lparam);
-
-	switch(msg){
-	case WM_CREATE:
-		hmenu=CreatePopupMenu();
-		if(hmenu){
-			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_LIGHT,"light");
-			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
-			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
-			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_TRANSFORM,"transform");
-			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION|MF_SEPARATOR,0,0);
-			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_DELETE,"delete");
-		}
-		return 0;
-	case WM_KEYFIRST:
-		if(wparam==0x1b)
-			exit(0);
-		break;
-	case WM_MOUSEMOVE:
-		set_focus(hwnd);
-		break;
-	case WM_CONTEXTMENU:
-		if(hmenu){
-			int x=LOWORD(lparam),y=HIWORD(lparam);
-			TrackPopupMenu(hmenu,TPM_LEFTALIGN,x,y,0,hwnd,NULL);
-		}
-		break;
-	case WM_COMMAND:
-		{
-			extern PAGE_LIST page_list;
-			PAGE_DATA *p;
-			OP *op=0;
-			int x,y;
-			p=page_list.current;
-			if(p==0)
-				break;
-			x=p->cursorx-p->si.hscroll;
-			y=p->cursory-p->si.vscroll;
-			hittest_op(p,x+1,y+1,&op);
-			switch(LOWORD(wparam)){
-			case CMD_LIGHT:
-				if(op==0)
-					add_type_op(p,TLIGHT,x,y);
-				break;
-			case CMD_CUBE:
-				if(op==0)
-					add_type_op(p,TCUBE,x,y);
-				break;
-			case CMD_MULTIPLY:
-				if(op==0)
-					add_type_op(p,TMULTIPLY,x,y);
-				break;
-			case CMD_TRANSFORM:
-				if(op==0)
-					add_type_op(p,TTRANSFORM,x,y);
-				break;
-			case CMD_DELETE:
-				del_op(p,op);
-				break;
-			}
-		}
-		break;
-	case WM_MBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-	case WM_LBUTTONDOWN:
-		SetFocus(hwnd);
-		break;
-	}
+	page_win_message(&scpage,hwnd,msg,wparam,lparam);
 	return DefWindowProc(hwnd,msg,wparam,lparam);
 }
 int resize_main_window(HWND hwnd)
@@ -808,9 +711,6 @@ int create_tool_windows(HWND hwnd)
 		}
 	}
 	resize_main_window(hwnd);
-	CreateThread(NULL,0,page_ui_thread,0,0,&page_ui_threadid);
-	CreateThread(NULL,0,param_ui_thread,0,0,&param_ui_threadid);
-	CreateThread(NULL,0,subparam_ui_thread,0,0,&subparam_ui_threadid);
 	CreateThread(NULL,0,idle,0,0,&idle_threadid);
 	return TRUE;
 
@@ -1012,9 +912,9 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 				}
 				if(hdc){
 					EnterCriticalSection(&mutex);
-					display_page(ghpage,&scpage);
-					display_params(ghparams,&scparams);
-					display_subparams(ghsubparams,&scsubparams);
+					display_screen(ghpage,&scpage);
+					display_screen(ghparams,&scparams);
+					display_screen(ghsubparams,&scsubparams);
 					LeaveCriticalSection(&mutex);
 				}
 				if(hbrush && ghfocus && hdc){
@@ -1057,6 +957,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 	MSG msg;
 	const char *class_name="DEMOTOOL";
 	ghinstance=hInstance;
+	InitializeCriticalSection(&mutex);
 
 	open_console();
 	move_console();
@@ -1078,7 +979,6 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PSTR szCmdLine,in
 		MessageBox(NULL,"Could not create main dialog","ERROR",MB_ICONERROR | MB_OK);
 		return 0;
 	}
-	InitializeCriticalSection(&mutex);
 	UpdateWindow(ghwindow);
 	//ghaccel=LoadAccelerators(ghinstance,MAKEINTRESOURCE(IDR_ACCELERATOR));
 	while(GetMessage(&msg,NULL,0,0))

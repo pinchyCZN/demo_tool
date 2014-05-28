@@ -23,7 +23,7 @@ int init_page_list()
 	}
 	return result;
 }
-int begin_scroll_adjust(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll,SCROLL_INFO *si)
+int begin_scroll_adjust(SCREEN *sc,RECT *rect,SCROLL_INFO *si)
 {
 	int rect_height,rect_width;
 	if(sc==0 || rect==0 || si==0)
@@ -39,17 +39,13 @@ int begin_scroll_adjust(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll,SCROLL_I
 		si->hscroll=(sc->w - rect_width);
 	if(si->hscroll<0)
 		si->hscroll=0;
-	if(xscroll)
-		*xscroll=si->hscroll;
-	if(yscroll)
-		*yscroll=si->vscroll;
 	sc->clipxl=si->hscroll;
 	sc->clipxr=si->hscroll+rect_width;
 	sc->clipyt=si->vscroll;
 	sc->clipyb=si->vscroll+rect_height;
 	return TRUE;
 }
-int end_scroll_adjust(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll,SCROLL_INFO *si)
+int end_scroll_adjust(SCREEN *sc,RECT *rect,SCROLL_INFO *si)
 {
 	int rect_height,rect_width;
 	if(sc==0 || rect==0 || si==0)
@@ -91,7 +87,7 @@ int end_scroll_adjust(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll,SCROLL_INF
 	}
 	return TRUE;
 }
-int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
+int build_page(SCREEN *sc,RECT *rect)
 {
 	PAGE_DATA *p;
 	p=page_list.current;
@@ -100,7 +96,9 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 	if(p==0)
 		return FALSE;
 
-	begin_scroll_adjust(sc,rect,xscroll,yscroll,&p->si);
+	begin_scroll_adjust(sc,rect,&p->si);
+	sc->xscroll=p->si.hscroll;
+	sc->yscroll=p->si.vscroll;
 
 	if(p->list){
 		OP *list=p->list;
@@ -189,14 +187,14 @@ int build_page(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
 		}
 	}
 	draw_cursor(sc,p->cursorx,p->cursory);
-	end_scroll_adjust(sc,rect,xscroll,yscroll,&p->si);
+	end_scroll_adjust(sc,rect,&p->si);
 	return TRUE;
 }
 
-int build_spline(SCREEN *sc,RECT *rect,int *xscroll,int *yscroll)
+int build_spline(SCREEN *sc,RECT *rect)
 {
 	if(spline_edit.plist.list){
-		build_params(sc,&spline_edit.plist.si,spline_edit.plist.list,rect,xscroll,yscroll);
+		build_params(sc,&spline_edit.plist.si,spline_edit.plist.list,rect);
 		//draw_string(sc,10,10,"324234243",WHITE);
 	}
 }
@@ -234,10 +232,12 @@ int get_droplist_height(DROPLIST *dl,int *h)
 	}
 	return TRUE;
 }
-int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect,int *xscroll,int *yscroll)
+int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 {
 	PARAM_CONTROL *pc=paramc;
-	begin_scroll_adjust(sc,rect,xscroll,yscroll,si);
+	begin_scroll_adjust(sc,rect,si);
+	sc->xscroll=si->hscroll;
+	sc->yscroll=si->vscroll;
 	while(pc){
 		int height=0;
 		switch(pc->control.type){
@@ -368,10 +368,18 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect,int
 				}
 			}
 			break;
+		case CSPLINE:
+			{
+				SPLINE_CONTROL *s=pc->control.data;
+				if(s){
+
+				}
+			}
+			break;
 		}
 		pc=pc->next;
 	}
-	end_scroll_adjust(sc,rect,xscroll,yscroll,si);
+	end_scroll_adjust(sc,rect,si);
 	return 0;
 }
 int display_view1(HWND hwnd,HGLRC hglrc)
@@ -386,11 +394,29 @@ int display_view1(HWND hwnd,HGLRC hglrc)
 		SwapBuffers(hdc);
 	}
 }
-int display_page(HWND hwnd,SCREEN *sc)
+int display_screen(HWND hwnd,SCREEN *sc)
 {
 	HDC hdc;
+	hdc=GetDC(hwnd);
+	if(hdc && sc){
+		BITMAPINFO bmi;
+		int w,h;
+		w=sc->w;
+		h=sc->h;
+		memset(&bmi,0,sizeof(BITMAPINFO));
+		bmi.bmiHeader.biBitCount=32;
+		bmi.bmiHeader.biWidth=w;
+		bmi.bmiHeader.biHeight=h;
+		bmi.bmiHeader.biPlanes=1;
+		bmi.bmiHeader.biSize=40;
+		SetDIBitsToDevice(hdc,-sc->xscroll,-sc->yscroll,w,h,0,0,0,w,sc->buffer,&bmi,DIB_RGB_COLORS);
+	}
+	return 0;
+}
+int draw_page(HWND hwnd,SCREEN *sc)
+{
 	RECT rect={0};
-	int *buffer,w,h,xscroll=0,yscroll=0;
+	int *buffer,w,h;
 	if(sc==0 || sc->buffer==0)
 		return 0;
 	buffer=sc->buffer;
@@ -399,83 +425,41 @@ int display_page(HWND hwnd,SCREEN *sc)
 	memset(buffer,0x10,w*h*4);
 	GetWindowRect(hwnd,&rect);
 	if(spline_edit.plist.list)
-		build_spline(sc,&rect,&xscroll,&yscroll);
+		build_spline(sc,&rect);
 	else
-		build_page(sc,&rect,&xscroll,&yscroll);
-	hdc=GetDC(hwnd);
-	if(hdc){
-		BITMAPINFO bmi;
-		memset(&bmi,0,sizeof(BITMAPINFO));
-		bmi.bmiHeader.biBitCount=32;
-		bmi.bmiHeader.biWidth=w;
-		bmi.bmiHeader.biHeight=h;
-		bmi.bmiHeader.biPlanes=1;
-		bmi.bmiHeader.biSize=40;
-		SetDIBitsToDevice(hdc,-xscroll,-yscroll,w,h,0,0,0,w,buffer,&bmi,DIB_RGB_COLORS);
-	}
-	return 0;
-}
-int display_page_list(HWND hwnd,SCREEN *sc)
-{
+		build_page(sc,&rect);
+	return TRUE;
 }
 
-
-
-int display_params(HWND hwnd,SCREEN *sc)
+int draw_params(HWND hwnd,SCREEN *sc)
 {
-	HDC hdc;
 	RECT rect={0};
-	int *buffer,w,h,xscroll=0,yscroll=0;
+	int *buffer,w,h;
 	PARAM_CONTROL *pc=param_list.list;
-
 	if(sc==0 || sc->buffer==0 || pc==0)
 		return 0;
 	buffer=sc->buffer;
 	w=sc->w;
 	h=sc->h;
-	memset(buffer,0x8,w*h*4);
+	memset(buffer,0x10,w*h*4);
 	GetWindowRect(hwnd,&rect);
-	build_params(sc,&param_list.si,pc,&rect,&xscroll,&yscroll);
-	hdc=GetDC(hwnd);
-	if(hdc){
-		BITMAPINFO bmi;
-		memset(&bmi,0,sizeof(BITMAPINFO));
-		bmi.bmiHeader.biBitCount=32;
-		bmi.bmiHeader.biWidth=w;
-		bmi.bmiHeader.biHeight=h;
-		bmi.bmiHeader.biPlanes=1;
-		bmi.bmiHeader.biSize=40;
-		SetDIBitsToDevice(hdc,-xscroll,-yscroll,w,h,0,0,0,w,buffer,&bmi,DIB_RGB_COLORS);
-	}
-	return 0;
+	build_params(sc,&param_list.si,pc,&rect);
+	return TRUE;
 }
 
-
-int display_subparams(HWND hwnd,SCREEN *sc)
+int draw_subparams(HWND hwnd,SCREEN *sc)
 {
-	HDC hdc;
 	RECT rect={0};
-	int *buffer,w,h,xscroll=0,yscroll=0;
+	int *buffer,w,h;
 	PARAM_CONTROL *pc=subparam_list.list;
-
 	if(sc==0 || sc->buffer==0 || pc==0)
 		return 0;
 	buffer=sc->buffer;
 	w=sc->w;
 	h=sc->h;
-	memset(buffer,0x8,w*h*4);
+	memset(buffer,0x10,w*h*4);
 	GetWindowRect(hwnd,&rect);
-	build_params(sc,&subparam_list.si,pc,&rect,&xscroll,&yscroll);
-	hdc=GetDC(hwnd);
-	if(hdc){
-		BITMAPINFO bmi;
-		memset(&bmi,0,sizeof(BITMAPINFO));
-		bmi.bmiHeader.biBitCount=32;
-		bmi.bmiHeader.biWidth=w;
-		bmi.bmiHeader.biHeight=h;
-		bmi.bmiHeader.biPlanes=1;
-		bmi.bmiHeader.biSize=40;
-		SetDIBitsToDevice(hdc,-xscroll,-yscroll,w,h,0,0,0,w,buffer,&bmi,DIB_RGB_COLORS);
-	}
-	return 0;
+	build_params(sc,&subparam_list.si,pc,&rect);
+	return TRUE;
 }
+
