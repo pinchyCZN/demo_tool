@@ -206,7 +206,8 @@ typedef struct{
 
 typedef struct{
 	ANIMATE_DATA *anim;
-	int x,y,w,h;
+	int x,y;
+	int w,h;
 	int count;
 	int selected;
 }SPLINE_CONTROL;
