@@ -27,12 +27,26 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 		break;
 	case WM_CONTEXTMENU:
 		if(hmenu){
-			int x=LOWORD(lparam),y=HIWORD(lparam);
-			TrackPopupMenu(hmenu,TPM_LEFTALIGN,x,y,0,hwnd,NULL);
+			POINT point;
+			int x,y;
+			point.x=x=LOWORD(lparam);
+			point.y=y=HIWORD(lparam);
+			MapWindowPoints(NULL,hwnd,&point,1);
+			point.x+=spline_edit.plist.si.hscroll;
+			point.y+=spline_edit.plist.si.vscroll;
+			if(hittest_param(p,point.x,point.y,0))
+				TrackPopupMenu(hmenu,TPM_LEFTALIGN,x,y,0,hwnd,NULL);
 		}
 		break;
 	case WM_COMMAND:
 		{
+			PARAM_CONTROL *pc=0;
+			if(p){
+				find_param_type(&spline_edit.plist,CSPLINE,&pc);
+				if(pc){
+					
+				}
+			}
 			switch(LOWORD(wparam)){
 			case CMD_ADDKEY:
 				break;
@@ -46,8 +60,10 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 			point.x=LOWORD(lparam);
 			point.y=HIWORD(lparam);
 			MapWindowPoints(NULL,hwnd,&point,1);
-			if(hittest_param(p,point.x,point.y,&pc)){
-				if(pc->has_focus){
+			point.x+=spline_edit.plist.si.hscroll;
+			point.y+=spline_edit.plist.si.vscroll;
+			if(hittest_param(p,point.x,point.y,&pc)
+				&& pc->control.type==CDROPLIST){
 					signed short deltax=(HIWORD(wparam));
 					int lmb,mmb,rmb,ctrl,shift;
 					lmb=wparam&MK_LBUTTON;
@@ -57,7 +73,6 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 					ctrl=wparam&MK_CONTROL;
 					deltax>>=4;
 					send_mouse_move(pc,deltax,0,lmb,mmb,rmb,shift,ctrl);
-				}
 			}
 			else{
 				short w=HIWORD(wparam);

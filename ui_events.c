@@ -367,6 +367,15 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			}
 		}
 		break;
+	case CSPLINE:
+		{
+			SPLINE_CONTROL *sc=control->data;
+			if(sc){
+				trans_pos_data(x,y,w,h,sc->x,sc->y,sc->w,sc->h);
+				result=TRUE;
+			}
+		}
+		break;
 	}
 	return result;
 }
