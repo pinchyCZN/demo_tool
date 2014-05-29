@@ -105,10 +105,6 @@ SOURCE=.\environment.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\input.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\loadpng.c
 # End Source File
 # Begin Source File
