@@ -675,7 +675,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	PAGE_DATA *p;
 	extern PAGE_LIST page_list;
 	extern SPLINE_EDIT spline_edit;
-	if(spline_edit.plist.list){
+	if(spline_edit.plist.list || msg==WM_CREATE){
 		spline_win_message(sc,hwnd,msg,wparam,lparam);
 		return TRUE;
 	}

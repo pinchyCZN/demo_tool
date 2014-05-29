@@ -137,17 +137,7 @@ void display(void)
 	glRotatef(grx,1,0,0);
 	glRotatef(gry,0,1,0);
 	glRotatef(grz,0,0,1);
-	{
-		unsigned int tick,global_tick;
-		tick=GetTickCount();
-		global_tick=get_global_tick();
-		//update_world(players,sizeof(players)/sizeof(ENTITY*),global_tick,tick);
-		//global_tick=update_world(non_players,sizeof(non_players)/sizeof(ENTITY*),global_tick,tick);
-		set_global_tick(global_tick);
-	}
-//	render_entitys(players,sizeof(players)/sizeof(ENTITY*));
-//	render_entitys(non_players,sizeof(non_players)/sizeof(ENTITY*));
-	get_modifiers();
+
 
 
 	//test_triangle();
@@ -287,53 +277,8 @@ int find_empty_slot(void **array,int count)
 	}
 	return index;
 }
-int add_player()
-{
-	ENTITY *e;
-	int i,index;
-	index=find_empty_slot(players,sizeof(players)/sizeof(ENTITY*));
-	if(index>=0){
-		e=malloc(sizeof(ENTITY));
-		if(e){
-			init_entity(e,PLAYER1);
-			players[index]=e;
-		}
-	}
-	return index;
-}
-int add_bullet(void *owner,int *speed,int *pos)
-{
-	ENTITY *e;
-	int i,index=-1;
-	index=find_empty_slot(non_players,sizeof(non_players)/sizeof(ENTITY*));
-	if(index>=0){
-		e=malloc(sizeof(ENTITY));
-		if(e){
-			init_entity(e,BULLET1);
-			e->owner=owner;
-			non_players[index]=e;
-			if(speed!=0){
-				e->speedx=speed[0];
-				e->speedy=speed[1];
-				e->speedz=speed[2];
-			}
-			if(pos!=0){
-				e->posx=pos[0];
-				e->posy=pos[1];
-				e->posz=pos[2];
-			}
-		}
-	}
-	return index;
-}
-int init_entity_array(ENTITY **e,int count)
-{
-	int i;
-	for(i=0;i<count;i++){
-		e[i]=0;
-	}
-	return 0;
-}
+
+
 DWORD WINAPI idle()
 {
 	static DWORD tick=0;
@@ -357,35 +302,7 @@ DWORD WINAPI idle()
 		}
 	}
 }
-/*
-int main(int argc,char **argv)
-{
 
-	ghinstance=GetModuleHandle(NULL);
-	WinMain(0,0,0,0);
-	init_keys();
-	init_world();
-	init_entity_array(players,sizeof(players)/sizeof(ENTITY*));
-	init_entity_array(non_players,sizeof(non_players)/sizeof(ENTITY*));
-	glutInit(&argc,argv);
-	glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE);
-	glutInitWindowSize(800,500);
-	glutInitWindowPosition(0,0);
-	glutCreateWindow("test");
-	gl_init();
-	glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
-	glutKeyboardFunc(glkey_down);
-	glutSpecialFunc(glspecial_down);
-	glutKeyboardUpFunc(glkey_up);
-	glutSpecialUpFunc(glspecial_up);
-	glutIdleFunc(idle);
-	move_console();
-	add_player();
-	glutMainLoop();
-	return 0;
-}
-*/
 int setupPixelFormat(HDC hDC)
 {
     PIXELFORMATDESCRIPTOR pfd = {
@@ -812,11 +729,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			}
 
 			gl_init();
-			init_keys();
-			init_world();
-			init_entity_array(players,sizeof(players)/sizeof(ENTITY*));
-			init_entity_array(non_players,sizeof(non_players)/sizeof(ENTITY*));
-			add_player();
 			init_page_list();
 			GetClientRect(hwnd,&gwinrect);
 		}
@@ -860,17 +772,13 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	case WM_KEYFIRST:
 		if(wparam==0x1b)
 			exit(0);
-		key_down(wparam);
 		break;
 	case WM_KEYUP:
-		key_up(wparam);
 		break;
 	case WM_SYSKEYDOWN:
-		key_down(wparam);
 		return 0;
 		break;
 	case WM_SYSKEYUP:
-		key_up(wparam);
 		break;
 	case WM_SIZE:
 		{

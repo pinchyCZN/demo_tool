@@ -19,6 +19,26 @@ int init_page_list()
 		p->name[sizeof(p->name)-1]=0;
 		add_page(&page_list,&p);
 		page_list.current=p;
+
+		/**********testing!!****************/
+		{
+			OP *o=0;
+			add_type_op(p,TTRANSFORM,0,0);
+			find_op_type(p,&o,TTRANSFORM);
+			if(o){
+				PARAM_CONTROL *pc=0;
+				create_op_params(o);
+				find_param_type(&param_list,CBUTTON,&pc);
+				if(pc){
+					create_subparams(o,pc);
+					pc=0;
+					find_param_type(&subparam_list,CBUTTON,&pc);
+					if(pc)
+						handle_subparam_button(&subparam_list,pc);
+				}
+			}
+		}
+		/**************************************/
 		result=TRUE;
 	}
 	return result;

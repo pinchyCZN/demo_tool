@@ -6,14 +6,39 @@
 int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	extern SPLINE_EDIT spline_edit;
+	typedef enum CMDMENU{
+		CMD_ADDKEY,CMD_DELKEY
+	};
 	static int clickx=0,clicky=0,debounce=0;
 	static PARAM_CONTROL *pcdrag=0;
+	static HMENU hmenu=0;
 	PARAM_CONTROL *p;
 
 	p=spline_edit.plist.list;
-	if(p==0)
-		return FALSE;
 	switch(msg){
+	case WM_CREATE:
+		{
+			hmenu=CreatePopupMenu();
+			if(hmenu){
+				InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_ADDKEY,"add key");
+				InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_DELKEY,"delete key");
+			}
+		}
+		break;
+	case WM_CONTEXTMENU:
+		if(hmenu){
+			int x=LOWORD(lparam),y=HIWORD(lparam);
+			TrackPopupMenu(hmenu,TPM_LEFTALIGN,x,y,0,hwnd,NULL);
+		}
+		break;
+	case WM_COMMAND:
+		{
+			switch(LOWORD(wparam)){
+			case CMD_ADDKEY:
+				break;
+			}
+		}
+		break;
 	case WM_MOUSEWHEEL:
 		{
 			POINT point;
@@ -50,6 +75,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 		}
 		break;
 	case WM_MOUSEMOVE:
+		set_focus(hwnd);
 		if(pcdrag){
 			int x,y,deltax,deltay;
 			int lmb,mmb,rmb,ctrl,shift;

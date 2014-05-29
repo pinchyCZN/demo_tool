@@ -215,7 +215,7 @@ int handle_subparam_button(PARAM_LIST *spl,PARAM_CONTROL *b)
 						struct PCLIST pclist[]={
 							{CSTATIC,   8,  0,8*10,20,"spline",0,0},
 							{CDROPLIST, 8,  0,8*20,20,"scalex\nscaley\nscalez\nrotx\nroty\nrotz\ntransx\ntransy\ntransz\n",0,30},
-							{CSPLINE,   8,  0,8*20,20,0,1,30},
+							{CSPLINE,   8,  0,900,600,0,1,30},
 						};
 						for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
 							if(pclist[i].data_ex==1){

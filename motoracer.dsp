@@ -101,10 +101,6 @@ SOURCE=.\display_ui.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\entity.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\environment.c
 # End Source File
 # Begin Source File
@@ -154,10 +150,6 @@ SOURCE=.\vga737.c
 # Begin Source File
 
 SOURCE=.\widgets.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\world_state.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
