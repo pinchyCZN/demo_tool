@@ -3,6 +3,17 @@
 #include <math.h>
 #include "widgets.h"
 
+int add_splinekey(PARAM_CONTROL *pc)
+{
+	if(pc){
+		if(pc->control.type==CSPLINE){
+			SPLINE_CONTROL *sc=pc->control.data;
+			if(sc){
+				int i=sc->;
+			}
+		}
+	}
+}
 int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	extern SPLINE_EDIT spline_edit;
@@ -49,6 +60,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 			}
 			switch(LOWORD(wparam)){
 			case CMD_ADDKEY:
+				add_splinekey(pc);
 				break;
 			}
 		}

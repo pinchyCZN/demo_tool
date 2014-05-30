@@ -105,10 +105,6 @@ SOURCE=.\environment.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\loadpng.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\main.c
 # End Source File
 # Begin Source File
@@ -154,10 +150,6 @@ SOURCE=.\widgets.c
 # Begin Source File
 
 SOURCE=.\entity.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\lodepng.h
 # End Source File
 # Begin Source File
 
