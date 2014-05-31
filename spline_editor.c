@@ -3,13 +3,53 @@
 #include <math.h>
 #include "widgets.h"
 
+int alloc_key(SPLINE_KEY **sk)
+{
+	int result=FALSE;
+	if(sk){
+		*sk=malloc(sizeof(SPLINE_KEY));
+		if(*sk){
+			memset(*sk,0,sizeof(SPLINE_KEY));
+			result=TRUE;
+		}
+	}
+	return result;
+}
+int insert_keylist(SPLINE_KEY *klist,SPLINE_KEY *sk)
+{
+	int result=FALSE;
+	SPLINE_KEY *list=klist;
+	while(list){
+		if(list->next==0){
+			list->next=sk;
+			sk->prev=list;
+			result=TRUE;
+			break;
+		}
+		list=list->next;
+	}
+	return result;
+}
 int add_splinekey(PARAM_CONTROL *pc)
 {
 	if(pc){
 		if(pc->control.type==CSPLINE){
 			SPLINE_CONTROL *sc=pc->control.data;
 			if(sc){
-				int i=sc->;
+				int i=sc->selected;
+				ANIMATE_DATA *a=sc->anim;
+				if(a){
+					SPLINE_KEY *sk=0;
+					alloc_key(&sk);
+					if(sk){
+						if(a[i].key==0){
+							a[i].key=sk;
+						}
+						else{
+							insert_keylist(a[i].key,sk);
+						}
+					}
+				}
 			}
 		}
 	}

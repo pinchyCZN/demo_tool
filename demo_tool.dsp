@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="motoracer" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="demo_tool" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 60000
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
 
-CFG=motoracer - Win32 Debug
+CFG=demo_tool - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "motoracer.mak".
+!MESSAGE NMAKE /f "demo_tool.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "motoracer.mak" CFG="motoracer - Win32 Debug"
+!MESSAGE NMAKE /f "demo_tool.mak" CFG="demo_tool - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "motoracer - Win32 Release" (based on "Win32 (x86) Console Application")
-!MESSAGE "motoracer - Win32 Debug" (based on "Win32 (x86) Console Application")
+!MESSAGE "demo_tool - Win32 Release" (based on "Win32 (x86) Console Application")
+!MESSAGE "demo_tool - Win32 Debug" (based on "Win32 (x86) Console Application")
 !MESSAGE 
 
 # Begin Project
@@ -28,7 +28,7 @@ CFG=motoracer - Win32 Debug
 CPP=cl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "motoracer - Win32 Release"
+!IF  "$(CFG)" == "demo_tool - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -53,7 +53,7 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib opengl32.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"msvcrt.lib"
 # SUBTRACT LINK32 /pdb:none
 
-!ELSEIF  "$(CFG)" == "motoracer - Win32 Debug"
+!ELSEIF  "$(CFG)" == "demo_tool - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -82,8 +82,8 @@ LINK32=link.exe
 
 # Begin Target
 
-# Name "motoracer - Win32 Release"
-# Name "motoracer - Win32 Debug"
+# Name "demo_tool - Win32 Release"
+# Name "demo_tool - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
