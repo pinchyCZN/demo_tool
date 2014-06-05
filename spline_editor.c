@@ -30,8 +30,9 @@ int insert_keylist(SPLINE_KEY *klist,SPLINE_KEY *sk)
 	}
 	return result;
 }
-int add_splinekey(PARAM_CONTROL *pc)
+int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk)
 {
+	int result=FALSE;
 	if(pc){
 		if(pc->control.type==CSPLINE){
 			SPLINE_CONTROL *sc=pc->control.data;
@@ -48,11 +49,15 @@ int add_splinekey(PARAM_CONTROL *pc)
 						else{
 							insert_keylist(a[i].key,sk);
 						}
+						if(nsk)
+							*nsk=sk;
+						result=TRUE;
 					}
 				}
 			}
 		}
 	}
+	return result;
 }
 int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
@@ -83,10 +88,13 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 			point.x=x=LOWORD(lparam);
 			point.y=y=HIWORD(lparam);
 			MapWindowPoints(NULL,hwnd,&point,1);
+			clickx=x;
+			clicky=y;
 			point.x+=spline_edit.plist.si.hscroll;
 			point.y+=spline_edit.plist.si.vscroll;
-			if(hittest_param(p,point.x,point.y,0))
+			if(hittest_param(p,point.x,point.y,0)){
 				TrackPopupMenu(hmenu,TPM_LEFTALIGN,x,y,0,hwnd,NULL);
+			}
 		}
 		break;
 	case WM_COMMAND:
@@ -100,7 +108,13 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 			}
 			switch(LOWORD(wparam)){
 			case CMD_ADDKEY:
-				add_splinekey(pc);
+				{
+					SPLINE_KEY *sk=0;
+					add_splinekey(pc,&sk);
+					if(sk){
+						sk->pos=10;
+					}
+				}
 				break;
 			}
 		}
