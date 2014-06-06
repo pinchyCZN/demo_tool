@@ -177,9 +177,16 @@ typedef struct{
 
 typedef struct{
 	float time;
-	float pos;
+	float val;
 	void *prev,*next;
 }SPLINE_KEY;
+
+typedef struct{
+	int x,y;
+	int w,h;
+	SPLINE_KEY *key;
+	void *prev,*next;
+}SPLINE_KEY_CONTROL;
 
 typedef struct{
 	int enabled;
@@ -206,8 +213,10 @@ typedef struct{
 
 typedef struct{
 	ANIMATE_DATA *anim;
+	SPLINE_KEY_CONTROL *keys;
 	int x,y;
 	int w,h;
+	float zoomx,zoomy;
 	int count;
 	int selected;
 }SPLINE_CONTROL;

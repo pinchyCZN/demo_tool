@@ -112,7 +112,8 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 					SPLINE_KEY *sk=0;
 					add_splinekey(pc,&sk);
 					if(sk){
-						sk->pos=10;
+						sk->time=.433;
+						sk->val=4;
 					}
 				}
 				break;

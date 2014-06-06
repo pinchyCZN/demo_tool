@@ -392,13 +392,21 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 			{
 				SPLINE_CONTROL *s=pc->control.data;
 				if(s){
-					ANIMATE_DATA *a=s->anim;
+					SPLINE_KEY_CONTROL *skc=s->keys;
 					draw_rect(sc,s->x,s->y,s->w,s->h,0x44);
-					if(a){
-						SPLINE_KEY *sk=a->key;
-						if(sk){
-							draw_rect(sc,s->x,s->y,10,10,0x225544);
-						}
+					while(skc){
+						int x,y,size=10;
+						/*
+						x=s->x+(s->w*sk->time);
+						y=s->y+(s->h/2)+sk->val;
+						size=10;
+						sk->x=x;
+						sk->y=y;
+						sk->w=size;
+						sk->y=size;
+						draw_rect(sc,x,y,size,size,0x225544);
+						*/
+						skc=skc->next;
 					}
 				}
 			}
