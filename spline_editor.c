@@ -30,6 +30,34 @@ int insert_keylist(SPLINE_KEY *klist,SPLINE_KEY *sk)
 	}
 	return result;
 }
+int add_splinekey_control(SPLINE_CONTROL *sc,SPLINE_KEY *k,SPLINE_KEY_CONTROL **skc)
+{
+	int result=FALSE;
+	if(sc && k){
+		*skc=malloc(sizeof(SPLINE_KEY_CONTROL));
+		if(*skc){
+			memset(*skc,0,sizeof(SPLINE_KEY_CONTROL));
+			(*skc)->w=10;
+			(*skc)->h=10;
+			(*skc)->key=k;
+			if(sc->keys==0){
+				sc->keys=*skc;
+				result=TRUE;
+			}else{
+				SPLINE_KEY_CONTROL *list=sc->keys;
+				while(list){
+					if(list->next==0){
+						list->next=*skc;
+						(*skc)->prev=list;
+						result=TRUE;
+						break;
+					}
+				}
+			}
+		}
+	}
+	return result;
+}
 int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk)
 {
 	int result=FALSE;
@@ -51,6 +79,10 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk)
 						}
 						if(nsk)
 							*nsk=sk;
+						{
+							SPLINE_KEY_CONTROL *skc=0;
+							add_splinekey_control(sc,sk,&skc);
+						}
 						result=TRUE;
 					}
 				}

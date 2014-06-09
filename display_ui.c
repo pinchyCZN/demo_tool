@@ -395,17 +395,30 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 					SPLINE_KEY_CONTROL *skc=s->keys;
 					draw_rect(sc,s->x,s->y,s->w,s->h,0x44);
 					while(skc){
-						int x,y,size=10;
-						/*
-						x=s->x+(s->w*sk->time);
-						y=s->y+(s->h/2)+sk->val;
-						size=10;
-						sk->x=x;
-						sk->y=y;
-						sk->w=size;
-						sk->y=size;
-						draw_rect(sc,x,y,size,size,0x225544);
-						*/
+						int x,y,w,h;
+						x=skc->x;
+						y=skc->y;
+						w=skc->w;
+						h=skc->h;
+
+						if((x+w>=s->x) && (y+h>=s->y)
+							&& (x<s->x+s->w) && (y<s->y+s->h)){
+							if(x<s->x){
+								x=s->x;
+								w=w-(s->x-x);
+							}
+							else if(x+w>s->x+s->w){
+								w=w-(x+w-(s->x+s->w));
+							}
+							if(y<s->y){
+								y=s->y;
+								w=w-(s->y-y);
+							}
+							else if(y+h>s->y+s->h){
+								h=h-(y+h-(s->y+s->h));
+							}
+							draw_rect(sc,x,y,w,h,0x225544);
+						}
 						skc=skc->next;
 					}
 				}
