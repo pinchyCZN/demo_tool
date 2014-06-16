@@ -52,13 +52,14 @@ int add_splinekey_control(SPLINE_CONTROL *sc,SPLINE_KEY *k,SPLINE_KEY_CONTROL **
 						result=TRUE;
 						break;
 					}
+					list=list->next;
 				}
 			}
 		}
 	}
 	return result;
 }
-int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk)
+int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 {
 	int result=FALSE;
 	if(pc){
@@ -82,6 +83,10 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk)
 						{
 							SPLINE_KEY_CONTROL *skc=0;
 							add_splinekey_control(sc,sk,&skc);
+							if(skc){
+								skc->x=x;
+								skc->y=y;
+							}
 						}
 						result=TRUE;
 					}
@@ -142,7 +147,14 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 			case CMD_ADDKEY:
 				{
 					SPLINE_KEY *sk=0;
-					add_splinekey(pc,&sk);
+					POINT p;
+					p.x=clickx;
+					p.y=clicky;
+					MapWindowPoints(NULL,hwnd,&p,1);
+					p.x+=spline_edit.plist.si.hscroll;
+					p.y+=spline_edit.plist.si.vscroll;
+
+					add_splinekey(pc,&sk,p.x,p.y);
 					if(sk){
 						sk->time=.433;
 						sk->val=4;
