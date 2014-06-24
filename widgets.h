@@ -185,6 +185,7 @@ typedef struct{
 	int x,y;
 	int w,h;
 	SPLINE_KEY *key;
+	int selected;
 	void *prev,*next;
 }SPLINE_KEY_CONTROL;
 

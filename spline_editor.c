@@ -96,6 +96,74 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 	}
 	return result;
 }
+int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **result)
+{
+	SPLINE_KEY_CONTROL *skc;
+	if(sc==0)
+		return TRUE;
+	if(result)
+		*result=0;
+	skc=sc->keys;
+	if(skc){
+		SPLINE_KEY_CONTROL *list=skc,*first=0,*selected=0,*next=0;
+		int count=0;
+		while(list){
+			if(x>=list->x && x<(list->x+list->w) && y>=list->y && y<(list->y+list->h)){
+				if(first==0)
+					first=list;
+				if(list->selected)
+					selected=list;
+				else if(selected)
+					next=list;
+				count++;
+			}else{
+				list->selected=FALSE;
+			}
+			list=list->next;
+		}
+		if(first){
+			SPLINE_KEY_CONTROL *s=0;
+			if(count==1){
+				s=first;
+			}
+			else if(result && selected && (*result)==selected){
+				if(next)
+					s=next;
+				else
+					s=first;
+			}
+			else{
+				if(next){
+					s=next;
+				}
+				else
+					s=first;
+			}
+			if(selected)
+				selected->selected=FALSE;
+			if(result)
+				*result=s;
+			if(s)
+				s->selected=TRUE;
+		}
+	}
+	return TRUE;
+}
+int handle_spline_key_move(SPLINE_CONTROL *sc,SPLINE_KEY_CONTROL *skc,int dx,int dy)
+{
+	if(sc && skc){
+		int x,y;
+		x=skc->x;
+		y=skc->y;
+		x+=dx;
+		y+=dy;
+		if(x>=sc->x && x<(sc->x+sc->w) && y>=sc->y && y<(sc->y+sc->h)){
+			skc->x=x;
+			skc->y=y;
+		}
+	}
+	return TRUE;
+}
 int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	extern SPLINE_EDIT spline_edit;
@@ -105,6 +173,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 	static int clickx=0,clicky=0,debounce=0;
 	static PARAM_CONTROL *pcdrag=0;
 	static HMENU hmenu=0;
+	static SPLINE_KEY_CONTROL *selected_key=0;
 	PARAM_CONTROL *p;
 
 	p=spline_edit.plist.list;
@@ -234,6 +303,8 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 				}
 			}
 			send_mouse_move(pcdrag,deltax,deltay,lmb,mmb,rmb,shift,ctrl);
+			if(selected_key && pcdrag->control.type==CSPLINE)
+				handle_spline_key_move(pcdrag->control.data,selected_key,deltax,deltay);
 			clickx=x;
 			clicky=y;
 		}
@@ -296,6 +367,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 		spline_edit.plist.si.hscroll_pressed=0;
 		spline_edit.plist.si.vscroll_pressed=0;
 		pcdrag=0;
+		selected_key=0;
 		break;
 	case WM_LBUTTONDOWN:
 		{
@@ -324,6 +396,9 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 					BUTTON *b=pc->control.data;
 					if(b)
 						b->pressed=TRUE;
+				}
+				else if(pc->control.type==CSPLINE){
+					handle_spline_click(pc->control.data,x,y,&selected_key);
 				}
 				if(!list_handled)
 					remove_popup(&spline_edit.plist);

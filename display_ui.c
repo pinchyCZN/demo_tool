@@ -403,6 +403,7 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 
 						if((x+w>=s->x) && (y+h>=s->y)
 							&& (x<s->x+s->w) && (y<s->y+s->h)){
+							int color=0x225544;
 							if(x<s->x){
 								x=s->x;
 								w=w-(s->x-x);
@@ -417,7 +418,9 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 							else if(y+h>s->y+s->h){
 								h=h-(y+h-(s->y+s->h));
 							}
-							draw_rect(sc,x,y,w,h,0x225544);
+							if(skc->selected)
+								color=0x7f7f7f;
+							draw_rect(sc,x,y,w,h,color);
 						}
 						skc=skc->next;
 					}
