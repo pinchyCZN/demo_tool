@@ -113,7 +113,7 @@ int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **resu
 					first=list;
 				if(list->selected)
 					selected=list;
-				else if(selected)
+				else if(selected && next==0)
 					next=list;
 				count++;
 			}else{
@@ -126,16 +126,9 @@ int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **resu
 			if(count==1){
 				s=first;
 			}
-			else if(result && selected && (*result)==selected){
+			else{
 				if(next)
 					s=next;
-				else
-					s=first;
-			}
-			else{
-				if(next){
-					s=next;
-				}
 				else
 					s=first;
 			}
@@ -158,8 +151,21 @@ int handle_spline_key_move(SPLINE_CONTROL *sc,SPLINE_KEY_CONTROL *skc,int dx,int
 		x+=dx;
 		y+=dy;
 		if(x>=sc->x && x<(sc->x+sc->w) && y>=sc->y && y<(sc->y+sc->h)){
+			SPLINE_KEY *sk;
 			skc->x=x;
 			skc->y=y;
+			sk=skc->key;
+			if(sk){
+				float scalex,scaley;
+				scalex=sc->zoomx;
+				scaley=sc->zoomy;
+				if(scalex==0)
+					scalex=1;
+				if(scaley==0)
+					scaley=1;
+				sk->time+=scalex*dx;
+				sk->val+=scalex*dy;
+			}
 		}
 	}
 	return TRUE;

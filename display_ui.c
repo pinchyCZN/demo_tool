@@ -422,8 +422,17 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 								color=0x7f7f7f;
 							draw_rect(sc,x,y,w,h,color);
 						}
+						if(skc->selected){
+							char str[40];
+							SPLINE_KEY *key=skc->key;
+							if(key){
+								_snprintf(str,sizeof(str),"%1.2f,%1.2f",key->val,key->time);
+								draw_string(sc,x,y+h,str,0xFFFFFF);
+							}
+						}
 						skc=skc->next;
 					}
+					draw_spline(sc,s);
 				}
 			}
 			break;
@@ -432,6 +441,28 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 	}
 	end_scroll_adjust(sc,rect,si);
 	return 0;
+}
+int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
+{
+	if(sc && s){
+		int i;
+		for(i=0;i<s->count;i++){
+			ANIMATE_DATA *an=s->anim[i];
+			if(key){
+				int i,len;
+				len=s->w;
+				for(i=0;i<len;i++){
+					int x,y;
+					x=i+s->x;
+					y=skc->y;
+					if(x>=s->x && x<(s->x+s->w) && y>=s->y && y<(s->y+s->h)){
+						sc->buffer[x+(sc->h-1-y)*sc->w]=0xFFFFFF;
+					}
+				}
+			}
+			*/
+		}
+	}
 }
 int display_view1(HWND hwnd,HGLRC hglrc)
 {
