@@ -447,20 +447,14 @@ int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
 	if(sc && s){
 		int i;
 		for(i=0;i<s->count;i++){
-			ANIMATE_DATA *an=s->anim[i];
-			if(key){
-				int i,len;
-				len=s->w;
-				for(i=0;i<len;i++){
-					int x,y;
-					x=i+s->x;
-					y=skc->y;
-					if(x>=s->x && x<(s->x+s->w) && y>=s->y && y<(s->y+s->h)){
-						sc->buffer[x+(sc->h-1-y)*sc->w]=0xFFFFFF;
-					}
-				}
+			ANIMATE_DATA *an=&s->anim[i];
+			SPLINE_KEY *klist=an->key;
+			while(klist){
+				int i,x,y;
+				x=s->x;y=s->y;
+				draw_rect(sc,x+(int)klist->time,y+(int)klist->val,1,1,0xFF0000);
+				klist=klist->next;
 			}
-			*/
 		}
 	}
 }
