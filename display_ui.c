@@ -442,6 +442,22 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 	end_scroll_adjust(sc,rect,si);
 	return 0;
 }
+
+struct CubicPoly
+{
+	float c0, c1, c2, c3;
+};
+float eval(struct CubicPoly *c,float t)
+{
+	float t2 = t*t;
+	float t3 = t2 * t;
+	return c->c0 + c->c1*t + c->c2*t2 + c->c3*t3;
+}
+
+int init_centr_cr(float *points,struct CubicPoly *px,struct CubicPoly *py)
+{
+
+}
 int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
 {
 	if(sc && s){
@@ -449,11 +465,20 @@ int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
 		for(i=0;i<s->count;i++){
 			ANIMATE_DATA *an=&s->anim[i];
 			SPLINE_KEY *klist=an->key;
+			int index=0;
 			while(klist){
 				int i,x,y;
+				float points[4*2]={0};
 				x=s->x;y=s->y;
-				draw_rect(sc,x+(int)klist->time,y+(int)klist->val,1,1,0xFF0000);
+				draw_rect(sc,x+(int)klist->time,y+(int)klist->val,2,2,0xFF0000);
 				klist=klist->next;
+				points[index]=klist->time;
+				points[index+1]=klist->val;
+				index+=2;
+				if(index>=8 || (index<8 && klist==0)){
+					struct CubicPoly px,py;
+					init_centr_cr(points,&px,&py);
+				}
 			}
 		}
 	}

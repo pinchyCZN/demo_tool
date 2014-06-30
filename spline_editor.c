@@ -59,6 +59,21 @@ int add_splinekey_control(SPLINE_CONTROL *sc,SPLINE_KEY *k,SPLINE_KEY_CONTROL **
 	}
 	return result;
 }
+int init_skc_pos(SPLINE_CONTROL *sc,SPLINE_KEY_CONTROL *skc)
+{
+	if(sc && skc){
+		SPLINE_KEY *key;
+		key=skc->key;
+		if(key){
+			float zx,zy;
+			zx=sc->zoomx;
+			zy=sc->zoomy;
+			key->time=skc->x - sc->x;
+			key->val=skc->y - sc->y;
+		}
+	}
+	return TRUE;
+}
 int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 {
 	int result=FALSE;
@@ -86,6 +101,7 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 							if(skc){
 								skc->x=x;
 								skc->y=y;
+								init_skc_pos(sc,skc);
 							}
 						}
 						result=TRUE;
@@ -96,6 +112,8 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 	}
 	return result;
 }
+
+
 int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **result)
 {
 	SPLINE_KEY_CONTROL *skc;
@@ -230,10 +248,6 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 					p.y+=spline_edit.plist.si.vscroll;
 
 					add_splinekey(pc,&sk,p.x,p.y);
-					if(sk){
-						sk->time=.433;
-						sk->val=4;
-					}
 				}
 				break;
 			}
