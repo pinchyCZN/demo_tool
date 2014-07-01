@@ -393,6 +393,7 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 				SPLINE_CONTROL *s=pc->control.data;
 				if(s){
 					SPLINE_KEY_CONTROL *skc=s->keys;
+					int count=0;
 					draw_rect(sc,s->x,s->y,s->w,s->h,0x44);
 					while(skc){
 						int x,y,w,h;
@@ -426,10 +427,11 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 							char str[40];
 							SPLINE_KEY *key=skc->key;
 							if(key){
-								_snprintf(str,sizeof(str),"%1.2f,%1.2f",key->val,key->time);
+								_snprintf(str,sizeof(str),"(%i)%1.2f,%1.2f",count,key->val,key->time);
 								draw_string(sc,x,y+h,str,0xFFFFFF);
 							}
 						}
+						count++;
 						skc=skc->next;
 					}
 					draw_spline(sc,s);
@@ -442,7 +444,7 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 	end_scroll_adjust(sc,rect,si);
 	return 0;
 }
-
+#include <math.h>
 struct CubicPoly
 {
 	float c0, c1, c2, c3;
@@ -454,8 +456,49 @@ float eval(struct CubicPoly *c,float t)
 	return c->c0 + c->c1*t + c->c2*t2 + c->c3*t3;
 }
 
+void InitCubicPoly(float x0, float x1, float t0, float t1, struct CubicPoly *p)
+{
+	p->c0 = x0;
+	p->c1 = t0;
+	p->c2 = -3*x0 + 3*x1 - 2*t0 - t1;
+	p->c3 = 2*x0 - 2*x1 + t0 + t1;
+}
+void init_catmull(float x0,float x1,float x2,float x3,float dt0,float dt1,float dt2,struct CubicPoly *p)
+{
+	float t1,t2;
+	t1= (x1 - x0) / dt0 - (x2 - x0) / (dt0 + dt1) + (x2 - x1) / dt1;
+	t2= (x2 - x1) / dt1 - (x3 - x1) / (dt1 + dt2) + (x3 - x2) / dt2;
+	t1*=dt1;
+	t2*=dt1;
+	InitCubicPoly(x1,x2,t1,t2,p);
+
+}
+float dist_squared(float *p1,float *p2)
+{
+	float dx,dy;
+	dx=p2[0]-p1[0];
+	dy=p2[1]-p2[1];
+	return dx*dx+dy*dy;
+}
 int init_centr_cr(float *points,struct CubicPoly *px,struct CubicPoly *py)
 {
+	float dt0,dt1,dt2;
+	float *p0,*p1,*p2,*p3;
+	p0=points;
+	p1=points+2;
+	p2=points+4;
+	p3=points+6;
+	dt0=pow(dist_squared(p0,p1),0.25);
+	dt1=pow(dist_squared(p1,p2),0.25);
+	dt2=pow(dist_squared(p2,p3),0.25);
+    if (dt1 < 1e-4f)
+		dt1 = 1.0f;
+    if (dt0 < 1e-4f)
+		dt0 = dt1;
+    if (dt2 < 1e-4f)
+		dt2 = dt1;
+	init_catmull(p0[0],p1[0],p2[0],p3[0],dt0,dt1,dt2,px);
+	init_catmull(p0[1],p1[1],p2[1],p3[1],dt0,dt1,dt2,py);
 
 }
 int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
@@ -465,19 +508,85 @@ int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
 		for(i=0;i<s->count;i++){
 			ANIMATE_DATA *an=&s->anim[i];
 			SPLINE_KEY *klist=an->key;
-			int index=0;
+			int index=0,last=0,count=0;
+			float points[4*2]={0};
+			float tmp[2]={0};
 			while(klist){
-				int i,x,y;
-				float points[4*2]={0};
-				x=s->x;y=s->y;
-				draw_rect(sc,x+(int)klist->time,y+(int)klist->val,2,2,0xFF0000);
+				count++;
 				klist=klist->next;
-				points[index]=klist->time;
-				points[index+1]=klist->val;
-				index+=2;
-				if(index>=8 || (index<8 && klist==0)){
+			}
+			klist=an->key;
+			while(klist){
+				int j,x,y;
+				x=s->x;y=s->y;
+				draw_rect(sc,x+(int)klist->time,y+(int)klist->val,2,2,0xFF00);
+				tmp[0]=klist->time;
+				tmp[1]=klist->val;
+				klist=klist->next;
+dolast:
+				switch(count-1){
+				case 0:
+					points[0]=-1000;
+					points[1]=0;
+					points[2]=0;
+					points[3]=0;
+					points[4]=tmp[0];
+					points[5]=tmp[1];
+					points[6]=tmp[0]+1000;
+					points[7]=0;
+					break;
+				case 1:
+					points[0]=-1000;
+					points[1]=0;
+					points[2]=points[4];
+					points[3]=points[5];
+					points[4]=tmp[0];
+					points[5]=tmp[1];
+					points[6]=tmp[0]+1000;
+					points[7]=0;
+					break;
+				case 2:
+					points[0]=points[2];
+					points[1]=points[3];
+					points[2]=points[4];
+					points[3]=points[5];
+					points[4]=tmp[0];
+					points[5]=tmp[1];
+					points[6]=tmp[0]+1000;
+					points[7]=0;
+					break;
+				default:
+				case 3:
+					points[0]=points[2];
+					points[1]=points[3];
+					points[2]=points[4];
+					points[3]=points[5];
+					points[4]=tmp[0];
+					points[5]=tmp[1];
+					points[6]=tmp[0]+1000;
+					points[7]=0;
+					break;
+				}
+				index++;
+
+
+				//if((count<4) || index>=4)
+				{
 					struct CubicPoly px,py;
+					int i;
 					init_centr_cr(points,&px,&py);
+					for(i=0;i<100;i++){
+						x=eval(&px,0.01*(float)i);
+						y=eval(&py,0.01*(float)i);
+						draw_rect(sc,x+s->x,y+s->y,2,2,0xFF0000);
+
+					}
+				}
+				if(klist==0 && index>0 && last==0){
+					last=1;
+					tmp[0]=tmp[0]+1000;
+					tmp[1]=0;
+					goto dolast;
 				}
 			}
 		}
