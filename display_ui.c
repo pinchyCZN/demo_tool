@@ -508,69 +508,51 @@ int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
 		for(i=0;i<s->count;i++){
 			ANIMATE_DATA *an=&s->anim[i];
 			SPLINE_KEY *klist=an->key;
-			int index=0,last=0,count=0;
+			int index=0,last=0;
 			float points[4*2]={0};
 			float tmp[2]={0};
 			while(klist){
-				count++;
-				klist=klist->next;
-			}
-			klist=an->key;
-			while(klist){
-				int j,x,y;
-				x=s->x;y=s->y;
-				draw_rect(sc,x+(int)klist->time,y+(int)klist->val,2,2,0xFF00);
+				int x,y;
+				x=s->x;
+				y=s->y;
+				draw_rect(sc,1+x+(int)klist->time,1+y+(int)klist->val+(s->h/2),2,2,0xFF00);
 				tmp[0]=klist->time;
 				tmp[1]=klist->val;
 				klist=klist->next;
 dolast:
-				switch(count-1){
-				case 0:
+				if(index==0){
 					points[0]=-1000;
 					points[1]=0;
 					points[2]=0;
 					points[3]=0;
 					points[4]=tmp[0];
 					points[5]=tmp[1];
-					points[6]=tmp[0]+1000;
-					points[7]=0;
-					break;
-				case 1:
-					points[0]=-1000;
-					points[1]=0;
-					points[2]=points[4];
-					points[3]=points[5];
-					points[4]=tmp[0];
-					points[5]=tmp[1];
-					points[6]=tmp[0]+1000;
-					points[7]=0;
-					break;
-				case 2:
+					if(klist){
+						points[6]=klist->time;
+						points[7]=klist->val;
+					}else{
+						points[6]=tmp[0]+1000;
+						points[7]=0;
+					}
+				}
+				else{
 					points[0]=points[2];
 					points[1]=points[3];
 					points[2]=points[4];
 					points[3]=points[5];
-					points[4]=tmp[0];
-					points[5]=tmp[1];
-					points[6]=tmp[0]+1000;
-					points[7]=0;
-					break;
-				default:
-				case 3:
-					points[0]=points[2];
-					points[1]=points[3];
-					points[2]=points[4];
-					points[3]=points[5];
-					points[4]=tmp[0];
-					points[5]=tmp[1];
-					points[6]=tmp[0]+1000;
-					points[7]=0;
-					break;
+					points[4]=points[6];
+					points[5]=points[7];
+					points[6]=tmp[0];
+					points[7]=tmp[1];
+					if(klist){
+						points[6]=klist->time;
+						points[7]=klist->val;
+					}else{
+						points[6]=tmp[0]+1000;
+						points[7]=0;
+					}
 				}
 				index++;
-
-
-				//if((count<4) || index>=4)
 				{
 					struct CubicPoly px,py;
 					int i;
@@ -578,11 +560,10 @@ dolast:
 					for(i=0;i<100;i++){
 						x=eval(&px,0.01*(float)i);
 						y=eval(&py,0.01*(float)i);
-						draw_rect(sc,x+s->x,y+s->y,2,2,0xFF0000);
-
+						draw_rect(sc,x+s->x,y+s->y+(s->h/2),2,2,0xFF0000);
 					}
 				}
-				if(klist==0 && index>0 && last==0){
+				if(klist==0 && last==0){
 					last=1;
 					tmp[0]=tmp[0]+1000;
 					tmp[1]=0;

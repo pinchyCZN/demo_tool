@@ -69,7 +69,7 @@ int init_skc_pos(SPLINE_CONTROL *sc,SPLINE_KEY_CONTROL *skc)
 			zx=sc->zoomx;
 			zy=sc->zoomy;
 			key->time=skc->x - sc->x;
-			key->val=skc->y - sc->y;
+			key->val=skc->y - sc->y - (sc->h/2);
 		}
 	}
 	return TRUE;
