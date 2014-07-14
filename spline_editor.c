@@ -113,6 +113,30 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 	return result;
 }
 
+//int del_spline_key(
+int del_sel_keys(PARAM_CONTROL *pc)
+{
+	int result=FALSE;
+	if(pc){
+		if(pc->control.type==CSPLINE){
+			SPLINE_CONTROL *sc=pc->control.data;
+			if(sc && sc->selected){
+				SPLINE_KEY_CONTROL *keys=sc->keys;
+				while(keys){
+					SPLINE_KEY_CONTROL *prev,*next;
+					prev=keys->prev;
+					next=keys->next;
+					if(keys->selected){
+						//keys->key->
+						//free(keys);
+					}
+					keys=keys->next;
+				}
+			}
+		}
+	}
+	return result;
+}
 
 int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **result)
 {
@@ -251,8 +275,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 				}
 				break;
 			case CMD_DELKEY:
-				{
-				}
+				//del_sel_keys(
 				break;
 			}
 		}
