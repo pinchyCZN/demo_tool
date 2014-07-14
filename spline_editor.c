@@ -250,6 +250,10 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 					add_splinekey(pc,&sk,p.x,p.y);
 				}
 				break;
+			case CMD_DELKEY:
+				{
+				}
+				break;
 			}
 		}
 		break;
