@@ -15,18 +15,38 @@ int alloc_key(SPLINE_KEY **sk)
 	}
 	return result;
 }
-int insert_keylist(SPLINE_KEY *klist,SPLINE_KEY *sk)
+int insert_keylist(ANIMATE_DATA *a,SPLINE_KEY *sk)
 {
 	int result=FALSE;
-	SPLINE_KEY *list=klist;
-	while(list){
-		if(list->next==0){
-			list->next=sk;
-			sk->prev=list;
-			result=TRUE;
-			break;
+	if(a){
+		if(a->key==0)
+			a->key=sk;
+		else{
+			SPLINE_KEY *list=a->key;
+			while(list){
+				if(list->time<=sk->time){
+					SPLINE_KEY *next;
+					next=list->next;
+					if((next && (next->time>=sk->time)) || next==0){
+						list->next=sk;
+						sk->prev=list;
+						if(next)
+							next->prev=sk;
+						sk->next=next;
+						result=TRUE;
+						break;
+					}
+				}
+				list=list->next;
+			}
+			if(!result){
+				SPLINE_KEY *head;
+				head=a->key;
+				a->key=sk;
+				head->prev=sk;
+				sk->next=head;
+			}
 		}
-		list=list->next;
 	}
 	return result;
 }
@@ -88,23 +108,17 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 					SPLINE_KEY *sk=0;
 					alloc_key(&sk);
 					if(sk){
-						if(a[i].key==0){
-							a[i].key=sk;
+						SPLINE_KEY_CONTROL *skc=0;
+						add_splinekey_control(sc,sk,&skc);
+						if(skc){
+							skc->x=x;
+							skc->y=y;
+							init_skc_pos(sc,skc);
 						}
-						else{
-							insert_keylist(a[i].key,sk);
-						}
+						insert_keylist(&a[i],sk);
 						if(nsk)
 							*nsk=sk;
-						{
-							SPLINE_KEY_CONTROL *skc=0;
-							add_splinekey_control(sc,sk,&skc);
-							if(skc){
-								skc->x=x;
-								skc->y=y;
-								init_skc_pos(sc,skc);
-							}
-						}
+
 						result=TRUE;
 					}
 				}
@@ -264,12 +278,13 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 	PARAM_CONTROL *p;
 
 	p=spline_edit.plist.list;
-	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&msg!=WM_MOUSEMOVE)
+//	if(FALSE)
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE)
 	{
 		static DWORD tick;
 		if((GetTickCount()-tick)>500)
 			printf("--\n");
-		printf("g");
+		printf("spl");
 		print_msg(msg,lparam,wparam,hwnd);
 		tick=GetTickCount();
 	}

@@ -703,7 +703,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	static HDC hDC=0;
 	static lmb_drag=FALSE;
 #ifdef _DEBUG
-	if(FALSE)
+	//if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;

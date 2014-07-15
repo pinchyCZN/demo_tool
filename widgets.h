@@ -176,8 +176,8 @@ typedef struct{
 }TEXTURE_DATA;
 
 typedef struct{
-	float time;
-	float val;
+	float time; //x
+	float val; //y
 	void *prev,*next;
 }SPLINE_KEY;
 
