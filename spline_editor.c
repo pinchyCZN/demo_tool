@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <math.h>
 #include "widgets.h"
-
+extern CRITICAL_SECTION mutex;
 int alloc_key(SPLINE_KEY **sk)
 {
 	int result=FALSE;
@@ -77,6 +77,7 @@ int init_skc_pos(SPLINE_CONTROL *sc,SPLINE_KEY_CONTROL *skc)
 int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 {
 	int result=FALSE;
+	EnterCriticalSection(&mutex);
 	if(pc){
 		if(pc->control.type==CSPLINE){
 			SPLINE_CONTROL *sc=pc->control.data;
@@ -110,35 +111,70 @@ int add_splinekey(PARAM_CONTROL *pc,SPLINE_KEY **nsk,int x,int y)
 			}
 		}
 	}
+	LeaveCriticalSection(&mutex);
 	return result;
 }
 
-//int del_spline_key(
+int del_spline_key(SPLINE_KEY *key,ANIMATE_DATA *a)
+{
+	int result=FALSE;
+	if(key && a){
+		SPLINE_KEY *list=a->key;
+		while(list){
+			SPLINE_KEY *prev,*next;
+			prev=list->prev;
+			next=list->next;
+			if(list==key){
+				if(prev==0)
+					a->key=next;
+				else
+					prev->next=next;
+				if(next)
+					next->prev=prev;
+				free(list);
+				result=TRUE;
+				break;
+			}
+			list=next;
+		}
+
+	}
+	return result;
+}
 int del_sel_keys(PARAM_CONTROL *pc)
 {
 	int result=FALSE;
+	EnterCriticalSection(&mutex);
 	if(pc){
 		if(pc->control.type==CSPLINE){
 			SPLINE_CONTROL *sc=pc->control.data;
-			if(sc && sc->selected){
+			if(sc){
 				SPLINE_KEY_CONTROL *keys=sc->keys;
 				while(keys){
 					SPLINE_KEY_CONTROL *prev,*next;
 					prev=keys->prev;
 					next=keys->next;
 					if(keys->selected){
-						//keys->key->
-						//free(keys);
+						if(prev==0)
+							sc->keys=next;
+						else
+							prev->next=next;
+						if(next)
+							next->prev=prev;
+						del_spline_key(keys->key,sc->anim);
+						free(keys);
+						result=TRUE;
 					}
-					keys=keys->next;
+					keys=next;
 				}
 			}
 		}
 	}
+	LeaveCriticalSection(&mutex);
 	return result;
 }
 
-int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **result)
+int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **result,int keypress)
 {
 	SPLINE_KEY_CONTROL *skc;
 	if(sc==0)
@@ -159,7 +195,8 @@ int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **resu
 					next=list;
 				count++;
 			}else{
-				list->selected=FALSE;
+				if((keypress&MK_CONTROL)==0)
+					list->selected=FALSE;
 			}
 			list=list->next;
 		}
@@ -174,8 +211,10 @@ int handle_spline_click(SPLINE_CONTROL *sc,int x,int y,SPLINE_KEY_CONTROL **resu
 				else
 					s=first;
 			}
-			if(selected)
-				selected->selected=FALSE;
+			if(selected){
+				if((keypress&MK_CONTROL)==0)
+					selected->selected=FALSE;
+			}
 			if(result)
 				*result=s;
 			if(s)
@@ -225,6 +264,15 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 	PARAM_CONTROL *p;
 
 	p=spline_edit.plist.list;
+	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&msg!=WM_MOUSEMOVE)
+	{
+		static DWORD tick;
+		if((GetTickCount()-tick)>500)
+			printf("--\n");
+		printf("g");
+		print_msg(msg,lparam,wparam,hwnd);
+		tick=GetTickCount();
+	}
 	switch(msg){
 	case WM_CREATE:
 		{
@@ -251,6 +299,13 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 			}
 		}
 		break;
+	case WM_KEYFIRST:
+		switch(wparam){
+		case VK_DELETE:
+			PostMessage(hwnd,WM_COMMAND,CMD_DELKEY,0);
+			break;
+		}
+		break;
 	case WM_COMMAND:
 		{
 			PARAM_CONTROL *pc=0;
@@ -275,7 +330,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 				}
 				break;
 			case CMD_DELKEY:
-				//del_sel_keys(
+				del_sel_keys(pc);
 				break;
 			}
 		}
@@ -445,7 +500,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 						b->pressed=TRUE;
 				}
 				else if(pc->control.type==CSPLINE){
-					handle_spline_click(pc->control.data,x,y,&selected_key);
+					handle_spline_click(pc->control.data,x,y,&selected_key,wparam);
 				}
 				if(!list_handled)
 					remove_popup(&spline_edit.plist);
