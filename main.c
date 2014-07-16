@@ -343,10 +343,15 @@ int setupPixelFormat(HDC hDC)
 int set_focus(HWND hwnd)
 {
 	if(ghfocus!=hwnd){
-		PostMessage(ghwindow,WM_APP,WM_SETFOCUS,hwnd);
-		InvalidateRect(ghwindow,0,TRUE);
+		if(hwnd==0){
+			if(ghfocus!=0)
+			PostMessage(ghwindow,WM_APP,WM_SETFOCUS,ghfocus);
+		}else{
+			PostMessage(ghwindow,WM_APP,WM_SETFOCUS,hwnd);
+			InvalidateRect(ghwindow,0,TRUE);
+			ghfocus=hwnd;
+		}
 	}
-	ghfocus=hwnd;
 	return TRUE;
 }
 int print_globs()
@@ -784,6 +789,10 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 		{
 			resize_main_window(hwnd);
 		}
+		break;
+	case WM_ACTIVATE:
+		if(LOWORD(wparam)!=WA_INACTIVE)
+			set_focus(0);
 		break;
 	case WM_APP:
 		switch(wparam){

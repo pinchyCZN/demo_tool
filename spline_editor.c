@@ -278,7 +278,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 	PARAM_CONTROL *p;
 
 	p=spline_edit.plist.list;
-//	if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR&&msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE)
 	{
 		static DWORD tick;
