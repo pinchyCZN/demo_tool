@@ -35,9 +35,18 @@ int clear_params(PARAM_LIST *pl)
 		if(p->control.data){
 			switch(p->control.type){
 			case CPOPUPLIST:
+				break;
+			case CSPLINE:
 				{
-					int i;
-					i=i;
+					SPLINE_CONTROL *sc=p->control.data;
+					if(sc){
+						SPLINE_KEY_CONTROL *list=sc->keys;
+						while(list){
+							SPLINE_KEY_CONTROL *next=list->next;
+							free(list);
+							list=next;
+						}
+					}
 				}
 				break;
 			}

@@ -543,8 +543,9 @@ int resize_main_window(HWND hwnd)
 //		view1_divider=rect.right/2;
 	if(sub_params_divider<=0)
 		sub_params_divider=rect.right/3;
+	//TESTING
 	if(params_divider<=0)
-		params_divider=sub_params_divider+12;//rect.right*2/3;
+		params_divider=sub_params_divider+99;//rect.right*2/3;
 
 	x=y=0;
 	w=sub_params_divider-line;
@@ -708,7 +709,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	static HDC hDC=0;
 	static lmb_drag=FALSE;
 #ifdef _DEBUG
-	//if(FALSE)
+	if(FALSE)
 	if(msg!=WM_PAINT&&msg!=WM_SETCURSOR) //msg!=WM_NCHITTEST&&msg!=WM_ENTERIDLE&&
 	{
 		static DWORD tick;
