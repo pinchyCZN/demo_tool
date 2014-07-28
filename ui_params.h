@@ -46,6 +46,7 @@ int clear_params(PARAM_LIST *pl)
 							free(list);
 							list=next;
 						}
+						sc->keys=0;
 					}
 				}
 				break;

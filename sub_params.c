@@ -226,15 +226,15 @@ int handle_subparam_button(PARAM_LIST *spl,PARAM_CONTROL *b)
 						process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),&spline_edit.plist);
 						for(i=0;i<9;i++){
 							SPLINE_KEY *sk=t->anim[i].key;
+							SPLINE_CONTROL *sc=0;
+							find_param_type(&spline_edit.plist,CSPLINE,&sc);
 							while(sk){
-								SPLINE_CONTROL *sc=0;
-								find_param_type(&spline_edit.plist,CSPLINE,&sc);
 								if(sc){
 									SPLINE_KEY_CONTROL *skc=0;
 									add_splinekey_control(sc,sk,&skc);
 									if(skc){
-										skc->x=100;
-										skc->y=100;
+										skc->x=10;
+										skc->y=10;
 									}
 								}
 								sk=sk->next;
