@@ -226,18 +226,22 @@ int handle_subparam_button(PARAM_LIST *spl,PARAM_CONTROL *b)
 						process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),&spline_edit.plist);
 						for(i=0;i<9;i++){
 							SPLINE_KEY *sk=t->anim[i].key;
+							PARAM_CONTROL *pc=0;
 							SPLINE_CONTROL *sc=0;
-							find_param_type(&spline_edit.plist,CSPLINE,&sc);
-							while(sk){
+							find_param_type(&spline_edit.plist,CSPLINE,&pc);
+							if(pc){
+								sc=pc->control.data;
 								if(sc){
-									SPLINE_KEY_CONTROL *skc=0;
-									add_splinekey_control(sc,sk,&skc);
-									if(skc){
-										skc->x=10;
-										skc->y=10;
+									while(sk){
+										SPLINE_KEY_CONTROL *skc=0;
+										add_splinekey_control(sc,sk,&skc);
+										if(skc){
+											skc->x=sc->x+sk->time;
+											skc->y=sc->y+(sc->h/2)+sk->val;
+										}
+										sk=sk->next;
 									}
 								}
-								sk=sk->next;
 							}
 						}
 
