@@ -686,7 +686,8 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 	extern SPLINE_EDIT spline_edit;
 	if(spline_edit.plist.list || msg==WM_CREATE){
 		spline_win_message(sc,hwnd,msg,wparam,lparam);
-		return TRUE;
+		if(msg!=WM_CREATE)
+			return TRUE;
 	}
 	p=page_list.current;
 	if(p==0)
