@@ -128,6 +128,7 @@ int build_page(SCREEN *sc,RECT *rect)
 			case TMULTIPLY:
 			case TCUBE:
 			case TTRANSFORM:
+			case TTIME:
 				{
 					BUTTON *b=list->control.data;
 					static char *str="";
@@ -136,6 +137,7 @@ int build_page(SCREEN *sc,RECT *rect)
 						case TCUBE:str="CUBE";break;
 						case TMULTIPLY:str="MULTIPLY";break;
 						case TTRANSFORM:str="TRANSFORM";break;
+						case TTIME:str="TIME";break;
 					}
 					if(list->name[0]==0)
 						b->text=str;
@@ -515,6 +517,10 @@ int draw_spline(SCREEN *sc,SPLINE_CONTROL *s)
 			int index=0,last=0;
 			float points[4*2]={0};
 			float tmp[2]={0};
+			int color=0xFF0000;
+			if(i!=s->selected)
+				color=0x7F0000;
+
 			while(klist){
 				int x,y;
 				x=s->x;
@@ -556,7 +562,6 @@ dolast:
 						points[7]=0;
 					}
 				}
-				index++;
 				{
 					struct CubicPoly px,py;
 					int i;
@@ -564,9 +569,11 @@ dolast:
 					for(i=0;i<100;i++){
 						x=eval(&px,0.01*(float)i);
 						y=eval(&py,0.01*(float)i);
-						draw_rect(sc,x+s->x,y+s->y+(s->h/2),2,2,0xFF0000);
+						
+						draw_rect(sc,x+s->x,y+s->y+(s->h/2),2,2,color);
 					}
 				}
+				index++;
 				if(klist==0 && last==0){
 					last=1;
 					tmp[0]=tmp[0]+1000;

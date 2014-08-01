@@ -156,6 +156,9 @@ int create_op(int type,OP *op,int x,int y)
 			}
 		}
 		break;
+	case TTIME:
+		result=create_op_button(type,sizeof(TIME_DATA),op,x,y);
+		break;
 	case TDRAG:
 		{
 			CONTROLDRAG *drag;
@@ -676,7 +679,7 @@ int drag_finish(SCREEN *sc,PAGE_DATA *p,OP *drag)
 int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	typedef enum CMDMENU{
-		CMD_DELETE,CMD_LIGHT,CMD_CUBE,CMD_MULTIPLY,CMD_TRANSFORM
+		CMD_DELETE,CMD_LIGHT,CMD_CUBE,CMD_MULTIPLY,CMD_TRANSFORM,CMD_TIME
 	};
 	static lmb_down=FALSE;
 	static HMENU hmenu=0;
@@ -702,6 +705,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_CUBE,"cube");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_MULTIPLY,"multiply");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_TRANSFORM,"transform");
+			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_TIME,"time");
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION|MF_SEPARATOR,0,0);
 			InsertMenu(hmenu,0xFFFFFFFF,MF_BYPOSITION,CMD_DELETE,"delete");
 		}
@@ -740,6 +744,10 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			case CMD_TRANSFORM:
 				if(op==0)
 					add_type_op(p,TTRANSFORM,x,y);
+				break;
+			case CMD_TIME:
+				if(op==0)
+					add_type_op(p,TTIME,x,y);
 				break;
 			case CMD_DELETE:
 				del_op(p,op);
@@ -1222,7 +1230,31 @@ int send_char_control(CONTROL *c,int key,int vkey,int ctrl,int shift)
 	}
 	return result;
 }
-
+int send_mouse_wheel(PARAM_CONTROL *pc,int deltay)
+{
+	int result=FALSE;
+	if(pc==0 || pc->control.data==0)
+		return result;
+	switch(pc->control.type){
+	case CDROPLIST:
+		{
+			DROPLIST *dl=pc->control.data;
+			if(dl){
+				int max=get_droplist_count(dl->list);
+				if(deltay<0)
+					dl->current++;
+				else
+					dl->current--;
+				if(dl->current<=0)
+					dl->current=0;
+				else if(dl->current>=max)
+					dl->current=max-1;
+			}
+		}
+		break;
+	}
+	return result;
+}
 int send_mouse_move(PARAM_CONTROL *pc,int deltax,int deltay,int lmb,int mmb,int rmb,int shift,int ctrl)
 {
 	int result=FALSE;

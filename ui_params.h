@@ -399,6 +399,37 @@ int create_op_params(OP *o)
 				}
 			}
 			break;
+		case TTIME:
+			{
+				struct PCLIST pclist[]={
+					{CSTATIC,   8,  0,40,  20,"type - time",0,30},
+					{CSTATIC,   8,  0,8*4, 20,"name",0,0},
+					{CEDIT,     8,  0,8*40,20,NULL,1,30},
+					{CSTATIC,   8,  0,8*9, 20,"start",0,0},
+					{CEDITINT,  8,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"end",0,0},
+					{CEDITINT,  8,  0,10*8,20,NULL,2,30},
+					{CSTATIC,   8,  0,8*9,20,"length",0,0},
+					{CEDITINT,  8,  0,10*8,20,NULL,2,30},
+				};
+				TIME_DATA *t=o->data;
+				if(t){
+					void *plist[5]={o->name,sizeof(o->name),
+							&t->start,&t->end,&t->length
+						};
+					int i,index=0;
+					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
+						if(pclist[i].data_ex==1){
+							pclist[i].data=plist[index++];
+							pclist[i].data_ex=plist[index++];
+						}
+						else if(pclist[i].data_ex==2)
+							pclist[i].data=plist[index++];
+					}
+					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
+				}
+			}
+			break;
 		case TLIGHT:
 			{
 				struct PCLIST pclist[]={

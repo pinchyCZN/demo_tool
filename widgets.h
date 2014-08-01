@@ -204,6 +204,12 @@ typedef struct{
 	ANIMATE_DATA anim[9];
 }TRANSFORM_DATA;
 
+typedef struct{
+	int current;
+	int length;
+	int start,end;
+}TIME_DATA;
+
 
 typedef struct{
 	float scalex,scaley,scalez;
@@ -225,7 +231,7 @@ typedef struct{
 
 typedef enum OPTYPES{
 	TLIGHT,TTEXTURE,TCUBE,TMULTIPLY,TTRANSFORM,
-	TRESIZE,TDRAG
+	TRESIZE,TDRAG,TTIME
 };
 
 typedef enum CONTROLTYPES{

@@ -265,6 +265,31 @@ int handle_spline_key_move(SPLINE_CONTROL *sc,SPLINE_KEY_CONTROL *skc,int dx,int
 	}
 	return TRUE;
 }
+int update_spline_selection(PARAM_LIST *plist)
+{
+	if(plist){
+		PARAM_CONTROL *pc=0;
+		SPLINE_CONTROL *spl=0;
+		DROPLIST *dl=0;
+		find_param_type(plist,CSPLINE,&pc);
+		if(pc)
+			spl=pc->control.data;
+		pc=0;
+		find_param_type(plist,CDROPLIST,&pc);
+		if(pc)
+			dl=pc->control.data;
+		if(spl && dl){
+			spl->selected=dl->current;
+			if(spl->selected>=spl->count){
+				int count=spl->count;
+				if(count>0)
+					spl->selected=spl->count-1;
+				else
+					spl->selected=0;
+			}
+		}
+	}
+}
 int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 {
 	extern SPLINE_EDIT spline_edit;
@@ -361,15 +386,9 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 			point.y+=spline_edit.plist.si.vscroll;
 			if(hittest_param(p,point.x,point.y,&pc)
 				&& pc->control.type==CDROPLIST){
-					signed short deltax=(HIWORD(wparam));
-					int lmb,mmb,rmb,ctrl,shift;
-					lmb=wparam&MK_LBUTTON;
-					mmb=wparam&MK_MBUTTON;
-					rmb=wparam&MK_RBUTTON;
-					shift=wparam&MK_SHIFT;
-					ctrl=wparam&MK_CONTROL;
-					deltax>>=4;
-					send_mouse_move(pc,deltax,0,lmb,mmb,rmb,shift,ctrl);
+					signed short deltay=(HIWORD(wparam));
+					send_mouse_wheel(pc,deltay);
+					update_spline_selection(&spline_edit.plist);
 			}
 			else{
 				short w=HIWORD(wparam);
@@ -518,6 +537,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 				}
 				else if(pc->control.type==CPOPUPLIST){
 					handle_popup_list(&spline_edit.plist,pc,WM_LBUTTONDOWN,x,y);
+					update_spline_selection(&spline_edit.plist);
 					list_handled=TRUE;
 				}
 				else if(pc->control.type==CBUTTON){
