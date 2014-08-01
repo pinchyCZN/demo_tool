@@ -133,39 +133,63 @@ int handle_drop_list(PARAM_LIST *plist,PARAM_CONTROL *pc)
 	}
 	return result;
 }
-int handle_popup_list(PARAM_LIST *plist,PARAM_CONTROL *pc,int y)
+int handle_popup_list(PARAM_LIST *plist,PARAM_CONTROL *pc,int msg,int x,int y)
 {
 	int result=FALSE;
 	if(plist && pc){
 		POPUPLIST *pu=pc->control.data;
-		PARAM_CONTROL *parent=0;
-		int selected=-1;
-		if(pu){
-			int ypos=y-pu->y;
-			parent=pu->parent;
-			if(ypos>=0 && ypos<=pu->h){
-				if(pu->count!=0){
-					int h=pu->h/pu->count;
-					if(h!=0){
-						int pos=ypos/h;
-						if(pos<pu->count)
-							selected=pos;
+		switch(msg){
+		case WM_LBUTTONDOWN:
+			{
+				PARAM_CONTROL *parent=0;
+				int selected=-1;
+				if(pu){
+					int ypos=y-pu->y;
+					parent=pu->parent;
+					if(ypos>=0 && ypos<=pu->h){
+						if(pu->count!=0){
+							int h=pu->h/pu->count;
+							if(h!=0){
+								int pos=ypos/h;
+								if(pos<pu->count)
+									selected=pos;
+							}
+						}
+					}
+				}
+				if(remove_param(plist,pc)){
+					if(parent){
+						DROPLIST *dl=parent->control.data;
+						if(dl){
+							dl->child=0;
+							dl->dropped=FALSE;
+							if(selected>=0)
+								dl->current=selected;
+							result=TRUE;
+						}
+						parent->has_focus=TRUE;
 					}
 				}
 			}
-		}
-		if(remove_param(plist,pc)){
-			if(parent){
-				DROPLIST *dl=parent->control.data;
-				if(dl){
-					dl->child=0;
-					dl->dropped=FALSE;
-					if(selected>=0)
-						dl->current=selected;
-					result=TRUE;
+			break;
+		case WM_MOUSEMOVE:
+			{
+				printf("x=%i y=%i pux=%i puy=%i\n",x,y,pu->x,pu->y);
+				if(x>=pu->x && x<(pu->x+pu->w)
+					&& y>=pu->y && y<(pu->y+pu->h)){
+					int height=0;
+					if(pu->count!=0)
+						height=pu->h/pu->count;
+					if(height!=0){
+						pu->highlighted=((y-pu->y)/height)+1;
+						printf("hightlist=%i\n",pu->highlighted);
+					}
+
 				}
-				parent->has_focus=TRUE;
+				else
+					pu->highlighted=0;
 			}
+			break;
 		}
 	}
 	return result;
@@ -193,7 +217,7 @@ int remove_popup(PARAM_LIST *plist)
 	if(plist){
 		PARAM_CONTROL *pc=0;
 		if(find_param_type(plist,CPOPUPLIST,&pc)){
-			result=handle_popup_list(plist,pc,-1);
+			result=handle_popup_list(plist,pc,WM_LBUTTONDOWN,-1,-1);
 		}
 	}
 	return result;
@@ -414,7 +438,7 @@ int subparam_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lpar
 					list_handled=TRUE;
 				}
 				else if(pc->control.type==CPOPUPLIST){
-					handle_popup_list(&subparam_list,pc,y);
+					handle_popup_list(&subparam_list,pc,WM_LBUTTONDOWN,x,y);
 					list_handled=TRUE;
 				}
 				else if(pc->control.type==CBUTTON){

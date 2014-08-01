@@ -473,6 +473,17 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 				spline_edit.plist.si.hscroll+=(int)delta;
 				clickx=x;
 			}
+			{
+				int x,y;
+				PARAM_CONTROL *pc=0;
+				x=LOWORD(lparam);
+				y=HIWORD(lparam);
+				if(hittest_param(p,x,y,&pc)){
+					if(pc->control.type==CPOPUPLIST){
+						handle_popup_list(&spline_edit.plist,pc,WM_MOUSEMOVE,x,y);
+					}
+				}
+			}
 		}
 		break;
 	case WM_LBUTTONUP:
@@ -506,7 +517,7 @@ int spline_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam
 					list_handled=TRUE;
 				}
 				else if(pc->control.type==CPOPUPLIST){
-					handle_popup_list(&spline_edit.plist,pc,y);
+					handle_popup_list(&spline_edit.plist,pc,WM_LBUTTONDOWN,x,y);
 					list_handled=TRUE;
 				}
 				else if(pc->control.type==CBUTTON){

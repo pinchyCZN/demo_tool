@@ -366,6 +366,10 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 					if(count==0)
 						count=1;
 					draw_rect(sc,pu->x,pu->y,pu->w,pu->h,0x402020);
+					if(pu->highlighted>0){
+						int height=pu->h/count;
+						draw_rect(sc,pu->x,pu->y+height*(pu->highlighted-1),pu->w,height,RED);
+					}
 					while(pu->list){
 						int done=FALSE;
 						while(xpos<pu->w){
