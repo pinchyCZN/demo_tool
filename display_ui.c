@@ -23,19 +23,30 @@ int init_page_list()
 		/**********testing!!****************/
 		{
 			OP *o=0;
-			add_type_op(p,TTRANSFORM,0,0);
+			add_type_op(p,TCUBE,DEFBUTTONW,DEFBUTTONH*3);
+			add_type_op(p,TTRANSFORM,DEFBUTTONW,DEFBUTTONH*4);
+			add_type_op(p,TTIME,DEFBUTTONW,DEFBUTTONH*5);
 			find_op_type(p,&o,TTRANSFORM);
 			if(o){
 				PARAM_CONTROL *pc=0;
+				TRANSFORM_DATA *td=o->data;
+				td->animate=TRUE;
 				create_op_params(o);
-				find_param_type(&param_list,CBUTTON,&pc);
+				find_param_type(&subparam_list,CBUTTON,&pc);
 				if(pc){
-					create_subparams(o,pc);
-					pc=0;
 					find_param_type(&subparam_list,CBUTTON,&pc);
 					if(pc)
 						handle_subparam_button(&subparam_list,pc);
 				}
+			}
+			o=0;
+			find_op_type(p,&o,TTIME);
+			if(o){
+				TIME_DATA *td=o->data;
+				td->length=900;
+				set_root(p,o);
+				o->selected=TRUE;
+				test_build(p);
 			}
 		}
 		/**************************************/
@@ -459,15 +470,13 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 	return 0;
 }
 #include <math.h>
-struct CubicPoly
+int eval(struct CubicPoly *c,float *_t, float *out)
 {
-	float c0, c1, c2, c3;
-};
-float eval(struct CubicPoly *c,float t)
-{
+	float t=*_t;
 	float t2 = t*t;
 	float t3 = t2 * t;
-	return c->c0 + c->c1*t + c->c2*t2 + c->c3*t3;
+	*out = c->c0 + c->c1*t + c->c2*t2 + c->c3*t3;
+	return TRUE;
 }
 
 void InitCubicPoly(float x0, float x1, float t0, float t1, struct CubicPoly *p)
@@ -575,9 +584,12 @@ dolast:
 					int i;
 					init_centr_cr(points,&px,&py);
 					for(i=0;i<100;i++){
-						x=eval(&px,0.01*(float)i);
-						y=eval(&py,0.01*(float)i);
-						
+						float f=0.01*(float)i;
+						float fx=0,fy=0;
+						eval(&px,&f,&fx);
+						eval(&py,&f,&fy);
+						x=fx;
+						y=fy;
 						draw_rect(sc,x+s->x,y+s->y+(s->h/2),2,2,color);
 					}
 				}

@@ -148,10 +148,79 @@ int handle_multiply(TREENODE *t,MULTIPLY_DATA *m)
 		pop_model_matrix();
 	}
 }
+int evaluate_spline_pos(ANIMATE_DATA *a,float *pos,float *out)
+{
+	int index=0;
+	float points[4*2]={-1000,0,0,0,0,0,0,0};
+	SPLINE_KEY *klist=a->key;
+	int dolast=FALSE;
+	while(klist){
+		float tmp[2];
+		tmp[0]=klist->time;
+		tmp[1]=klist->val;
+		klist=klist->next;
+LAST:
+		if(index==0){
+			points[0]=-1000;
+			points[1]=0;
+			points[2]=0;
+			points[3]=0;
+			points[4]=tmp[0];
+			points[5]=tmp[1];
+			if(klist){
+				points[6]=klist->time;
+				points[7]=klist->val;
+			}else{
+				points[6]=tmp[0]+1000;
+				points[7]=0;
+			}
+		}
+		else{
+			points[0]=points[2];
+			points[1]=points[3];
+			points[2]=points[4];
+			points[3]=points[5];
+			points[4]=points[6];
+			points[5]=points[7];
+			points[6]=tmp[0];
+			points[7]=tmp[1];
+			if(klist){
+				points[6]=klist->time;
+				points[7]=klist->val;
+			}else{
+				points[6]=tmp[0]+1000;
+				points[7]=0;
+			}
+		}
+		index++;
+		if(pos && ((*pos>=points[2] && *pos<=points[4]) 
+				|| dolast)){
+			struct CubicPoly px,py;
+			float fx,fy;
+			init_centr_cr(points,&px,&py);
+			fx=points[4]-points[2];
+			if(fx!=0)
+				fx=*pos/fx;
+			//eval(&px,&fx,&fx);
+			eval(&py,&fx,&fy);
+			if(out)
+				*out=fy;
+			break;
+		}
+		if(klist==0){
+			tmp[0]=points[6];
+			//dolast=TRUE;
+			//goto LAST;
+		}
+
+	}
+}
 int dump_tree(TREENODE *t,int render)
 {
 	if(t){
 		int i;
+		static float current_time=0;
+		static int dir=0;
 		OP *o=t->op;
 		if(o){
 			if(render){
@@ -160,9 +229,24 @@ int dump_tree(TREENODE *t,int render)
 					{
 						TIME_DATA *td=o->data;
 						if(td){
-							td->current+=0.5;
-							if(td->current>td->length)
+							current_time=td->current;
+							printf("current=%f      \r",current_time);
+							if(td->current>=400){
+								dir=1;
+								printf("\nreverse\n");
+							}
+							else if(td->current<=0){
+								dir=0;
+								printf("\nforward\n");
+							}
+							if(dir==0)
+								td->current+=1;
+							else
+								td->current-=1;
+							if(td->current>td->length){
+								printf("reset\n");
 								td->current=0;
+							}
 						}
 					}
 					break;
@@ -200,18 +284,30 @@ int dump_tree(TREENODE *t,int render)
 						TRANSFORM_DATA *t=o->data;
 						if(t){
 							//push_model_matrix();
-							transform_mesh(&t->scalex,&t->rotx,&t->transx);
 							if(t->animate){
 								int i;
+								float scale[3]={1,1,1};
+								float rot[3]={0,0,0};
+								float trans[3]={0,0,0};
+								float *param[3]={&scale,&rot,&trans};
+								int index=0;
 								for(i=0;i<sizeof(t->anim)/sizeof(ANIMATE_DATA);i++){
 									ANIMATE_DATA *a=&t->anim[i];
-									if(a->key){
-										int j;
-										j++;
-									}
+									float *f;
+									float pos=current_time;
+									if(i>0 && (i%3)==0)
+										index++;
+									f=param[index]+(i%3);
+									evaluate_spline_pos(a,&pos,f);
+									//printf("pos=%f\n",*f);
+
 								}
+								transform_mesh(&scale,&rot,&trans);
 
 							}
+							else
+								transform_mesh(&t->scalex,&t->rotx,&t->transx);
+
 							//pop_model_matrix();
 						}
 					}

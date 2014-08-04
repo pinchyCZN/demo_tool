@@ -318,3 +318,9 @@ typedef struct{
 	void *op;
 	int lcount;
 }TREENODE;
+
+struct CubicPoly
+{
+	float c0, c1, c2, c3;
+};
+
