@@ -98,6 +98,7 @@ int create_param_control(int type,PARAM_CONTROL *pc)
 	case CDROPLIST: size=sizeof(DROPLIST);break;
 	case CPOPUPLIST: size=sizeof(POPUPLIST);break;
 	case CSPLINE: size=sizeof(SPLINE_CONTROL);break;
+	case CCHECKBOX: size=sizeof(CHECKBOX);break;
 	}
 	if(size!=0){
 		void *data=0;
@@ -261,6 +262,20 @@ int process_param_list(struct PCLIST *pclist,int list_count,PARAM_LIST *pl)
 						}
 					}
 					break;
+				case CCHECKBOX:
+					{
+						CHECKBOX *cb=pc->control.data;
+						if(cb){
+							cb->x=pclist[i].x+xpos;
+							cb->y=pclist[i].y+ypos;
+							cb->w=pclist[i].w;
+							cb->h=pclist[i].h;
+							cb->checked=pclist[i].data_ex;
+							strncpy(cb->str,pclist[i].data,sizeof(cb->str));
+							cb->str[sizeof(cb->str)-1]=0;
+						}
+					}
+					break;
 				}
 			}
 			ypos+=pclist[i].incypos;
@@ -377,14 +392,14 @@ int create_op_params(OP *o)
 					{CEDITFLOAT,8,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,0},
 					{CEDITFLOAT,2,  0,10*8,20,NULL,2,30},
-					{CBUTTON,   4,  0,10*8,25,NULL,1,30},
+					{CCHECKBOX, 4,  0,13,  13,NULL,1,30},
 				};
 				TRANSFORM_DATA *t=o->data;
 				if(t){
 					void *plist[17]={o->name,sizeof(o->name),
 							&t->scalex,&t->scaley,&t->scalez,
 							&t->rotx,&t->roty,&t->rotz,
-							&t->transx,&t->transy,&t->transz,"Animate",0,
+							&t->transx,&t->transy,&t->transz,"Animate",t->animate,
 						};
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
@@ -396,6 +411,11 @@ int create_op_params(OP *o)
 							pclist[i].data=plist[index++];
 					}
 					process_param_list(&pclist,sizeof(pclist)/sizeof(struct PCLIST),pl);
+					if(t->animate){
+						PARAM_CONTROL *pc=0;
+						find_param_type(pl,CCHECKBOX,&pc);
+						create_subparams(o,pc);
+					}
 				}
 			}
 			break;
@@ -407,15 +427,13 @@ int create_op_params(OP *o)
 					{CEDIT,     8,  0,8*40,20,NULL,1,30},
 					{CSTATIC,   8,  0,8*9, 20,"start",0,0},
 					{CEDITINT,  8,  0,10*8,20,NULL,2,30},
-					{CSTATIC,   8,  0,8*9,20,"end",0,0},
-					{CEDITINT,  8,  0,10*8,20,NULL,2,30},
 					{CSTATIC,   8,  0,8*9,20,"length",0,0},
 					{CEDITINT,  8,  0,10*8,20,NULL,2,30},
 				};
 				TIME_DATA *t=o->data;
 				if(t){
 					void *plist[5]={o->name,sizeof(o->name),
-							&t->start,&t->end,&t->length
+							&t->start,&t->length
 						};
 					int i,index=0;
 					for(i=0;i<sizeof(pclist)/sizeof(struct PCLIST);i++){
@@ -677,6 +695,11 @@ int param_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 						b->pressed=TRUE;
 						create_subparams(param_list.ref,pc);
 					}
+				}
+				else if(pc->control.type==CCHECKBOX){
+					CHECKBOX *cb=pc->control.data;
+					cb->checked=!cb->checked;
+					create_subparams(param_list.ref,pc);
 				}
 				pcdrag=pc;
 			}

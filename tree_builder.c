@@ -156,6 +156,16 @@ int dump_tree(TREENODE *t,int render)
 		if(o){
 			if(render){
 				switch(o->type){
+				case TTIME:
+					{
+						TIME_DATA *td=o->data;
+						if(td){
+							td->current+=0.5;
+							if(td->current>td->length)
+								td->current=0;
+						}
+					}
+					break;
 				case TCUBE:
 					{
 						static float theta=0;
@@ -191,6 +201,17 @@ int dump_tree(TREENODE *t,int render)
 						if(t){
 							//push_model_matrix();
 							transform_mesh(&t->scalex,&t->rotx,&t->transx);
+							if(t->animate){
+								int i;
+								for(i=0;i<sizeof(t->anim)/sizeof(ANIMATE_DATA);i++){
+									ANIMATE_DATA *a=&t->anim[i];
+									if(a->key){
+										int j;
+										j++;
+									}
+								}
+
+							}
 							//pop_model_matrix();
 						}
 					}

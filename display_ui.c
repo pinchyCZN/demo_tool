@@ -284,6 +284,14 @@ int build_params(SCREEN *sc,SCROLL_INFO *si,PARAM_CONTROL *paramc,RECT *rect)
 				}
 			}
 			break;
+		case CCHECKBOX:
+			{
+				CHECKBOX *cb=pc->control.data;
+				if(cb){
+					draw_checkbox(sc,cb);
+				}
+			}
+			break;
 		case CEDIT:
 			{
 				EDITBOX *e=pc->control.data;
@@ -638,14 +646,16 @@ int draw_params(HWND hwnd,SCREEN *sc)
 	RECT rect={0};
 	int *buffer,w,h;
 	PARAM_CONTROL *pc=param_list.list;
-	if(sc==0 || sc->buffer==0 || pc==0)
+	if(sc==0 || sc->buffer==0)
 		return 0;
 	buffer=sc->buffer;
 	w=sc->w;
 	h=sc->h;
 	memset(buffer,0x10,w*h*4);
-	GetWindowRect(hwnd,&rect);
-	build_params(sc,&param_list.si,pc,&rect);
+	if(pc!=0){
+		GetWindowRect(hwnd,&rect);
+		build_params(sc,&param_list.si,pc,&rect);
+	}
 	return TRUE;
 }
 
@@ -654,14 +664,19 @@ int draw_subparams(HWND hwnd,SCREEN *sc)
 	RECT rect={0};
 	int *buffer,w,h;
 	PARAM_CONTROL *pc=subparam_list.list;
-	if(sc==0 || sc->buffer==0 || pc==0)
+	if(sc==0 || sc->buffer==0){
+
+		memset(buffer,0x10,w*h*4);
 		return 0;
+	}
 	buffer=sc->buffer;
 	w=sc->w;
 	h=sc->h;
 	memset(buffer,0x10,w*h*4);
-	GetWindowRect(hwnd,&rect);
-	build_params(sc,&subparam_list.si,pc,&rect);
+	if(pc!=0){
+		GetWindowRect(hwnd,&rect);
+		build_params(sc,&subparam_list.si,pc,&rect);
+	}
 	return TRUE;
 }
 

@@ -53,16 +53,32 @@ int create_subpcontrols(OP *o)
 }
 int create_subparams(OP *op,PARAM_CONTROL *pc)
 {
-	if(op==0 || pc==0)
+	if(op==0){
+		extern PARAM_LIST subparam_list;
+		clear_params(&subparam_list);
 		return FALSE;
-	if(pc->control.type==CBUTTON){
-		switch(op->type){
-		case TTRANSFORM:
-			{
+	}
+	if(pc==0)
+		return FALSE;
+	switch(op->type){
+	case TTRANSFORM:
+		{
+			TRANSFORM_DATA *t=op->data;
+			if(pc->control.type==CBUTTON)
 				create_subpcontrols(op);
+			else if(pc->control.type==CCHECKBOX){
+				CHECKBOX *cb=pc->control.data;
+				if(cb){
+					if(cb->checked)
+						create_subpcontrols(op);
+					else
+						create_subpcontrols(0);
+					if(t)
+						t->animate=cb->checked;
+				}
 			}
-			break;
 		}
+		break;
 	}
 }
 int get_droplist_count(char *list)

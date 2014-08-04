@@ -46,10 +46,12 @@ B=COLOR_3DDKSHADOW
 2=COLOR_3DLIGHT
 1=COLOR_BTNHIGHLIGHT
 3=COLOR_BTNSHADOW
+4=COLOR_WINDOW
+5=COLOR_WINDOWTEXT
 F=COLOR_BTNFACE
 0=COLOR_WINDOWFRAME
 */
-/* button
+/* button (surrounded by COLOR_BTNFACE)
 	0000000000000000000000000
 	01111111111111111111111B0
 	01222222222222222222223B0
@@ -58,7 +60,7 @@ F=COLOR_BTNFACE
 	01333333333333333333333B0
 	0BBBBBBBBBBBBBBBBBBBBBBB0
 	0000000000000000000000000
-  button pressed
+  button pressed (surrounded by COLOR_BTNFACE)
 	0000000000000000000000000
 	0333333333333333333333330
 	03FFFFFFFFFFFFFFFFFFFFF30
@@ -67,6 +69,23 @@ F=COLOR_BTNFACE
 	03FFFFFFFFFFFFFFFFFFFFF30
 	0333333333333333333333330
 	0000000000000000000000000
+*/
+/* checkbox 13x13
+	FFFFFFFFFFFFFFF
+	F3333333333331F
+	F3444444444421F
+	F3444444445421F
+	F3444444455421F
+	F3445444555421F
+	F3445545554421F
+	F3445555544421F
+	F3444555444421F
+	F3444454444421F
+	F3444444444421F
+	F3444444444421F
+	F3222222222221F
+	F1111111111111F
+	FFFFFFFFFFFFFFF
 
 */
 #define _3DDKSHADOW 0x00000000
@@ -143,6 +162,38 @@ int draw_cursor(SCREEN *sc,int x,int y,int color)
 	draw_diag_line(sc,x+2,y+2,h/2,1,color);
 	draw_diag_line(sc,x+2+(h/2),y+2+(h/2),h/2,-1,color);
 	return 0;
+}
+int draw_checkbox(SCREEN *sc,CHECKBOX *cb)
+{
+	int x,y,w,h;
+	x=cb->x;
+	y=cb->y;
+	w=cb->w;
+	h=cb->h;
+	draw_line_h(sc,x,    y,    w-1, _BTNSHADOW);
+	draw_line_h(sc,x,    y+h-1,w,   _BTNHIGHLIGHT);
+	draw_line_h(sc,x+1,  y+h-2,w-3, _3DLIGHT);
+	draw_line_v(sc,x,    y+1,  h-2, _BTNSHADOW);
+	draw_line_v(sc,x+w-1,y,    h-1, _BTNHIGHLIGHT);
+	draw_line_v(sc,x+w-2,y+1,  h-2, _3DLIGHT);
+	draw_rect(sc,x+1,y+1,w-3,  h-3, 0);
+	if(cb->checked){
+		int i;
+		int centerx=(x+w/2)-3;
+		int centery=(y+h/2)-3;
+		int dir=1;
+		for(i=0;i<7;i++){
+			draw_line_v(sc,centerx+i,centery,3,GREEN);
+			centery+=dir;
+			if(i==1)
+				dir=-1;
+		}
+	}
+	if(cb->str[0]!=0){
+		draw_string(sc,x+20,y,cb->str,WHITE);
+	}
+	return 0;
+
 }
 int draw_button(SCREEN *sc,BUTTON *button)
 {

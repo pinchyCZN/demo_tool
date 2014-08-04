@@ -370,6 +370,17 @@ int get_control_pos(CONTROL *control,int *x,int *y,int *w,int *h){
 			}
 		}
 		break;
+	case CCHECKBOX:
+		{
+			CHECKBOX *cb=control->data;
+			if(cb){
+				int len=strlen(cb->str);
+				len=(len*8)+7;
+				trans_pos_data(x,y,w,h,cb->x,cb->y,cb->w+len,cb->h);
+				result=TRUE;
+			}
+		}
+		break;
 	case CSPLINE:
 		{
 			SPLINE_CONTROL *sc=control->data;
@@ -911,6 +922,7 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 			hittest_op(p,x,y,&op);
 			if(op){
 				clear_selected_all(p);
+				create_subparams(0,0);
 				if(wparam&MK_CONTROL)
 					set_root(p,op);
 				op->selected=TRUE;
@@ -930,6 +942,8 @@ int page_win_message(SCREEN *sc,HWND hwnd,UINT msg,WPARAM wparam,LPARAM lparam)
 					drag=TRUE;
 			}
 			else{
+				create_subparams(0,0);
+				create_op_params(0);
 			}
 		}
 		break;

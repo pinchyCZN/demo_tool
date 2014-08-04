@@ -65,6 +65,15 @@ typedef struct{
 }EDITBOX;
 
 typedef struct{
+	char str[40];
+	int x;
+	int y;
+	int w;
+	int h;
+	int checked;
+}CHECKBOX;
+
+typedef struct{
 	int x;
 	int y;
 	int w;
@@ -202,12 +211,13 @@ typedef struct{
 	float rotx,roty,rotz;
 	float transx,transy,transz;
 	ANIMATE_DATA anim[9];
+	int animate;
 }TRANSFORM_DATA;
 
 typedef struct{
-	int current;
+	int start;
 	int length;
-	int start,end;
+	float current;
 }TIME_DATA;
 
 
@@ -235,7 +245,8 @@ typedef enum OPTYPES{
 };
 
 typedef enum CONTROLTYPES{
-	CBUTTON,CSCROLL,CRECT,CDROPLIST,CPOPUPLIST,CRESIZERECT,CDRAG,CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT,CSPLINE
+	CBUTTON,CSCROLL,CRECT,CDROPLIST,CPOPUPLIST,CRESIZERECT,CDRAG,
+	CSTATIC,CEDIT,CEDITBYTE,CEDITINT,CEDITFLOAT,CSPLINE,CCHECKBOX
 };
 
 typedef struct{
