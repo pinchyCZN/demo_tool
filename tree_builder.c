@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "types.h"
 #include "widgets.h"
 
@@ -196,15 +197,16 @@ LAST:
 		if(pos && ((*pos>=points[2] && *pos<=points[4]) 
 				|| dolast)){
 			struct CubicPoly px,py;
-			float fx,fy;
+			float a,b;
 			init_centr_cr(points,&px,&py);
-			fx=points[4]-points[2];
-			if(fx!=0)
-				fx=*pos/fx;
+			a=points[4]-points[2];
+			b=*pos-points[2];
+			if(a!=0)
+				a=b/a;
 			//eval(&px,&fx,&fx);
-			eval(&py,&fx,&fy);
+			eval(&py,&a,&b);
 			if(out)
-				*out=fy;
+				*out=b;
 			break;
 		}
 		if(klist==0){
@@ -230,10 +232,10 @@ int dump_tree(TREENODE *t,int render)
 						TIME_DATA *td=o->data;
 						if(td){
 							current_time=td->current;
-							printf("current=%f      \r",current_time);
-							if(td->current>=400){
-								dir=1;
-								printf("\nreverse\n");
+							if(td->current>=800){
+								dir=0;
+								//printf("\nreverse\n");
+								td->current=0;
 							}
 							else if(td->current<=0){
 								dir=0;
@@ -298,8 +300,12 @@ int dump_tree(TREENODE *t,int render)
 									if(i>0 && (i%3)==0)
 										index++;
 									f=param[index]+(i%3);
+									if(i==3)
+										i=3;
 									evaluate_spline_pos(a,&pos,f);
 									//printf("pos=%f\n",*f);
+									if(a->key)
+									printf("current=%4.2f  pos=%4.2f    i=%i     \r",current_time,*f,i);
 
 								}
 								transform_mesh(&scale,&rot,&trans);
